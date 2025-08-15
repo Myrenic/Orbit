@@ -1,25 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
+  name: core-argocd
+  namespace: argocd
   labels:
     app.kubernetes.io/managed-by: core-argocd
     app.kubernetes.io/name: core-argocd
-  name: core-argocd
-  namespace: argocd
 spec:
   destination:
     namespace: argocd
     server: https://kubernetes.default.svc
-  ignoreDifferences:
-    - group: argoproj.io
-      jsonPointers:
-        - /status
-      kind: Application
   project: default
   source:
-    path: bootstrap/argo-cd
     repoURL: https://github.com/Myrenic/Light_Cycle
+    path: bootstrap/argo-cd
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /status
   syncPolicy:
     automated:
       allowEmpty: true
@@ -27,12 +26,3 @@ spec:
       selfHeal: true
     syncOptions:
       - allowEmpty=true
-status:
-  health: {}
-  summary: {}
-  sync:
-    comparedTo:
-      destination: {}
-      source:
-        repoURL: ""
-    status: ""

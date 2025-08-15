@@ -99,6 +99,10 @@ list_resources() {
     kubectl get nodes || true
 }
 
+run_server() {
+    kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0.0
+}
+
 # --- Menu ---
 menu() {
     while true; do
@@ -106,13 +110,15 @@ menu() {
         echo "1) Install"
         echo "2) Uninstall"
         echo "3) List resources"
-        echo "4) Exit"
+        echo "4) Run Server"
+        echo "5) Exit"
         read -rp "Choice: " choice
         case $choice in
             1) install ;;
             2) uninstall ;;
             3) list_resources ;;
-            4) exit 0 ;;
+            4) run_server ;;
+            5) exit 0 ;;
             *) echo "Invalid choice." ;;
         esac
     done
