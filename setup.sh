@@ -2,7 +2,7 @@
 
 set -e
 
-REPO_NAME="pikluster"
+REPO_NAME="Light_Cycle"
 TERRAFORM_SUBDIR="bootstrap/terraform/ENCOM"
 
 
