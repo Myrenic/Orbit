@@ -1,0 +1,28 @@
+name: Rewrite Default Commit Messages
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  randomize-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          # Rewrite all commits in HEAD
+          git filter-branch -f --msg-filter '
+            if [ "$GIT_COMMIT_MESSAGE" = "Default Commit Message" ]; then
+              head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8
+            else
+              cat
+            fi
+          ' HEAD
+
+          git push --force
