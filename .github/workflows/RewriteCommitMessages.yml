@@ -18,11 +18,10 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          git filter-repo --message-callback |
-            import random, string
-            if message.decode("utf-8") == "Default Commit Message\n":
-                message = "".join(random.choices(string.ascii_letters + string.digits, k=8)).encode("utf-8")
-            message
+          git filter-repo --message-callback "import random, string; \
+if message.decode('utf-8') == 'Default Commit Message\n': \
+    message = ''.join(random.choices(string.ascii_letters + string.digits, k=8)).encode('utf-8'); \
+message"
 
       - run: git push origin main --force
         env:
