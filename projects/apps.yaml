@@ -36,7 +36,7 @@ spec:
   - git:
       files:
       - path: apps/**/system/config.json
-      repoURL: https://github.com/Myrenic/pikluster.git
+      repoURL: https://github.com/Myrenic/Light_Cycle.git
       requeueAfterSeconds: 20
       revision: ""
       template:
@@ -47,7 +47,7 @@ spec:
   - git:
       files:
       - path: apps/**/system/config_dir.json
-      repoURL: https://github.com/Myrenic/pikluster.git
+      repoURL: https://github.com/Myrenic/Light_Cycle.git
       requeueAfterSeconds: 20
       revision: ""
       template:

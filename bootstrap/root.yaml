@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     path: projects
-    repoURL: https://github.com/Myrenic/pikluster.git
+    repoURL: https://github.com/Myrenic/Light_Cycle.git
   syncPolicy:
     automated:
       allowEmpty: true

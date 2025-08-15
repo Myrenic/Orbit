@@ -4,7 +4,7 @@
   "destNamespace": "sonarr",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "apps/sonarr/overlays/system",
-  "srcRepoURL": "https://github.com/Myrenic/pikluster.git",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
   "srcTargetRevision": "",
   "labels": null,
   "annotations": null

@@ -19,7 +19,7 @@ spec:
   project: default
   source:
     path: bootstrap/argo-cd
-    repoURL: https://github.com/Myrenic/pikluster
+    repoURL: https://github.com/Myrenic/Light_Cycle
   syncPolicy:
     automated:
       allowEmpty: true

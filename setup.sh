@@ -35,8 +35,8 @@ prompt_vars() {
     [[ -z "$PROXMOX_VE_PASSWORD" ]] && read -rsp "Proxmox VE Password: " PROXMOX_VE_PASSWORD && echo
 
     : "${GIT_REPO:=}"
-    [[ -z "$GIT_REPO" ]] && read -rp "Git Repository URL [https://github.com/Myrenic/pikluster/]: " GIT_REPO
-    GIT_REPO=${GIT_REPO:-https://github.com/Myrenic/pikluster/}
+    [[ -z "$GIT_REPO" ]] && read -rp "Git Repository URL [https://github.com/Myrenic/Light_Cycle/]: " GIT_REPO
+    GIT_REPO=${GIT_REPO:-https://github.com/Myrenic/Light_Cycle/}
 
     : "${GIT_BRANCH:=}"
     [[ -z "$GIT_BRANCH" ]] && read -rp "Git Branch [main]: " GIT_BRANCH
