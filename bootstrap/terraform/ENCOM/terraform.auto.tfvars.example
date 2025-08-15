@@ -1,0 +1,45 @@
+hosts = {
+  flynn_control_01 = {
+    name           = "flynn_control_01"
+    cores          = 6
+    memory         = 8096
+    ip_addr        = "x.x.x.x"
+    gateway        = "x.x.x.x"
+    cidr           = "/24"
+    node_name      = "proxmox"
+    network_bridge = "vmbr0"
+    vlan_id        = 69
+    datastore_id   = "ssd"
+    disk_size      = 128
+  }
+  flynn_worker_01 = {
+    name           = "flynn-worker-01"
+    cores          = 6
+    memory         = 8096
+    ip_addr        = "x.x.x.x"
+    gateway        = "x.x.x.x"
+    cidr           = "/24"
+    node_name      = "proxmox"
+    network_bridge = "vmbr0"
+    vlan_id        = 69
+    datastore_id   = "ssd"
+    disk_size      = 128
+  }
+
+}
+
+proxmox = {
+  url                   = "https://x.x.x.x:8006/"
+  download_node_name    = "proxmox"
+  download_datastore_id = "local"
+  host_description      = "Managed by Myrenic's Terraform"
+  host_tags             = ["terraform"]
+}
+
+talos = {
+  cluster_name             = "encom"
+  version                  = "v1.10.6"
+  control_plane_identifier = "control"
+  worker_identifier        = "worker"
+  img_id                   = "20076cec7a24aa514e2d202367ddcb2aba0fd7af19b449de48023003065b3815"
+}
