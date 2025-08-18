@@ -4,7 +4,7 @@
   "destNamespace": "homepage",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "apps/homepage/overlays/homelab",
-  "srcRepoURL": "https://github.com/tomaszbawor/homelab-argo.git",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
   "srcTargetRevision": "",
   "labels": null,
   "annotations": null
