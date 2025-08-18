@@ -8,6 +8,11 @@ resources:
 - ./service.yaml
 
 
+patchesStrategicMerge:
+- patch-argocd-server.yaml
+
+
+
 configMapGenerator:
 - behavior: merge
   literals:
