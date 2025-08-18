@@ -24,3 +24,8 @@ patches:
     kind: Service
     name: argocd-server
     version: v1
+- path: cm-enable-insecure-patch.yaml
+  target:
+    kind: ConfigMap
+    name: argocd-cmd-params-cm
+    version: v1
