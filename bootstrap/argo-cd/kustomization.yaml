@@ -19,25 +19,3 @@ configMapGenerator:
   - server.insecure=true
   name: argocd-cmd-params-cm
 
-patches:
-  - target:
-      group: ""
-      version: v1
-      kind: Service
-      name: argocd-server
-      namespace: argocd
-    patchType: json
-    patch: |
-      [
-        {
-          "op": "replace",
-          "path": "/spec/ports",
-          "value": [
-            {
-              "name": "http",
-              "port": 80,
-              "targetPort": 8080
-            }
-          ]
-        }
-      ]
