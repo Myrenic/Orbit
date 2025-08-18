@@ -20,4 +20,13 @@ configMapGenerator:
   name: argocd-cmd-params-cm
 
 patches:
-- path: remove-https-port.yaml
+  - target:
+      kind: Service
+      name: argocd-server
+      namespace: argocd
+    patch: |-
+      spec:
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8080
