@@ -6,3 +6,5 @@ spec:
   ports:
   - name: https
     $patch: delete
+  - name: http
+    port: 80

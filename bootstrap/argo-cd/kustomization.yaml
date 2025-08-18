@@ -23,4 +23,3 @@ configMapGenerator:
   literals:
   - server.insecure=true
   name: argocd-cmd-params-cm
-
