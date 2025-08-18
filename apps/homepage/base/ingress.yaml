@@ -6,23 +6,22 @@ metadata:
   labels:
     app.kubernetes.io/name: homepage
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
-  ingressClassName: nginx
   rules:
-    - host: "homepage.lokaal.tuntelder.com"
-      http:
-        paths:
-          - path: "/"
-            pathType: Prefix
-            backend:
-              service:
-                name: homepage
-                port:
-                  number: 3000
+  - host: homepage.lokaal.tuntelder.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: homepage
+            port:
+              number: 3000
   tls:
-    - hosts:
-        - "homepage.lokaal.tuntelder.com"
-      secretName: entropymaker-com-tls
-
+  - hosts:
+    - homepage.lokaal.tuntelder.com
