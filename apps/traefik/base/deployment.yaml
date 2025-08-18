@@ -31,7 +31,7 @@ spec:
         - --entrypoints.web.http.redirections.entrypoint.scheme=https
         - --entrypoints.websecure.address=:443
         - --providers.kubernetesingress.ingressclass=traefik
-        - --providers.kubernetesingress.ingressendpoint.hostname=local.tuntelder.com
+        - --providers.kubernetesingress.ingressendpoint.hostname=lokaal.tuntelder.com
         - --certificatesresolvers.letsencrypt.acme.email=38107502+Myrenic@users.noreply.github.com
         - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
         - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare

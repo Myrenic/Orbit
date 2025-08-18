@@ -10,7 +10,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
   rules:
-  - host: sonarr.local.tuntelder.com
+  - host: sonarr.lokaal.tuntelder.com
     http:
       paths:
       - path: /
@@ -22,4 +22,4 @@ spec:
               number: 8989
   tls:
   - hosts:
-    - sonarr.local.tuntelder.com
+    - sonarr.lokaal.tuntelder.com
