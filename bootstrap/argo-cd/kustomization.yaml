@@ -3,21 +3,21 @@ kind: Kustomization
 namespace: argocd
 
 resources:
-  - github.com/argoproj-labs/argocd-autopilot/manifests/base?ref=v0.4.19
-  - ./ingress.yaml
-  - ./service.yaml
+- github.com/argoproj-labs/argocd-autopilot/manifests/base?ref=v0.4.19
+- ./ingress.yaml
+- ./service.yaml
+
 
 configMapGenerator:
-  - name: argocd-cm
-    behavior: merge
-    literals:
-      - kustomize.buildOptions=--enable-alpha-plugins --enable-helm
-      - repository.credentials=[{"url":"https://github.com/","usernameSecret":{"name":"autopilot-secret","key":"git_username"},"passwordSecret":{"name":"autopilot-secret","key":"git_token"}}]
+- behavior: merge
+  literals:
+  - kustomize.buildOptions=--enable-alpha-plugins --enable-helm
+  - repository.credentials=[{"url":"https://github.com/","usernameSecret":{"name":"autopilot-secret","key":"git_username"},"passwordSecret":{"name":"autopilot-secret","key":"git_token"}}]
+  name: argocd-cm
+- behavior: merge
+  literals:
+  - server.insecure=true
+  name: argocd-cmd-params-cm
 
-  - name: argocd-cmd-params-cm
-    behavior: merge
-    literals:
-      - server.insecure=true
-
-patchesStrategicMerge:
-  - patch-deployment.yaml
+patches:
+- path: patch-deployment.yaml
