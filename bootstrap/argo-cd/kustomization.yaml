@@ -18,6 +18,3 @@ configMapGenerator:
   literals:
   - server.insecure=true
   name: argocd-cmd-params-cm
-
-patches:
-- path: patch-deployment.yaml
