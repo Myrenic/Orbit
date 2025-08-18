@@ -100,7 +100,7 @@ list_resources() {
 }
 
 run_server() {
-    kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0.0
+    kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0
 }
 
 rebuild () {
