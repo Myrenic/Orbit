@@ -27,10 +27,17 @@ patches:
       name: argocd-server
       namespace: argocd
     patchType: json
-    patch:
-      - op: replace
-        path: /spec/ports
-        value:
-          - name: http
-            port: 80
-            targetPort: 8080
+    patch: |
+      [
+        {
+          "op": "replace",
+          "path": "/spec/ports",
+          "value": [
+            {
+              "name": "http",
+              "port": 80,
+              "targetPort": 8080
+            }
+          ]
+        }
+      ]
