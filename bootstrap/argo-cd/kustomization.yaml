@@ -29,3 +29,8 @@ patches:
     kind: ConfigMap
     name: argocd-cmd-params-cm
     version: v1
+- path: deployment-restart-patch.yaml
+  target:
+    kind: Deployment
+    name: argocd-server
+    version: v1
