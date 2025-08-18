@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  template:
+    metadata:
+      annotations:
+        argocd-cm-hash: "dummy"  # Kustomize will replace this with a hash ConfigMaps
