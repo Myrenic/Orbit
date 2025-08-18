@@ -103,19 +103,27 @@ run_server() {
     kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0.0
 }
 
+rebuild () {
+    uninstall
+    install
+    run_server
+}
+
 # --- Menu ---
 menu() {
     while true; do
         echo "Select an action:"
-        echo "1) Install"
-        echo "2) Uninstall"
+        echo "i) Install"
+        echo "u) Uninstall"
+        echo "r) rebuild"
         echo "3) List resources"
         echo "4) Run Server"
         echo "5) Exit"
         read -rp "Choice: " choice
         case $choice in
-            1) install ;;
-            2) uninstall ;;
+            i) install ;;
+            u) uninstall ;;
+            r) rebuild ;;
             3) list_resources ;;
             4) run_server ;;
             5) exit 0 ;;
