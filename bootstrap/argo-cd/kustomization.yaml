@@ -7,13 +7,6 @@ resources:
 - ./ingress.yaml
 
 
-patchesJson6902:
-  - target:
-      group: ""
-      version: v1
-      kind: Service
-      name: argocd-server
-    path: service-remove-https-patch.yaml
 
 configMapGenerator:
 - behavior: merge
@@ -25,3 +18,9 @@ configMapGenerator:
   literals:
   - server.insecure=true
   name: argocd-cmd-params-cm
+patches:
+- path: service-remove-https-patch.yaml
+  target:
+    kind: Service
+    name: argocd-server
+    version: v1
