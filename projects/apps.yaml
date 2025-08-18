@@ -84,6 +84,10 @@ spec:
         path: '{{ srcPath }}'
         repoURL: '{{ srcRepoURL }}'
         targetRevision: '{{ srcTargetRevision }}'
+        kustomize:
+          enableHelm: true
+          buildOptions:
+          - --enable-alpha-plugins
       syncPolicy:
         automated:
           allowEmpty: true
