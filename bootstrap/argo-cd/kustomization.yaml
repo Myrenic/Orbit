@@ -8,9 +8,11 @@ resources:
 - ./service.yaml
 
 
-patchesStrategicMerge:
-- patch-argocd-server.yaml
-
+patches:
+  - target:
+      kind: Service
+      name: argocd-server
+    path: service-patch.yaml
 
 
 configMapGenerator:
