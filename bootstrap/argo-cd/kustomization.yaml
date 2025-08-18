@@ -21,12 +21,16 @@ configMapGenerator:
 
 patches:
   - target:
+      group: ""
+      version: v1
       kind: Service
       name: argocd-server
       namespace: argocd
-    patch: |-
-      spec:
-        ports:
+    patchType: json
+    patch:
+      - op: replace
+        path: /spec/ports
+        value:
           - name: http
             port: 80
             targetPort: 8080
