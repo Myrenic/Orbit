@@ -23,13 +23,6 @@ spec:
   - '*'
 status: {}
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data:
-  domain: "lokaal.tuntelder.com"
----
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -95,9 +88,14 @@ spec:
           enableHelm: true
           buildOptions:
           - --enable-alpha-plugins
+          - --load-restrictor=LoadRestrictionsNone
+          - --kustomize-args=baseDomain={{ baseDomain }}  # Injecting the base domain
       syncPolicy:
         automated:
           allowEmpty: true
           prune: true
           selfHeal: true
+    parameters:
+      - name: baseDomain
+        value: "lokaal.tuntelder.com"
 status: {}

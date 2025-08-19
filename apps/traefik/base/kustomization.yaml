@@ -8,11 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
 
-vars:
-  - name: DOMAIN
-    objref:
-      kind: ConfigMap
-      name: app-config
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.domain
+configMapGenerator:
+  - name: base-domain-config
+    literals:
+      - BASE_DOMAIN={{ .Values.baseDomain }}
