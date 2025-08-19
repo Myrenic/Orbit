@@ -88,14 +88,10 @@ spec:
           enableHelm: true
           buildOptions:
           - --enable-alpha-plugins
-          - --load-restrictor=LoadRestrictionsNone
-          - --kustomize-args=baseDomain={{ baseDomain }}  # Injecting the base domain
       syncPolicy:
         automated:
           allowEmpty: true
           prune: true
           selfHeal: true
-    parameters:
-      - name: baseDomain
-        value: "lokaal.tuntelder.com"
+
 status: {}

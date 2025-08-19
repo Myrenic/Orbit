@@ -8,7 +8,3 @@ resources:
   - deployment.yaml
   - service.yaml
 
-configMapGenerator:
-  - name: base-domain-config
-    literals:
-      - BASE_DOMAIN={{ .Values.baseDomain }}
