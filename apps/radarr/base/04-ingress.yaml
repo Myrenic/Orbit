@@ -19,7 +19,7 @@ spec:
           service:
             name: radarr
             port:
-              number: 8989
+              number: 7878
   tls:
   - hosts:
     - radarr.lokaal.tuntelder.com
