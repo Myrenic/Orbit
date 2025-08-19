@@ -23,6 +23,13 @@ spec:
   - '*'
 status: {}
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  domain: "lokaal.tuntelder.com"
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:

@@ -7,3 +7,12 @@ resources:
   - volumes.yaml
   - deployment.yaml
   - service.yaml
+
+vars:
+  - name: DOMAIN
+    objref:
+      kind: ConfigMap
+      name: app-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.domain
