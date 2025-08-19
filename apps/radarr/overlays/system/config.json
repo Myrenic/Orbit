@@ -1,0 +1,11 @@
+{
+  "appName": "radarr",
+  "userGivenName": "radarr",
+  "destNamespace": "radarr",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/radarr/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}
