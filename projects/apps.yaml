@@ -93,5 +93,7 @@ spec:
           allowEmpty: true
           prune: true
           selfHeal: true
-
+      parameters:
+        - name: BASE_URL
+          value: "lokaal.tuntelder.com"
 status: {}

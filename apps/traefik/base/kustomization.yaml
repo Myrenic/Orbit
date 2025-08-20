@@ -8,3 +8,15 @@ resources:
   - deployment.yaml
   - service.yaml
 
+replacements:
+- source:
+    kind: ApplicationSet
+    name: apps
+    fieldPath: spec.template.spec.parameters[?(@.name=="BASE_URL")].value
+  targets:
+  - select:
+      kind: Ingress
+      name: traefik-dashboard
+    fieldPaths:
+    - spec.rules[0].host
+    - spec.tls[0].hosts[0]
