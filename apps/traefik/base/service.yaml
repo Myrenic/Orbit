@@ -30,7 +30,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
   rules:
-    - host: traefik.BASE_URL_PLACEHOLDER
+    - host: traefik.lokaal.tuntelder.com
       http:
         paths:
           - path: /
@@ -42,4 +42,5 @@ spec:
                   name: admin
   tls:
     - hosts:
-        - "traefik.BASE_URL_PLACEHOLDER"
+        - "traefik.lokaal.tuntelder.com"
+
