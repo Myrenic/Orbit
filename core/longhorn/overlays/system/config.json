@@ -1,0 +1,11 @@
+{
+  "appName": "longhorn",
+  "userGivenName": "longhorn",
+  "destNamespace": "longhorn-system",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "core/longhorn/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

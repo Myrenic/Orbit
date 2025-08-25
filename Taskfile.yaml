@@ -1,0 +1,79 @@
+---
+version: '3'
+
+tasks:
+  pre-checks:
+    desc: Check if all the needed variables are available
+    cmds:
+      - |
+        : "${BW_ORGANIZATION_ID:?Environment variable BW_ORGANIZATION_ID is required}"
+        : "${BW_PROJECT_ID:?Environment variable BW_PROJECT_ID is required}"
+        : "${BW_TOKEN:?Environment variable BW_TOKEN is required}"
+
+  crds:
+    desc: Install 'crds'
+    cmds:
+      - kustomize build bootstrap/crds | kubectl apply -f -
+      - kubectl rollout status deployment -l app.kubernetes.io/component=crds -n default \
+        || echo "No CRDs deployment to wait for"
+
+  cert-manager:
+    desc: Install 'cert-manager'
+    cmds:
+      - kustomize build --enable-helm bootstrap/cert-manager | kubectl apply -f -
+      - kubectl rollout status deployment -l app.kubernetes.io/instance=cert-manager -n cert-manager
+
+  external-secrets:
+    desc: Execute Taskfile in 'external-secrets'
+    dir: bootstrap/external-secrets/base/
+    cmds:
+      - |
+        : "${BW_ORGANIZATION_ID:?Environment variable BW_ORGANIZATION_ID is required}"
+        : "${BW_PROJECT_ID:?Environment variable BW_PROJECT_ID is required}"
+        : "${BW_TOKEN:?Environment variable BW_TOKEN is required}"
+      - task all
+      - kubectl rollout status deployment -l app.kubernetes.io/instance=external-secrets -n external-secrets
+
+  argocd:
+    desc: Install 'argocd'
+    cmds:
+      - kustomize build bootstrap/argocd/base --enable-helm | kubectl apply -f -
+      - kubectl apply -f bootstrap/argocd/base/ExternalSecret.yaml
+      - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd
+
+  argocd-projects:
+    desc: Add 'argocd' projects
+    cmds:
+      - kustomize build bootstrap --enable-helm | kubectl apply -f -
+      - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd \
+        || echo "No new deployments for projects"
+
+  password-argocd:
+    desc: Change 'argocd' default password
+    cmds:
+      - |
+        nohup kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0 \
+          > /dev/null 2>&1 &
+      - |
+        argocd login localhost:8080 --insecure --username admin \
+          --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
+          jsonpath="{.data.password}" | base64 -d)
+      - |
+        argocd account update-password --insecure --account admin \
+          --current-password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
+          jsonpath="{.data.password}" | base64 -d) \
+          --new-password $(kubectl -n argocd get secret argocd-admin-password -o \
+          jsonpath="{.data.secretValue}" | base64 -d)
+      - |
+        pkill -f "kubectl port-forward"
+
+  bootstrap:
+    desc: Run tasks in sequence
+    cmds:
+      - task pre-checks
+      - task crds
+      - task cert-manager
+      - task external-secrets
+      - task argocd
+      - task argocd-projects
+      - task password-argocd

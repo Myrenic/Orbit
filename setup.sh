@@ -3,7 +3,7 @@
 set -e
 
 REPO_NAME="Light_Cycle"
-TERRAFORM_SUBDIR="bootstrap/terraform/ENCOM"
+TERRAFORM_SUBDIR="bootstrap/terraform/Encom"
 
 
 determine_repo_path() {
@@ -72,12 +72,6 @@ install() {
 
     echo "Created nodes:"
     kubectl get nodes
-
-    export SOPS_AGE_KEY_FILE=~/secrets/age.agekey
-    sops -d "$REPO_PATH/apps/traefik/base/cloudflare-api-token.yaml" > "$REPO_PATH/apps/traefik/base/secret.yaml"
-    kubectl create ns traefik || true
-    kubectl apply -f "$REPO_PATH/apps/traefik/base/secret.yaml"
-    argocd-autopilot repo bootstrap --recover
 }
 
 # --- Uninstall ---

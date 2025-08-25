@@ -7,13 +7,13 @@ metadata:
     argocd.argoproj.io/sync-options: PruneLast=true
     argocd.argoproj.io/sync-wave: "-2"
   creationTimestamp: null
-  name: apps
+  name: bootstrap
   namespace: argocd
 spec:
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
-  description: apps project
+  description: core project
   destinations:
     - namespace: "*"
       server: "*"
@@ -30,13 +30,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   creationTimestamp: null
-  name: apps
+  name: bootstrap
   namespace: argocd
 spec:
   generators:
     - git:
         files:
-          - path: apps/**/system/config.json
+          - path: bootstrap/**/system/config.json
         repoURL: https://github.com/Myrenic/test.git
         requeueAfterSeconds: 20
         revision: ""
@@ -48,7 +48,7 @@ spec:
   syncPolicy: {}
   template:
     metadata:
-      name: apps-{{ userGivenName }}
+      name: bootstrap-{{ userGivenName }}
       namespace: argocd
     spec:
       destination:
@@ -59,7 +59,7 @@ spec:
           jsonPointers:
             - /status
           kind: Application
-      project: apps
+      project: bootstrap
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"

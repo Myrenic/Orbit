@@ -1,0 +1,16 @@
+---
+name: Linters
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: ["main"]
+jobs:
+  yaml-linter:
+    name: Yaml Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: yaml-lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: .yamllint
+      - run: echo ${{ steps.yaml-lint.outputs.logfile }}

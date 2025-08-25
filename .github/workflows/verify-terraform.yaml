@@ -1,0 +1,18 @@
+---
+name: Validate Terraform
+on:  # yamllint disable-line rule:truthy
+  push:
+jobs:
+  terraform-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Validate Terraform configuration (Encom)
+        uses: devops-infra/action-terraform-validate@v0.3.1
+        with:
+          working-directory: infrastructure/terraform/Encom
+      - name: Validate Terraform configuration (DataDisc)
+        uses: devops-infra/action-terraform-validate@v0.3.1
+        with:
+          working-directory: infrastructure/terraform/DataDisc

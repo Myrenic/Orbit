@@ -1,0 +1,48 @@
+---
+version: '3'
+
+tasks:
+  check-namespace:
+    desc: Check if the namespace 'external-secrets' exists and create it if not
+    cmds:
+      - |
+        if kubectl get namespace external-secrets > /dev/null 2>&1; then
+          echo "Namespace 'external-secrets' already exists.";
+        else
+          kubectl create namespace external-secrets;
+          echo "Namespace 'external-secrets' created.";
+        fi
+
+  generate-secret:
+    desc: "Create Kubernetes secret"
+    cmds:
+      - sleep 1
+      - echo "Generating Kubernetes secret (bitwarden-api-tokens) in the 'external-secrets' namespace..."
+      - |
+      - kubectl delete secret bitwarden-api-tokens -n external-secrets --ignore-not-found
+      - |
+        kubectl create secret generic bitwarden-api-tokens \
+          --from-literal=organizationID="$BW_ORGANIZATION_ID" \
+          --from-literal=projectID="$BW_PROJECT_ID" \
+          --from-literal=token="$BW_TOKEN" \
+          --namespace=external-secrets \
+
+  apply-kustomization:
+    desc: "Build and apply the kustomization of external-secrets"
+    cmds:
+      - sleep 1
+      - echo "Building and applying kustomization for external-secrets..."
+      - |
+        kustomize build . --enable-helm | kubectl apply -f -
+      - echo "Waiting for webhook to become ready..."
+      - kubectl rollout status deployment external-secrets-webhook -n external-secrets --timeout=120s
+      - echo "Applying ClusterSecretStore with env values..."
+      - envsubst < ClusterSecretStore.yaml.tpl | kubectl apply -f -
+      - echo "Kustomization applied."
+
+  all:
+    desc: "Generate namespace, Kubernetes secrets, apply secret, and apply kustomization"
+    cmds:
+      - task check-namespace
+      - task generate-secret
+      - task apply-kustomization

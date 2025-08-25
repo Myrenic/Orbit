@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-base-tuntelder-com
+  namespace: cert-manager
+spec:
+  secretName: cert-base-tuntelder-com
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - "local.tuntelder.com"
+    - "*.local.tuntelder.com"
+  secretTemplate:
+    annotations:
+      # Auto create copy of secret in other namespaces
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"

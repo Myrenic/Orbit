@@ -1,0 +1,11 @@
+{
+  "appName": "metallb",
+  "userGivenName": "metallb",
+  "destNamespace": "metallb-system",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "core/metallb/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

@@ -1,0 +1,11 @@
+{
+  "appName": "external-secrets",
+  "userGivenName": "external-secrets",
+  "destNamespace": "external-secrets",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "bootstrap/external-secrets/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

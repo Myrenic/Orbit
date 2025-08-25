@@ -1,0 +1,11 @@
+{
+  "appName": "csi-driver-nfs",
+  "userGivenName": "csi-driver-nfs",
+  "destNamespace": "kube-system",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "core/csi-driver-nfs/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

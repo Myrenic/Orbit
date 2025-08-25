@@ -1,0 +1,11 @@
+{
+  "appName": "argocd",
+  "userGivenName": "argocd",
+  "destNamespace": "argocd",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "bootstrap/argocd/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}
