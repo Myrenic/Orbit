@@ -1,6 +1,6 @@
 hosts = {
-    DataDisc = {
-      name    = "DataDisc"
+    identity_disc = {
+      name    = "identity-disc"
       cores   = 4
       memory  = 4096
       ip_addr = "10.0.69.20"
@@ -13,7 +13,7 @@ hosts = {
       disk_size = 64
       hdd_datastore_id = "hdd"
       hdd_disk_size = 1024
-}
+    }
 }
 proxmox = {
     url                     = "https://10.0.3.10:8006/"

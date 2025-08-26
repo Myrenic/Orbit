@@ -1,15 +1,75 @@
----
 version: '3'
 
 tasks:
-  pre-checks:
-    desc: Check if all the needed variables are available
+
+  # ------------------------
+  # Basic checks
+  # ------------------------
+  ensure_env:
     cmds:
       - |
-        : "${BW_ORGANIZATION_ID:?Environment variable BW_ORGANIZATION_ID is required}"
-        : "${BW_PROJECT_ID:?Environment variable BW_PROJECT_ID is required}"
-        : "${BW_TOKEN:?Environment variable BW_TOKEN is required}"
+        set -euo pipefail
+        missing=()
+        for v in BW_ORGANIZATION_ID BW_PROJECT_ID BW_TOKEN; do
+          # portable indirect expansion: use eval
+          eval "val=\${${v}:-}"
+          if [ -z "${val}" ]; then
+            missing+=("$v")
+          fi
+        done
+        if [ ${#missing[@]} -ne 0 ]; then
+          echo "Missing required env vars: ${missing[*]}" >&2
+          exit 1
+        fi
 
+  check_tools:
+    cmds:
+      - |
+        set -euo pipefail
+        need=(git terraform kubectl kustomize argocd)
+        miss=()
+        for cmd in "${need[@]}"; do
+          if ! command -v "$cmd" >/dev/null 2>&1; then
+            miss+=("$cmd")
+          fi
+        done
+        if [ ${#miss[@]} -ne 0 ]; then
+          echo "Missing required CLI tools: ${miss[*]}" >&2
+          exit 1
+        fi
+  pre-checks:
+    desc: Check environment variables and required CLIs
+    cmds:
+      - task ensure_env
+      - task check_tools
+
+  check-env:
+    desc: Ensure required environment variables are set (including GIT_TOKEN)
+    cmds:
+      - |
+        set -euo pipefail
+        missing=()
+        for v in BW_ORGANIZATION_ID BW_PROJECT_ID BW_TOKEN GIT_TOKEN; do
+          eval "val=\${${v}:-}"
+          if [ -z "${val}" ]; then
+            missing+=("$v")
+          fi
+        done
+        if [ ${#missing[@]} -ne 0 ]; then
+          echo "Missing required env vars: ${missing[*]}" >&2
+          exit 1
+        fi
+
+  check-cluster:
+    desc: Check Kubernetes cluster health
+    cmds:
+      - kubectl cluster-info
+      - kubectl get nodes --no-headers
+      - kubectl get pods -A --no-headers | wc -l | xargs echo "Total pods:"
+
+  # ------------------------
+  # CRDs and controllers
+  # ------------------------
   crds:
     desc: Install 'crds'
     cmds:
@@ -27,10 +87,6 @@ tasks:
     desc: Execute Taskfile in 'external-secrets'
     dir: bootstrap/external-secrets/base/
     cmds:
-      - |
-        : "${BW_ORGANIZATION_ID:?Environment variable BW_ORGANIZATION_ID is required}"
-        : "${BW_PROJECT_ID:?Environment variable BW_PROJECT_ID is required}"
-        : "${BW_TOKEN:?Environment variable BW_TOKEN is required}"
       - task all
       - kubectl rollout status deployment -l app.kubernetes.io/instance=external-secrets -n external-secrets
 
@@ -55,6 +111,14 @@ tasks:
         nohup kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0 \
           > /dev/null 2>&1 &
       - |
+        # wait for port-forward to be ready
+        for i in $(seq 1 10); do
+          if curl -sS --fail http://localhost:8080/ >/dev/null 2>&1; then
+            break
+          fi
+          sleep 1
+        done
+      - |
         argocd login localhost:8080 --insecure --username admin \
           --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
           jsonpath="{.data.password}" | base64 -d)
@@ -67,8 +131,11 @@ tasks:
       - |
         pkill -f "kubectl port-forward"
 
+  # ------------------------
+  # Orchestration
+  # ------------------------
   bootstrap:
-    desc: Run tasks in sequence
+    desc: Full bootstrap sequence (pre-checks + infra + apps)
     cmds:
       - task pre-checks
       - task crds
@@ -77,3 +144,73 @@ tasks:
       - task argocd
       - task argocd-projects
       - task password-argocd
+
+  # ------------------------
+  # Logs / Utilities
+  # ------------------------
+  argo-port-fw:
+    aliases: [fw]
+    desc: Port-forward ArgoCD server to localhost:8080
+    cmds:
+      - kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0
+
+  replace-repo:
+    desc: Replace all occurrences of the current repo in bootstrap and subfolders
+    cmds:
+      - find . -type f -exec sed -i "s|$(grep '^github_repo=' ./bootstrap/config.yaml | cut -d'=' -f2)|$(read -p "Enter new repo URL)|g" {} +
+
+
+
+  # ------------------------
+  # Infrastructure (terraform)
+  # ------------------------
+  terraform-status:
+    aliases: [status]
+    desc: Run terraform plan (dry-run)
+    cmds:
+      - terraform -chdir=infrastructure/encom-tower status
+  
+  terraform-plan:
+    aliases: [plan]
+    desc: Run terraform plan (dry-run)
+    cmds:
+      - >
+        terraform -chdir=infrastructure/encom-tower plan &
+        terraform -chdir=infrastructure/identity-disc plan &
+        wait
+        
+  terraform-apply:
+    aliases: [apply]
+    desc: Apply terraform changes
+    cmds:
+      - >
+        terraform -chdir=infrastructure/encom-tower apply -auto-approve &
+        terraform -chdir=infrastructure/identity-disc apply -auto-approve &
+        wait
+        
+  terraform-destroy:
+    aliases: [destroy]
+    desc: Destroy terraform infra (REQUIRES DESTROY_CONFIRM=true)
+    cmds:
+      - >
+        terraform -chdir=infrastructure/encom-tower destroy -auto-approve &
+        terraform -chdir=infrastructure/identity-disc destroy -auto-approve &
+        wait
+
+  terraform-import:
+    aliases: [import]
+    desc: Destroy terraform infra
+    cmds:
+      - terraform -chdir=infrastructure/encom-tower output -raw kubeconfig > ~/.kube/config
+      - terraform -chdir=infrastructure/encom-tower output -raw talosconfig > ~/.talos/config
+
+  reset-infra:
+    aliases: [reset]
+    desc: Rebuild infra (destroy + apply)
+    cmds:
+      - task terraform-destroy
+      - task terraform-apply
+      - task terraform-import
+      - task bootstrap
+
+
