@@ -8,11 +8,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      - name: Validate Terraform configuration (Encom)
+      - name: Validate Terraform configuration (encom-tower)
         uses: devops-infra/action-terraform-validate@v0.3.1
         with:
-          working-directory: infrastructure/terraform/Encom
-      - name: Validate Terraform configuration (DataDisc)
+          working-directory: infrastructure/terraform/encom-tower
+      - name: Validate Terraform configuration (identity-disc)
         uses: devops-infra/action-terraform-validate@v0.3.1
         with:
-          working-directory: infrastructure/terraform/DataDisc
+          working-directory: infrastructure/terraform/identity-disc
