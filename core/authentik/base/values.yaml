@@ -1,11 +1,11 @@
 authentik:
-    secret_key: "NqTZvFj3Lrrkm2uCJrulSCxCUB4FZLj0dOyXKIK6qBSZIuMwHh"
+    secret_key: "test-nwasYwvDjSFyNUiFkVrRMy"
     # This sends anonymous usage-data, stack traces on errors and
     # performance data to sentry.io, and is fully opt-in
     error_reporting:
         enabled: true
     postgresql:
-        password: "bQ7+ArmOit0ATqUAh/o1fQATmN6MNcisgt4+ir41q8VZVP03KUWxNoZt7M+PoNGG6sKr3S2MO/BrCKUl"
+        password: "test-WXkFEEYfEpMEiETYusuukP"
 
 server:
     ingress:
@@ -20,9 +20,10 @@ server:
         nginx.ingress.kubernetes.io/rewrite-target: /
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
         nginx.ingress.kubernetes.io/proxy-body-size: 10000m
+
 postgresql:
     enabled: true
     auth:
-        password: "bQ7+ArmOit0ATqUAh/o1fQATmN6MNcisgt4+ir41q8VZVP03KUWxNoZt7M+PoNGG6sKr3S2MO/BrCKUl"
+        password: "test-WXkFEEYfEpMEiETYusuukP"
 redis:
     enabled: true
