@@ -17,5 +17,5 @@ spec:
               key: api-token
         selector:
           dnsNames:
-            - "local.tuntelder.com"
-            - "*.local.tuntelder.com"
+            - "kube.tuntelder.com"
+            - "*.kube.tuntelder.com"

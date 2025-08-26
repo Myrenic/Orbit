@@ -9,10 +9,10 @@ defaultBackupStore:
 ingress:
   ingressClassName: nginx
   enabled: true
-  host: longhorn.local.tuntelder.com
+  host: longhorn.kube.tuntelder.com
   tls:
     enabled: true
-    secretName: tls-local-tuntelder-com
+    secretName: tls-kube.tuntelder.com
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"

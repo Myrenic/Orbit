@@ -1,4 +1,4 @@
 ---
-base_domain=local.tuntelder.com
-cert_name=tls-local-tuntelder-com
+base_domain=kube.tuntelder.com
+cert_name=tls-kube.tuntelder.com
 github_repo=https://github.com/Myrenic/Light_Cycle
