@@ -12,7 +12,7 @@ ingress:
   host: longhorn.kube.tuntelder.com
   tls:
     enabled: true
-    secretName: tls-kube.tuntelder.com
+    secretName: tls-kube-tuntelder-com
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"

@@ -20,7 +20,7 @@ server:
     tls:
       - hosts:
           - auth.kube.tuntelder.com
-        secretName: tls-kube.tuntelder.com
+        secretName: tls-kube-tuntelder-com
   resources:
     requests:
       cpu: 100m
