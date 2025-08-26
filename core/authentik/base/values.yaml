@@ -1,88 +1,40 @@
-authentik:
-  secret_key: "replace-with-secure-random-hex" # generate: openssl rand -hex 32
-  error_reporting:
-    enabled: true
-  postgresql:
-    # -- set the postgresql hostname to talk to
-    # if unset and .Values.postgresql.enabled == true, will generate the default
-    # @default -- `{{ .Release.Name }}-postgresql`
-    host: "{{ .Release.Name }}-postgresql"
-    # -- postgresql Database name
-    # @default -- `authentik`
-    name: "authentik"
-    # -- postgresql Username
-    # @default -- `authentik`
-    user: "authentik"
-    password: "test-WufkfyDNhfpfHhpyajwrNR"
-    port: 5432
-
+global:
+  envFrom:
+    - secretRef:
+        name: authentik-secret
 
 server:
   ingress:
-    ingressClassName: nginx
     enabled: true
+    ingressClassName: nginx
     hosts:
       - authentik.kube.tuntelder.com
+    tls:
+      - hosts:
+          - authentik.kube.tuntelder.com
+        secretName: tls-kube.tuntelder.com
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 512Mi
 
+worker:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 512Mi
 
 postgresql:
-  # -- enable the Bitnami PostgreSQL chart. Refer to https://github.com/bitnami/charts/blob/main/bitnami/postgresql/ for possible values.
   enabled: true
-  image:
-    registry: docker.io
-    repository: library/postgres
-    tag: "17.6-bookworm"
   auth:
-    username: authentik
-    database: authentik
-    password: "test-WufkfyDNhfpfHhpyajwrNR"
-  primary:
-    args:
-      - -c
-      - config_file=/bitnami/postgresql/conf/postgresql.conf
-      - -c
-      - hba_file=/bitnami/postgresql/conf/pg_hba.conf
-    configuration: |
-      listen_addresses = '*'
-      port = '5432'
-      wal_level = 'replica'
-      fsync = 'on'
-      hot_standby = 'on'
-      log_connections = 'false'
-      log_disconnections = 'false'
-      log_hostname = 'false'
-      client_min_messages = 'error'
-      include_dir = 'conf.d'
-    pgHbaConfiguration: |
-      host     all             all             0.0.0.0/0               scram-sha-256
-      host     all             all             ::/0                    scram-sha-256
-      local    all             all                                     scram-sha-256
-      host     all             all        127.0.0.1/32                 scram-sha-256
-      host     all             all        ::1/128                      scram-sha-256
-    extendedConfiguration: |
-      max_connections = 500
-    extraEnvVars:
-      - name: POSTGRES_DB
-        value: '{{ (include "postgresql.v1.database" .) }}'
-    resourcesPreset: "none"
-    # persistence:
-    #   enabled: true
-    #   storageClass:
-    #   accessModes:
-    #     - ReadWriteOnce
-    containerSecurityContext:
-      readOnlyRootFilesystem: false
-  readReplicas:
-    resourcesPreset: "none"
-  backup:
-    resourcesPreset: "none"
-  passwordUpdateJob:
-    resourcesPreset: "none"
-  volumePermissions:
-    resourcesPreset: "none"
-  metrics:
-    resourcesPreset: "none"
-
+    enablePostgresUser: false
+    existingSecret: authentik-secret
+    secretKeys:
+      userPasswordKey: AUTHENTIK_POSTGRESQL__PASSWORD
 
 redis:
   enabled: true
