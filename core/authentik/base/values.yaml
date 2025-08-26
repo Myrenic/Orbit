@@ -6,6 +6,7 @@ authentik:
         enabled: true
     postgresql:
         password: "test-WXkFEEYfEpMEiETYusuukP"
+        user: "test"
 
 server:
     ingress:
@@ -25,5 +26,6 @@ postgresql:
     enabled: true
     auth:
         password: "test-WXkFEEYfEpMEiETYusuukP"
+        user: "test"
 redis:
     enabled: true
