@@ -17,5 +17,3 @@ ingress:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 10000m
-    nginx.ingress.kubernetes.io/auth-url: "https://auth.kube.tuntelder.com/outpost.goauthentik.io/auth/nginx"
-    nginx.ingress.kubernetes.io/auth-signin: "https://auth.kube.tuntelder.com/outpost.goauthentik.io/start?rd=$scheme://$host$request_uri"
