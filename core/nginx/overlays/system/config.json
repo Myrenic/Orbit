@@ -4,7 +4,7 @@
   "destNamespace": "ingress-nginx",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "core/nginx/overlays/system",
-  "srcRepoURL": "https://github.com/Myrenic/test.git",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
   "srcTargetRevision": "",
   "labels": null,
   "annotations": null

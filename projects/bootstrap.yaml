@@ -37,7 +37,7 @@ spec:
     - git:
         files:
           - path: bootstrap/**/system/config.json
-        repoURL: https://github.com/Myrenic/test.git
+        repoURL: https://github.com/Myrenic/Light_Cycle.git
         requeueAfterSeconds: 20
         revision: ""
         template:

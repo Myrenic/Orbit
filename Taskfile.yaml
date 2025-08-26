@@ -154,11 +154,31 @@ tasks:
     cmds:
       - kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0
 
-  replace-repo:
-    desc: Replace all occurrences of the current repo in bootstrap and subfolders
+  replace-config-values:
+    desc: Replace repo, domain, and cert in bootstrap and subfolders, preserving other characters
     cmds:
-      - find . -type f -exec sed -i "s|$(grep '^github_repo=' ./bootstrap/config.yaml | cut -d'=' -f2)|$(read -p "Enter new repo URL)|g" {} +
+      - |
+        OLD_REPO=$(grep '^github_repo=' ./bootstrap/config.yaml | cut -d'=' -f2)
+        OLD_DOMAIN=$(grep '^base_domain=' ./bootstrap/config.yaml | cut -d'=' -f2)
+        OLD_CERT=$(grep '^cert_name=' ./bootstrap/config.yaml | cut -d'=' -f2)
 
+        read -p "Enter new repo URL [$OLD_REPO]: " NEW_REPO
+        NEW_REPO=${NEW_REPO:-$OLD_REPO}
+
+        read -p "Enter new base domain [$OLD_DOMAIN]: " NEW_DOMAIN
+        NEW_DOMAIN=${NEW_DOMAIN:-$OLD_DOMAIN}
+
+        read -p "Enter new cert name [$OLD_CERT]: " NEW_CERT
+        NEW_CERT=${NEW_CERT:-$OLD_CERT}
+
+        # Replace repo literally
+        find . -type f -exec sed -i "s|$OLD_REPO|$NEW_REPO|g" {} +
+
+        # Replace domains while preserving prefixes like *.
+        find . -type f -exec sed -i -E "s|(\*?\.)?$OLD_DOMAIN|\1$NEW_DOMAIN|g" {} +
+
+        # Replace cert literally
+        find . -type f -exec sed -i "s|$OLD_CERT|$NEW_CERT|g" {} +
 
 
   # ------------------------
