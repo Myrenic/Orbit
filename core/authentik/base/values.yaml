@@ -1,17 +1,25 @@
+---
 global:
-  envFrom:
-    - secretRef:
-        name: authentik-secret
-
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          key: secret-key
+          name: authentik-secret
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: authentik-secret
 server:
   ingress:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - authentik.kube.tuntelder.com
+      - auth.kube.tuntelder.com
     tls:
       - hosts:
-          - authentik.kube.tuntelder.com
+          - auth.kube.tuntelder.com
         secretName: tls-kube.tuntelder.com
   resources:
     requests:
@@ -34,7 +42,7 @@ postgresql:
     enablePostgresUser: false
     existingSecret: authentik-secret
     secretKeys:
-      userPasswordKey: AUTHENTIK_POSTGRESQL__PASSWORD
+      password: AUTHENTIK_POSTGRESQL__PASSWORD
 
 redis:
   enabled: true
