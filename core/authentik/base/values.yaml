@@ -1,28 +1,22 @@
 authentik:
-    secret_key: "PleaseGenerateASecureKey"
-    # This sends anonymous usage-data, stack traces on errors and
-    # performance data to sentry.io, and is fully opt-in
-    error_reporting:
-        enabled: true
-    postgresql:
-        password: "ThisIsNotASecurePassword"
+  secret_key: "replace-with-secure-random-hex" # generate: openssl rand -hex 32
+  error_reporting:
+    enabled: true
+  postgresql:
+    password: "bkLAFJX6oU"
+
 server:
-    ingress:
+  ingress:
     ingressClassName: nginx
     enabled: true
-    hosts: 
-        - authentik.kube.tuntelder.com
-    tls:
-        enabled: true
-        secretName: tls-kube.tuntelder.com
-    annotations:
-        nginx.ingress.kubernetes.io/rewrite-target: /
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
-        nginx.ingress.kubernetes.io/proxy-body-size: 10000m
+    hosts:
+      - authentik.kube.tuntelder.com
+
 
 postgresql:
-    enabled: true
-    auth:
-        password: "ThisIsNotASecurePassword"
+  enabled: true
+  auth:
+    password: "bkLAFJX6oU"
+
 redis:
-    enabled: true
+  enabled: true
