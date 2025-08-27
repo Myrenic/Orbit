@@ -1,20 +1,20 @@
 ---
 controller:
-  defaultBackend:
-    enabled: true
+  # defaultBackend:
+  #   enabled: true
   service:
     type: LoadBalancer
     loadBalancerIP: 10.0.69.200
-    externalTrafficPolicy: Local
+    # externalTrafficPolicy: Local
     nodePorts:
       http: 32080
       https: 32443
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-  ingressClassResource:
-    name: nginx
-    enabled: true
-    default: true
-  admissionWebhooks:
-    enabled: false
-  allowSnippetAnnotations: true
+  # hostNetwork: true
+  # dnsPolicy: ClusterFirstWithHostNet
+  # ingressClassResource:
+  #   name: nginx
+  #   enabled: true
+  #   default: true
+  # admissionWebhooks:
+  #   enabled: false
+  # allowSnippetAnnotations: true
