@@ -32,25 +32,25 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: hello-world-ingress
+  namespace: test
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-  generation: 1
-  name: hello-world-ingress
-  namespace: test
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-my-traefik-authentik-forward-plugin@kubernetescrd
 spec:
   rules:
     - host: hello.traefik.tuntelder.com
       http:
         paths:
-          - backend:
+          - path: /
+            pathType: Prefix
+            backend:
               service:
                 name: hello-world-service
                 port:
                   number: 80
-            path: /
-            pathType: Prefix
   tls:
     - hosts:
         - hello.traefik.tuntelder.com
