@@ -22,6 +22,15 @@ global:
           key: bootstrap_password
           name: authentik-secret
 server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - auth.kube.tuntelder.com
+    tls:
+      - hosts:
+          - auth.kube.tuntelder.com
+        secretName: tls-kube-tuntelder-com
   resources:
     requests:
       cpu: 100m
