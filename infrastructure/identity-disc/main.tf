@@ -95,7 +95,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
       "sudo mount /dev/vdb /mnt/nfs_disk",
       "grep -q '/dev/vdb' /etc/fstab || echo '/dev/vdb /mnt/nfs_disk ext4 defaults 0 2' | sudo tee -a /etc/fstab",
       "for dir in media config backup; do sudo mkdir -p /mnt/nfs_disk/$dir; sudo chown nobody:nogroup /mnt/nfs_disk/$dir; Echo done",
-      "for dir in media config backup; do grep -q '/mnt/nfs_disk/$dir' /etc/exports || echo \"/mnt/nfs_disk/$dir 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)\" | sudo tee -a /etc/exports; done",
+      "for dir in media config backup; do grep -q '/mnt/nfs_disk/$dir' /etc/exports || echo \"/mnt/nfs_disk/$dir 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)\" | sudo tee -a /etc/exports; Echo done",
       "sudo systemctl enable --now nfs-server qemu-guest-agent",
       "sudo exportfs -ra"
     ]
