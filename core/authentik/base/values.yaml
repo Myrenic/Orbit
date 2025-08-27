@@ -38,6 +38,26 @@ server:
     limits:
       memory: 512Mi
 
+  readinessProbe:
+    httpGet:
+      path: /-/health/ready/
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+  livenessProbe:
+    httpGet:
+      path: /-/health/live/
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+
 worker:
   resources:
     requests:
