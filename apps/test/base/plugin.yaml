@@ -1,7 +1,8 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: auth-middleware
+  name: my-traefik-authentik-forward-plugin
+  namespace: test
 spec:
   plugin:
     authentik-forward:
