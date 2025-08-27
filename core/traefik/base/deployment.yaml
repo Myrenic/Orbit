@@ -38,9 +38,6 @@ spec:
         - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
         - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
         - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
-        - --experimental.plugins.authentik-forward.moduleName=github.com/xabinapal/traefik-authentik-forward-plugin
-        - --experimental.plugins.authentik-forward.version=v1.0.0
-
         ports:
         - containerPort: 80
           name: web
