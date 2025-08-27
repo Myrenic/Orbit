@@ -34,6 +34,7 @@ spec:
         - --providers.kubernetesingress.ingressclass=traefik
         - --providers.kubernetesingress.ingressendpoint.hostname=traefik.tuntelder.com
         - --providers.kubernetescrd
+        - --providers.kubernetescrd.watchallnamespaces=true
         - --certificatesresolvers.letsencrypt.acme.email=38107502+Myrenic@users.noreply.github.com
         - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
         - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
