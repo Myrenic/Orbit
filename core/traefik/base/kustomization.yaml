@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: traefik
 
 resources:
+  - ns.yaml
   - roles.yaml
   - volumes.yaml
   - deployment.yaml
