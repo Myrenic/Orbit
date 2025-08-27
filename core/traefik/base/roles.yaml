@@ -12,6 +12,10 @@ rules:
 - apiGroups: ["traefik.containo.us"]
   resources: ["*"]
   verbs: ["get", "list", "watch"]
+- apiGroups: ["traefik.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+
 ---
 apiVersion: v1
 kind: ServiceAccount
