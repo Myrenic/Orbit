@@ -1,23 +1,19 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: my-traefik-authentik-forward-plugin
-  namespace: test
+  name: auth-middleware
 spec:
   plugin:
     authentik-forward:
       address: https://auth.traefik.tuntelder.com
-      redirectPaths: ""
-      redirectStatusCode: "302"
-      skippedPaths: ""
-      timeout: 30s
+      timeout: "30s"
       tls:
-        ca: ""
-        cert: ""
-        insecureSkipVerify: "false"
-        key: ""
-        maxVersion: "13"
-        minVersion: "12"
+        insecureSkipVerify: true
+      unauthorizedStatusCode: 401
+      redirectStatusCode: 302
       unauthorizedPaths:
-        - ^/.*$
-      unauthorizedStatusCode: "401"
+        - "^/api/.*$"
+        - "^/admin/.*$"
+      redirectPaths:
+        - "^/app/.*$"
+        - "^/$"
