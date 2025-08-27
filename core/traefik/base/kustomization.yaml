@@ -4,5 +4,7 @@ namespace: traefik
 
 resources:
   - roles.yaml
+  - volumes.yaml
   - deployment.yaml
   - service.yaml
+  - cloudflare-api-token.yaml
