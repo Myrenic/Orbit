@@ -6,14 +6,3 @@ persistence:
 defaultBackupStore:
   backupTarget: "nfs://10.0.69.20:/mnt/nfs_disk/backup"
 
-ingress:
-  ingressClassName: nginx
-  enabled: true
-  host: longhorn.kube.tuntelder.com
-  tls:
-    enabled: true
-    secretName: tls-kube-tuntelder-com
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: 10000m
