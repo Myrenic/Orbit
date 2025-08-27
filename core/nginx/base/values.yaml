@@ -8,6 +8,7 @@ controller:
       http: 32080
       https: 32443
   hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
   ingressClassResource:
     name: nginx
     enabled: true
