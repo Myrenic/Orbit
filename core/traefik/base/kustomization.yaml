@@ -9,4 +9,4 @@ resources:
   - deployment.yaml
   - service.yaml
   - cloudflare-api-token.yaml
-  - middlewares.yaml
+  - middleware.yaml
