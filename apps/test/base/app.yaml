@@ -32,7 +32,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-world-ingress2
+  name: hello-world-ingress
   annotations:
     nginx.ingress.kubernetes.io/auth-url: |-
         http://ak-outpost-authentik-outpost.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/nginx
