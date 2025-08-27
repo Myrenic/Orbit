@@ -86,21 +86,27 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update -qq -y",
-      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; Echo apt update finished;",
-      "sudo apt-get install -y -qq nfs-kernel-server nfs-common qemu-guest-agent",
-      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; Echo apt install finished;",
+      "sudo apt-get update -y",
+      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;",
+      "sudo apt-get install -y nfs-kernel-server nfs-common qemu-guest-agent",
+      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;",
       "sudo mkfs.ext4 -F /dev/vdb",
       "sudo mkdir -p /mnt/nfs_disk",
       "sudo mount /dev/vdb /mnt/nfs_disk",
-      "grep -q '/dev/vdb' /etc/fstab || echo '/dev/vdb /mnt/nfs_disk ext4 defaults 0 2' | sudo tee -a /etc/fstab",
-      "for dir in media config backup; do sudo mkdir -p /mnt/nfs_disk/$dir; sudo chown nobody:nogroup /mnt/nfs_disk/$dir; Echo done",
-      "for dir in media config backup; do grep -q '/mnt/nfs_disk/$dir' /etc/exports || echo \"/mnt/nfs_disk/$dir 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)\" | sudo tee -a /etc/exports; Echo done",
-      "sudo systemctl enable --now nfs-server qemu-guest-agent",
+      "echo '/dev/vdb /mnt/nfs_disk ext4 defaults 0 2' | sudo tee -a /etc/fstab",
+      "sudo mkdir -p /mnt/nfs_disk/media",
+      "sudo mkdir -p /mnt/nfs_disk/config",
+      "sudo mkdir -p /mnt/nfs_disk/backup",
+      "sudo chown nobody:nogroup /mnt/nfs_disk/media",
+      "sudo chown nobody:nogroup /mnt/nfs_disk/config",
+      "sudo chown nobody:nogroup /mnt/nfs_disk/backup",
+      "echo '/mnt/nfs_disk/media 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
+      "echo '/mnt/nfs_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
+      "echo '/mnt/nfs_disk/backup 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
+      "sudo systemctl enable --now nfs-server",
+      "sudo systemctl enable --now qemu-guest-agent",
       "sudo exportfs -ra"
     ]
-  
-
 
     connection {
       type        = "ssh"

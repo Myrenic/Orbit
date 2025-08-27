@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      containers:
+      - name: traefik
+        image: traefik:v2.10
+        args:
+        - --api.dashboard=true
+        - --api.insecure=true
+        - --entrypoints.web.address=:80
+        - --entrypoints.web.http.redirections.entrypoint.to=websecure
+        - --entrypoints.web.http.redirections.entrypoint.scheme=https
+        - --entrypoints.websecure.address=:443
+        - --providers.kubernetesingress.ingressclass=traefik
+        - --providers.kubernetesingress.ingressendpoint.hostname=kube.tuntelder.com
+        ports:
+        - containerPort: 80
+          name: web
+        - containerPort: 443
+          name: websecure
+        - containerPort: 8080
+          name: admin
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          runAsNonRoot: false
+          seccompProfile:
+            type: RuntimeDefault
