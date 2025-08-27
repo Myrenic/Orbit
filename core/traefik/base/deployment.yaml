@@ -25,6 +25,7 @@ spec:
               name: cloudflare-api-token
               key: api-token
         args:
+        - --log.level=DEBUG
         - --api.dashboard=true
         - --api.insecure=true
         - --entrypoints.web.address=:80
