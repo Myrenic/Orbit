@@ -45,7 +45,7 @@ spec:
           port: 80
       middlewares:
         - name: my-traefik-authentik-forward-plugin
-          namespace: traefik
+          namespace: test
   tls:
     certResolver: letsencrypt
 ---
