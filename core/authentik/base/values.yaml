@@ -18,13 +18,15 @@ server:
         name: authentik-secret
   ingress:
     enabled: true
-    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
     hosts:
-      - auth.kube.tuntelder.com
+      - auth.traefik.tuntelder.com
     tls:
       - hosts:
-          - auth.kube.tuntelder.com
-        secretName: tls-kube-tuntelder-com
+          - auth.traefik.tuntelder.com
 
   readinessProbe:
     httpGet:
