@@ -11,17 +11,11 @@ global:
         secretKeyRef:
           key: password
           name: authentik-secret
-    - name: AUTHENTIK_BOOTSTRAP_USERNAME
-      valueFrom:
-        secretKeyRef:
-          key: bootstrap_username
-          name: authentik-secret
-    - name: AUTHENTIK_BOOTSTRAP_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          key: bootstrap_password
-          name: authentik-secret
+
 server:
+  extraEnvFrom:
+    - secretRef:
+        name: authentik-secret
   ingress:
     enabled: true
     ingressClassName: nginx
