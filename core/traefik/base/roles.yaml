@@ -23,5 +23,5 @@ roleRef:
   name: traefik-access
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: traefik-sa
   namespace: traefik
