@@ -43,11 +43,11 @@ spec:
       services:
         - name: hello-world-service
           port: 80
-      middlewares:
+      # middlewares:
         # - name: my-traefik-authentik-forward-plugin
         #   namespace: traefik
-  tls:
-    certResolver: letsencrypt
+  # tls:
+  #   certResolver: letsencrypt
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
