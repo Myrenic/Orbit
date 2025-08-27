@@ -3,8 +3,8 @@ kind: Ingress
 metadata:
   name: hello-world-ingress2
   annotations:
-    # nginx.ingress.kubernetes.io/auth-url: |-
-        # http://ak-outpost-authentik-outpost.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/nginx
+    nginx.ingress.kubernetes.io/auth-url: |-
+        http://ak-outpost-authentik-outpost.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/nginx
     nginx.ingress.kubernetes.io/auth-signin: |-
         https://hello2.kube.tuntelder.com/outpost.goauthentik.io/start?rd=$escaped_request_uri
     nginx.ingress.kubernetes.io/auth-response-headers: |-
