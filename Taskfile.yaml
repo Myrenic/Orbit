@@ -155,6 +155,12 @@ tasks:
     cmds:
       - kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0
 
+  lint-issues:
+    aliases: [lint]
+    desc: Check for lint issues in git tracked files
+    cmds:
+      - git ls-files '*.yml' '*.yaml' | xargs yamllint
+
   replace-config-values:
     desc: Replace repo, domain, and cert in bootstrap and subfolders, preserving other characters
     cmds:
