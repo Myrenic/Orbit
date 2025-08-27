@@ -61,3 +61,27 @@ spec:
     - hosts:
       - hello.kube.tuntelder.com
       secretName: tls-kube-tuntelder-com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello2-world-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    # Update host with your domain name
+    - host: hello2.kube.tuntelder.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello-world-service
+                port:
+                  number: 80
+  # Optionally configure TLS
+  tls:
+    - hosts:
+      - hello2.kube.tuntelder.com
+      secretName: tls-kube-tuntelder-com
