@@ -6,12 +6,18 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # custom max body size for file uploading like backing image uploading
     nginx.ingress.kubernetes.io/proxy-body-size: 10000m
+    # Authentik forward auth
+    nginx.ingress.kubernetes.io/auth-url: "http://authentik.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/nginx"
+    nginx.ingress.kubernetes.io/auth-signin: "https://longhorn.kube.tuntelder.com/outpost.goauthentik.io/start?rd=$scheme://$http_host$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: "Set-Cookie,X-authentik-username,X-authentik-groups,X-authentik-entitlements,X-authentik-email,X-authentik-name,X-authentik-uid"
+    nginx.ingress.kubernetes.io/auth-snippet: |
+      proxy_set_header X-Forwarded-Host $http_host;
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: longhorn.kube.tuntelder.com
+      http:
         paths:
           - pathType: Prefix
             path: "/"
@@ -20,7 +26,6 @@ spec:
                 name: longhorn-frontend
                 port:
                   number: 80
-      host: longhorn.kube.tuntelder.com
   tls:
     - hosts:
         - "longhorn.kube.tuntelder.com"

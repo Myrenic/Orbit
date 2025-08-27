@@ -14,3 +14,4 @@ controller:
     default: true
   admissionWebhooks:
     enabled: false
+  allowSnippetAnnotations: true
