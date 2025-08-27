@@ -33,10 +33,9 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: hello-world-ingressroute
-  namespace: test
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
     - match: Host(`hello.traefik.tuntelder.com`)
       kind: Rule
