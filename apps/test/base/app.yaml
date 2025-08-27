@@ -44,7 +44,7 @@ spec:
         - name: hello-world-service
           port: 80
       middlewares:
-        - name: my-traefik-authentik-forward-plugin
+        - name: traefik-my-traefik-authentik-forward-plugin
           namespace: test
   tls:
     certResolver: letsencrypt
