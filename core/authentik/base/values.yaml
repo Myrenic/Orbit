@@ -31,12 +31,6 @@ server:
       - hosts:
           - auth.kube.tuntelder.com
         secretName: tls-kube-tuntelder-com
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      memory: 512Mi
 
   readinessProbe:
     httpGet:
@@ -58,13 +52,6 @@ server:
     timeoutSeconds: 5
     failureThreshold: 5
 
-worker:
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      memory: 512Mi
 
 postgresql:
   enabled: true
