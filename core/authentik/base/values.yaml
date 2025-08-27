@@ -37,10 +37,10 @@ server:
       path: /-/health/ready/
       port: http
       scheme: HTTP
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 5
+    timeoutSeconds: 10
+    failureThreshold: 10
 
   livenessProbe:
     httpGet:
