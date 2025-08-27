@@ -38,7 +38,7 @@ metadata:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-my-traefik-authentik-forward-plugin@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-my-traefik-authentik-forward-plugin
 spec:
   rules:
     - host: hello.traefik.tuntelder.com
