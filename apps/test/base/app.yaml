@@ -44,6 +44,8 @@ spec:
         - name: hello-world-service
           port: 80
       middlewares:
+        - name: crowdsec-mw
+          namespace: traefik
         - name: authentik
           namespace: traefik
   tls:
