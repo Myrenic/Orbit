@@ -13,6 +13,9 @@ global:
           name: authentik-secret
 
 server:
+  extraEnv:
+    - name: AUTHENTIK_CUSTOM_CSS
+      value: /web/dist/custom.css
   extraEnvFrom:
     - secretRef:
         name: authentik-secret
@@ -35,7 +38,7 @@ server:
     - name: custom-css
       mountPath: /web/dist/custom.css
       subPath: custom.css
-      
+
   readinessProbe:
     httpGet:
       path: /-/health/ready/
