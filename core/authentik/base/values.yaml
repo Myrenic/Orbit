@@ -13,9 +13,6 @@ global:
           name: authentik-secret
 
 server:
-  extraEnv:
-    - name: AUTHENTIK_CUSTOM_CSS
-      value: /web/dist/custom.css
   extraEnvFrom:
     - secretRef:
         name: authentik-secret
@@ -30,14 +27,6 @@ server:
     tls:
       - hosts:
           - auth.traefik.tuntelder.com
-  volumes:
-    - name: custom-css
-      configMap:
-          name: authentik-custom-css
-  volumeMounts:
-    - name: custom-css
-      mountPath: /web/dist/custom.css
-      subPath: custom.css
 
   readinessProbe:
     httpGet:
