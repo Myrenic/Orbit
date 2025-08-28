@@ -11,4 +11,4 @@ helmCharts:
     namespace: crowdsec
     releaseName: crowdsec
     valuesFile: values.yaml
-    version: 1.6.10
+    version: 0.19.5
