@@ -1,5 +1,12 @@
 # ⚡ Light_Cycle | Authentik Application Control ⚡
 
+## Step 0: Change default admin password👤
+
+Make sure your authentik pod is ready:  
+
+1. Go to **https://auth.traefik.tuntelder.com/if/flow/initial-setup/**.  
+2. Fill in the form
+
 ## Step 1: Check Your Outpost 🖥️
 
 Make sure your embedded outpost is online and ready:  
