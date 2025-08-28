@@ -5,6 +5,12 @@ lapi:
     port: 8080
 
 
+console:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8081
+
   bouncers:
     traefik:
       key: "super-secret-static-key" # for testing only
