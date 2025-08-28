@@ -3,20 +3,15 @@ lapi:
   service:
     type: ClusterIP
     port: 8080
-
-
-
   bouncers:
     traefik:
       key: "super-secret-static-key" # for testing only
-
 
 console:
   enabled: true
   service:
     type: ClusterIP
     port: 8081
-
 
 agent:
   # we are not setting up traefik but the acquisition section is required.
