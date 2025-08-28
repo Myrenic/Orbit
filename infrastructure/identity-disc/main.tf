@@ -87,9 +87,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update -y",
-      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;",
-      "sudo apt-get install -y nfs-kernel-server nfs-common qemu-guest-agent",
-      "while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;",
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y",
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nfs-kernel-server nfs-common qemu-guest-agent",
       "sudo mkfs.ext4 -F /dev/vdb",
       "sudo mkdir -p /mnt/nfs_disk",
       "sudo mount /dev/vdb /mnt/nfs_disk",

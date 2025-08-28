@@ -51,7 +51,8 @@ Connect your app to the outpost for full control:
 
 1. Go to **Outpost → Authentik Embedded Outpost → Edit**.  
 2. Move your new app from the **left box** to the **right box**.  
-3. Your app is now live on the grid.  
+3. Select **Local Kubernetes Cluster** inside the **intergration** pull-down.
+4. Your app is now live on the grid.  
 
 ---
 
