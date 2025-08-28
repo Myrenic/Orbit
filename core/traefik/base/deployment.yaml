@@ -40,6 +40,8 @@ spec:
             - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
+            - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
+            - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"
           ports:
             - containerPort: 80
               name: web

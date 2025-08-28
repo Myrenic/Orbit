@@ -1,0 +1,16 @@
+lapi:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+
+
+  bouncers:
+    traefik:
+      key: "temp-super-secret-static-key-@9fj20F92_2djdksl2" # for testing only
+
+agent:
+  acquisition:
+    - namespace: default
+      podSelector:
+        matchLabels: {}

@@ -22,3 +22,17 @@ spec:
       - X-authentik-meta-provider
       - X-authentik-meta-app
       - X-authentik-meta-version
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: crowdsec-mw
+  namespace: traefik
+spec:
+  plugin:
+    crowdsec-bouncer-traefik-plugin:
+      apiURL: "http://crowdsec-lapi.crowdsec.svc.cluster.local:8080"
+      apiKey: "temp-super-secret-static-key-@9fj20F92_2djdksl2" # for testing only
+      clientTrustedIPs:
+        - "10.0.0.0/8"
+        - "127.0.0.1/32"
