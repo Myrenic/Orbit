@@ -27,7 +27,15 @@ server:
     tls:
       - hosts:
           - auth.traefik.tuntelder.com
-
+  volumes:
+    - name: custom-css
+      configMap:
+          name: authentik-custom-css
+  volumeMounts:
+    - name: custom-css
+      mountPath: /web/dist/custom.css
+      subPath: custom.css
+      
   readinessProbe:
     httpGet:
       path: /-/health/ready/
