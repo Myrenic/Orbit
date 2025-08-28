@@ -10,7 +10,8 @@ lapi:
       key: "temp-super-secret-static-key-@9fj20F92_2djdksl2" # for testing only
 
 agent:
+  # we are not setting up traefik but the acquisition section is required.
   acquisition:
-    - namespace: default
-      podSelector:
-        matchLabels: {}
+    - namespace: traefik
+      podName: traefik-*
+      program: traefik
