@@ -43,8 +43,8 @@ spec:
       services:
         - name: hello-world-service
           port: 80
-      # middlewares:
-      #   - name: crowdsec-mw
-      #     namespace: traefik
+      middlewares:
+        - name: crowdsec-mw
+          namespace: traefik
   tls:
     certResolver: letsencrypt
