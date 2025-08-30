@@ -36,7 +36,7 @@ spec:
       enabled: true
       logLevel: DEBUG
       crowdsecMode: live
-      crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
+      crowdsecLapiHost: crowdsec-service.crowdsec:8080
       crowdsecLapiScheme: http
       crowdsecLapiKey: "R3XUxWkP2tstRUYySypkUjFg"
       # clientTrustedIPs:

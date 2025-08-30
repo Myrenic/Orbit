@@ -4,7 +4,7 @@ container_runtime: containerd
 secrets:
   externalSecret:
     name: crowdsec-api-token
-    csLapiSecretKey: csLapiSecret
+    csLapiSecretKey: TRAEFIK_BOUNCER_KEY
     registrationTokenKey: registrationToken
 
 lapi:
@@ -32,7 +32,7 @@ lapi:
         secretKeyRef:
           name: crowdsec-api-token
           key: ENROLL_KEY
-    - name: TRAEFIK_BOUNCER_KEY
+    - name: BOUNCER_KEY_traefik
       valueFrom:
         secretKeyRef:
           name: crowdsec-api-token
