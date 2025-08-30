@@ -32,7 +32,7 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       defaultDecisionSeconds: 60
-      remediationStatusCode: 200   # Return 200 instead of blocking
+      # remediationStatusCode: 200   # Return 200 instead of blocking
       enabled: "true"
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
