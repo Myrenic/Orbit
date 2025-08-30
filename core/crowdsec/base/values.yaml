@@ -51,17 +51,14 @@ console:
     port: 8081
 
 agent:
-  customAcquisitions:
-    - name: traefik-access
+  acquisition:
+    - namespace: traefik
+      podName: traefik-*
+      program: traefik
+    - namespace: traefik
       file: /var/log/traefik/access.log
       program: traefik
-  volumeMounts:
-    - name: access-logs
-      mountPath: /var/log/traefik
-  volumes:
-    - name: access-logs
-      persistentVolumeClaim:
-        claimName: traefik-access-logs
+  enabled: true
   env: 
     - name: REGISTRATION_TOKEN
       valueFrom:
