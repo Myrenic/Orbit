@@ -24,16 +24,15 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: api-token
-            - name: csLapiSecret
+            - name: ENROLL_KEY
               valueFrom:
                 secretKeyRef:
-                  name: crowdsec-lapi-secrets
-                  key: csLapiSecret
-                  namespace: crowdsec
+                  name: crowdsec-api-token
+                  key: ENROLL_KEY
             - name: TRAEFIK_BOUNCER_KEY
               valueFrom:
                 secretKeyRef:
-                  name: crowdsec-lapi-secrets
+                  name: crowdsec-api-token
                   key: TRAEFIK_BOUNCER_KEY
           args:
             - --log.level=DEBUG
