@@ -32,7 +32,7 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
-      crowdsecLapiKeyFile: "/etc/traefik/csLapiSecret"
+      crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
       crowdsecMode: live
       # clientTrustedIPs:
       #   - "10.0.0.0/8"
