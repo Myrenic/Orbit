@@ -36,6 +36,7 @@ spec:
                   key: TRAEFIK_BOUNCER_KEY
           args:
             - --log.level=DEBUG
+            - --log.format=json
             - --api.dashboard=true
             - --api.insecure=true
             - --entrypoints.web.address=:80
