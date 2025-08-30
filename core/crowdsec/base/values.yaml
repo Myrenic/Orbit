@@ -55,9 +55,6 @@ agent:
     - namespace: traefik
       podName: traefik-*
       program: traefik
-    - namespace: traefik
-      file: /var/log/traefik/access.log
-      program: traefik
   enabled: true
   env: 
     - name: REGISTRATION_TOKEN

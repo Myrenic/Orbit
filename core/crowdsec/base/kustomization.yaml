@@ -6,7 +6,6 @@ namespace: crowdsec
 resources:
   - ns.yaml
   - secrets.yaml
-  - volumes.yaml
 
 helmCharts:
   - name: crowdsec
