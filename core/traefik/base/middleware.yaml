@@ -31,15 +31,14 @@ metadata:
 spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
-      defaultDecisionSeconds: 5
+      defaultDecisionSeconds: 60
       remediationStatusCode: 200   # Return 200 instead of blocking
       enabled: "true"
-      logLevel: DEBUG
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
       crowdsecLapiScheme: http
       crowdsecLapiKeyFile: "/etc/crowdsec/TRAEFIK_BOUNCER_KEY"
-      # clientTrustedIPs:
-        # - "10.0.0.0/16"
+      clientTrustedIPs:
+        - "10.0.0.0/16"
       #   - "127.0.0.1/32"
 
