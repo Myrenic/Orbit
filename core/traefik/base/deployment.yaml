@@ -71,17 +71,17 @@ spec:
               mountPath: /data
             - name: acme-storage
               mountPath: /etc/traefik
-            - name: crowdsec-lapi-secrets
+            - name: crowdsec-api-token
               mountPath: /etc/crowdsec
               readOnly: true
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
             claimName: traefik-acme-pvc
-        - name: crowdsec-lapi-secrets
+        - name: crowdsec-api-token
           secret:
-            secretName: crowdsec-lapi-secrets
+            secretName: crowdsec-api-token
       volumeMounts:
-        - name: crowdsec-lapi-secrets
+        - name: crowdsec-api-token
           mountPath: /etc/traefik
           readOnly: true
