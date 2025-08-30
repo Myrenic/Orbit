@@ -31,6 +31,8 @@ metadata:
 spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
+      defaultDecisionSeconds: 5
+      remediationStatusCode: 200   # Return 200 instead of blocking
       enabled: "true"
       logLevel: DEBUG
       crowdsecMode: live
