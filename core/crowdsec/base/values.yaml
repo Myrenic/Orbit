@@ -1,15 +1,17 @@
 ---
 container_runtime: containerd
 
+secrets:
+  externalSecret:
+    name: crowdsec-api-token
+    csLapiSecretKey: csLapiSecret
+    registrationTokenKey: registrationToken
+
 lapi:
   enabled: true
   service:
     type: ClusterIP
     port: 8080
-  externalSecret:
-    name: crowdsec-api-token
-    csLapiSecretKey: csLapiSecret
-    registrationTokenKey: registrationToken
   env: 
     - name: ENROLL_INSTANCE_NAME
       value: "my-k8s-cluster"
@@ -59,11 +61,11 @@ agent:
         secretKeyRef:
           name: crowdsec-api-token
           key: registrationToken
-initContainers:
-  - name: crowdsec-init
-    env:
-      - name: REGISTRATION_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: crowdsec-api-token
-            key: registrationToken
+  initContainers:
+    - name: crowdsec-init
+      env:
+        - name: REGISTRATION_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: crowdsec-api-token
+              key: registrationToken
