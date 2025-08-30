@@ -53,7 +53,7 @@ console:
 agent:
   acquisition:
     - namespace: traefik
-      podName: traefik-*
+      labelSelector: app=traefik
       program: traefik
   env: 
     - name: REGISTRATION_TOKEN
