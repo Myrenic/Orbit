@@ -60,3 +60,11 @@ agent:
           name: crowdsec-api-token
           key: registrationToken
 
+initContainers:
+  - name: crowdsec-init
+    env:
+      - name: REGISTRATION_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: crowdsec-api-token
+            key: registrationToken
