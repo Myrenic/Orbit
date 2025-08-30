@@ -35,7 +35,7 @@ spec:
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
       crowdsecMode: live
-      # clientTrustedIPs:
-      #   - "10.0.0.0/8"
-      #   - "127.0.0.1/32"
+      clientTrustedIPs:
+        - "10.0.0.0/8"
+        - "127.0.0.1/32"
 
