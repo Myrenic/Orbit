@@ -34,7 +34,7 @@ spec:
       defaultDecisionSeconds: 5
       # remediationStatusCode: 469   
       enabled: true
-      logLevel: DEBUG
+      logLevel: INFO
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service.crowdsec:8080
       crowdsecLapiScheme: http
