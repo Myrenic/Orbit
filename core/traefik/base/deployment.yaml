@@ -54,6 +54,7 @@ spec:
             - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"
             - --accesslog=true
             - --accesslog.filters.statuscodes=100-599
+            - --accesslog.format=json
             - --accesslog.bufferingsize=0
             - --accesslog.fields.headers.defaultmode=drop
             - --accesslog.fields.headers.names.User-Agent=keep
