@@ -53,7 +53,7 @@ console:
 agent:
   acquisition:
     - namespace: traefik
-      podName: traefik-*
+      file: /var/log/traefik/access.log
       program: traefik
   env: 
     - name: REGISTRATION_TOKEN
@@ -63,6 +63,13 @@ agent:
           key: registrationToken
     - name: COLLECTIONS
       value: "crowdsecurity/traefik"
+  volumeMounts:
+    - name: access-logs
+      mountPath: /var/log/traefik
+  volumes:
+    - name: access-logs
+      persistentVolumeClaim:
+        claimName: traefik-access-logs
   initContainers:
     - name: crowdsec-init
       env:
