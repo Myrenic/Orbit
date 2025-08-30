@@ -32,7 +32,7 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
-      apiKey: "${TRAEFIK_BOUNCER_KEY}"
+      apiKey: "${ENROLL_KEY}"
       CrowdsecLapiKey: "${TRAEFIK_BOUNCER_KEY}"
       # clientTrustedIPs:
       #   - "10.0.0.0/8"
