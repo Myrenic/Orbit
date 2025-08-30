@@ -1,14 +1,14 @@
+---
 lapi:
   enabled: true
   service:
     type: ClusterIP
     port: 8080
 
-  # Inject env from your ExternalSecret-managed Secret
   extraEnvFrom:
     - secretRef:
         name: crowdsec-api-token
-        key: ENROLL_KEY
+
   bouncers:
     traefik:
       keyFromSecret:
