@@ -1,5 +1,5 @@
 lapi:
-  enabled: true
+  enabled: false
   service:
     type: ClusterIP
     port: 8080
