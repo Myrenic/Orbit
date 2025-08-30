@@ -10,6 +10,8 @@ lapi:
       value: "my-k8s-cluster"
     - name: ENROLL_TAGS
       value: "k8s linux test"
+    - name: DISABLE_AGENT
+      value: "false"
 
   extraEnvFrom:
     - secretRef:
@@ -20,7 +22,7 @@ lapi:
       keyFromSecret:
         name: crowdsec-api-token
         key: TRAEFIK_BOUNCER_KEY
-        
+
 console:
   enabled: true
   service:
