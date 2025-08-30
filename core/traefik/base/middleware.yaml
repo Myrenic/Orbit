@@ -38,7 +38,7 @@ spec:
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
       crowdsecLapiScheme: http
       crowdsecLapiKeyFile: "/etc/crowdsec/TRAEFIK_BOUNCER_KEY"
-      clientTrustedIPs:
+      # clientTrustedIPs:
         # - "10.0.0.0/16"
       #   - "127.0.0.1/32"
 
