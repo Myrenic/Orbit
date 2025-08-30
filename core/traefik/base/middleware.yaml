@@ -34,10 +34,6 @@ spec:
       enabled: true
       defaultDecisionSeconds: 5
       crowdsecMode: live
-      crowdsecAppsecEnabled: false 
-      crowdsecAppsecHost: crowdsec:7422
-      crowdsecAppsecFailureBlock: true
-      crowdsecAppsecUnreachableBlock: true
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
       # clientTrustedIPs:
