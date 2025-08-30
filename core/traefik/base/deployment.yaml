@@ -52,6 +52,13 @@ spec:
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
             - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
             - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"
+            - --accesslog=true
+            - --accesslog.filepath=/logs/traefik.log
+            - --accesslog.format=json
+            - --accesslog.filters.statuscodes=200-299,400-599
+            - --accesslog.bufferingsize=0
+            - --accesslog.fields.headers.defaultmode=drop
+            - --accesslog.fields.headers.names.User-Agent=keep
           ports:
             - containerPort: 80
               name: web
