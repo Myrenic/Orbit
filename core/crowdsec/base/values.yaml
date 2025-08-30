@@ -53,5 +53,10 @@ agent:
     - namespace: traefik
       podName: traefik-*
       program: traefik
-
+  env: 
+    - name: REGISTRATION_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-api-token
+          key: registrationToken
 
