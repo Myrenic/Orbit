@@ -9,5 +9,5 @@ resources:
   - volumes.yaml
   - deployment.yaml
   - service.yaml
-  - cloudflare-api-token.yaml
+  - secrets.yaml
   - middleware.yaml
