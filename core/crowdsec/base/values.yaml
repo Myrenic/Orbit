@@ -6,6 +6,10 @@ lapi:
   service:
     type: ClusterIP
     port: 8080
+  externalSecret:
+    name: crowdsec-api-token
+    csLapiSecretKey: csLapiSecret
+    registrationTokenKey: registrationToken
   env: 
     - name: ENROLL_KEY
       valueFrom:
