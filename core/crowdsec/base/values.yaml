@@ -10,7 +10,7 @@ lapi:
     - name: ENROLL_KEY
       valueFrom:
         secretKeyRef:
-          name: crowdsec-enroll-key
+          name: crowdsec-api-token
           key: ENROLL_KEY
     - name: ENROLL_INSTANCE_NAME
       value: "my-k8s-cluster"
