@@ -69,6 +69,11 @@ spec:
           volumeMounts:
             - name: acme-storage
               mountPath: /data
+            - name: acme-storage
+              mountPath: /etc/traefik
+            - name: crowdsec-lapi-secrets
+              mountPath: /etc/crowdsec
+              readOnly: true
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
