@@ -63,7 +63,7 @@ agent:
           name: crowdsec-api-token
           key: registrationToken
     - name: COLLECTIONS
-      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux crowdsecurity/appsec-generic-rules crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-crs"
+      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux"
   initContainers:
     - name: crowdsec-init
       env:
