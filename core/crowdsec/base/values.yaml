@@ -51,10 +51,17 @@ console:
     port: 8081
 
 agent:
-  acquisition:
-    - namespace: traefik
+  customAcquisitions:
+    - name: traefik-access
       file: /var/log/traefik/access.log
       program: traefik
+  volumeMounts:
+    - name: access-logs
+      mountPath: /var/log/traefik
+  volumes:
+    - name: access-logs
+      persistentVolumeClaim:
+        claimName: traefik-access-logs
   env: 
     - name: REGISTRATION_TOKEN
       valueFrom:
@@ -63,13 +70,6 @@ agent:
           key: registrationToken
     - name: COLLECTIONS
       value: "crowdsecurity/traefik"
-  volumeMounts:
-    - name: access-logs
-      mountPath: /var/log/traefik
-  volumes:
-    - name: access-logs
-      persistentVolumeClaim:
-        claimName: traefik-access-logs
   initContainers:
     - name: crowdsec-init
       env:
