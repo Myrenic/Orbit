@@ -35,7 +35,7 @@ spec:
                   name: crowdsec-api-token
                   key: TRAEFIK_BOUNCER_KEY
           args:
-            - --log.level=DEBUG
+            - --log.level=INFO
             - --log.format=json
             - --api.dashboard=true
             - --api.insecure=true
