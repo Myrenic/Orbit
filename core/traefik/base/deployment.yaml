@@ -82,7 +82,7 @@ spec:
             - name: crowdsec-api-token
               mountPath: /etc/crowdsec
               readOnly: true
-            - name: traefik-access-logs
+            - name: access-logs
               mountPath: /logs
       volumes:
         - name: acme-storage
@@ -91,6 +91,6 @@ spec:
         - name: crowdsec-api-token
           secret:
             secretName: crowdsec-api-token
-        - name: traefik-access-logs
+        - name: access-logs
           persistentVolumeClaim:
             claimName: traefik-access-logs
