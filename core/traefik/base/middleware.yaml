@@ -32,12 +32,13 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       enabled: true
-      logLevel: DEBUG
       defaultDecisionSeconds: 5
-      remediationStatusCode: 200
+      remediationStatusCode: 200   # Return 200 instead of blocking
       crowdsecMode: stream
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
+      crowdsecLapiHost: "crowdsec.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
+
       # clientTrustedIPs:
         # - "10.0.0.0/16"
       #   - "127.0.0.1/32"
