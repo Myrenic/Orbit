@@ -86,7 +86,4 @@ spec:
         - name: crowdsec-api-token
           secret:
             secretName: crowdsec-api-token
-      volumeMounts:
-        - name: crowdsec-api-token
-          mountPath: /etc/traefik
-          readOnly: true
+
