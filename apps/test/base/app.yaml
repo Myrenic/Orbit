@@ -46,7 +46,5 @@ spec:
       middlewares:
         - name: crowdsec-mw
           namespace: traefik
-        - name: authentik
-          namespace: traefik
   tls:
     certResolver: letsencrypt
