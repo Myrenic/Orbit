@@ -31,9 +31,9 @@ metadata:
 spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
-      apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080/health"
-      apiKey: "super-secret-static-key" # for testing only
-      CrowdsecLapiKey: "super-secret-static-key" # for testing only
+      apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
+      apiKey: "${TRAEFIK_BOUNCER_KEY}"
+      CrowdsecLapiKey: "${TRAEFIK_BOUNCER_KEY}"
       # clientTrustedIPs:
       #   - "10.0.0.0/8"
       #   - "127.0.0.1/32"
