@@ -5,6 +5,12 @@ lapi:
     type: ClusterIP
     port: 8080
 
+  extraEnv:
+    - name: ENROLL_INSTANCE_NAME
+      value: "my-k8s-cluster"
+    - name: ENROLL_TAGS
+      value: "k8s linux test"
+
   extraEnvFrom:
     - secretRef:
         name: crowdsec-api-token
@@ -14,7 +20,7 @@ lapi:
       keyFromSecret:
         name: crowdsec-api-token
         key: TRAEFIK_BOUNCER_KEY
-
+        
 console:
   enabled: true
   service:
