@@ -36,7 +36,7 @@ spec:
       remediationStatusCode: 200   # Return 200 instead of blocking
       crowdsecMode: stream
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
-      crowdsecLapiHost: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
+      crowdsecLapiHost: "crowdsec-service.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
 
       # clientTrustedIPs:
