@@ -3,9 +3,17 @@ lapi:
   service:
     type: ClusterIP
     port: 8080
+
+  # Inject env from your ExternalSecret-managed Secret
+  extraEnvFrom:
+    - secretRef:
+        name: crowdsec-api-token
+        key: ENROLL_KEY
   bouncers:
     traefik:
-      key: "super-secret-static-key" # for testing only
+      keyFromSecret:
+        name: crowdsec-api-token
+        key: TRAEFIK_BOUNCER_KEY
 
 console:
   enabled: true
@@ -14,7 +22,6 @@ console:
     port: 8081
 
 agent:
-  # we are not setting up traefik but the acquisition section is required.
   acquisition:
     - namespace: traefik
       podName: traefik-*
