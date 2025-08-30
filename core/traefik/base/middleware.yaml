@@ -31,11 +31,12 @@ metadata:
 spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
-      Enabled: "true"
+      enabled: "true"
       logLevel: DEBUG
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
       crowdsecLapiScheme: http
+      crowdsecLapiKey: "R3XUxWkP2tstRUYySypkUjFg"
       # clientTrustedIPs:
         # - "10.0.0.0/16"
       #   - "127.0.0.1/32"
