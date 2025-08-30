@@ -34,7 +34,7 @@ spec:
       enabled: true
       logLevel: DEBUG
       defaultDecisionSeconds: 5
-      remediationStatusCode: 469
+      remediationStatusCode: 200
       crowdsecMode: stream
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
