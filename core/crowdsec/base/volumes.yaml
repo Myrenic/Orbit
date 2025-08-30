@@ -10,5 +10,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  volumeName: traefik-access-logs-pv
+  volumeName: traefik-access-logs  
   storageClassName: longhorn
