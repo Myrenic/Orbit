@@ -32,8 +32,8 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       defaultDecisionSeconds: 5
-      remediationStatusCode: 469   # Return 200 instead of blocking
-      enabled: "true"
+      # remediationStatusCode: 469   
+      enabled: true
       logLevel: DEBUG
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
