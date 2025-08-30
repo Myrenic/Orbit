@@ -1,21 +1,26 @@
 ---
+container_runtime: containerd
+
 lapi:
   enabled: true
   service:
     type: ClusterIP
     port: 8080
-
-  extraEnv:
+  env: 
+    - name: ENROLL_KEY
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-enroll-key
+          key: ENROLL_KEY
     - name: ENROLL_INSTANCE_NAME
       value: "my-k8s-cluster"
     - name: ENROLL_TAGS
       value: "k8s linux test"
-    - name: DISABLE_AGENT
-      value: "false"
-
-  extraEnvFrom:
-    - secretRef:
-        name: crowdsec-api-token
+    - name: TRAEFIK_BOUNCER_KEY
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-api-token
+          key: TRAEFIK_BOUNCER_KEY
 
   bouncers:
     traefik:
@@ -34,3 +39,5 @@ agent:
     - namespace: traefik
       podName: traefik-*
       program: traefik
+
+
