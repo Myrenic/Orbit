@@ -32,9 +32,14 @@ spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
       enabled: true
+      defaultDecisionSeconds: 5
+      crowdsecMode: live
+      crowdsecAppsecEnabled: false 
+      crowdsecAppsecHost: crowdsec:7422
+      crowdsecAppsecFailureBlock: true
+      crowdsecAppsecUnreachableBlock: true
       apiURL: "http://crowdsec-service.crowdsec.svc.cluster.local:8080"
       crowdsecLapiKeyFile: "/etc/crowdsec/csLapiSecret"
-      crowdsecMode: live
       # clientTrustedIPs:
         # - "10.0.0.0/16"
       #   - "127.0.0.1/32"
