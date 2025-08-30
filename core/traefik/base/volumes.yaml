@@ -11,3 +11,33 @@ spec:
   resources:
     requests:
       storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: traefik-access-logs-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: traefik-access-logs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-access-logs
+  namespace: traefik
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: traefik-access-logs-pv
+  storageClassName: longhorn

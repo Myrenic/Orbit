@@ -56,6 +56,7 @@ spec:
             - --accesslog=true
             - --accesslog.filters.statuscodes=100-599
             - --accesslog.format=json
+            - --accesslog.filepath=/logs/access.log
             - --accesslog.bufferingsize=0
             - --accesslog.fields.headers.defaultmode=drop
             - --accesslog.fields.headers.names.User-Agent=keep
@@ -81,6 +82,8 @@ spec:
             - name: crowdsec-api-token
               mountPath: /etc/crowdsec
               readOnly: true
+            - name: traefik-access-logs
+              mountPath: /logs
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
@@ -88,4 +91,6 @@ spec:
         - name: crowdsec-api-token
           secret:
             secretName: crowdsec-api-token
-
+        - name: traefik-access-logs
+          persistentVolumeClaim:
+            claimName: traefik-access-logs
