@@ -51,7 +51,6 @@ console:
     port: 8081
 
 agent:
-
   acquisition:
     - namespace: traefik
       podName: traefik-*
@@ -63,7 +62,7 @@ agent:
           name: crowdsec-api-token
           key: registrationToken
     - name: COLLECTIONS
-      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux"
+      value: "crowdsecurity/traefik"
   initContainers:
     - name: crowdsec-init
       env:
