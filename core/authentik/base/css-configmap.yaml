@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: authentik-custom-css
-  namespace: authentik
+  namespace: edge
 data:
   custom.css: |
     /*** global ***/

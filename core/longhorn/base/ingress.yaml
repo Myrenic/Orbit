@@ -15,6 +15,6 @@ spec:
           port: 80
       middlewares:
         - name: authentik
-          namespace: traefik
+          namespace: edge
   tls:
     certResolver: letsencrypt

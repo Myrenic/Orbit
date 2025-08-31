@@ -52,7 +52,7 @@ console:
 
 agent:
   acquisition:
-    - namespace: traefik
+    - namespace: edge
       podName: traefik-*
       program: traefik
   enabled: true

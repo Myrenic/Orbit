@@ -25,11 +25,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: traefik
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: metallb-system
   labels:
     app.kubernetes.io/name: metallb-system
@@ -38,4 +33,8 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: media
+  name: edge
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

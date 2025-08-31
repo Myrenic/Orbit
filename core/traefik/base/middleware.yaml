@@ -3,7 +3,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: authentik
-  namespace: traefik
+  namespace: edge
 spec:
   forwardAuth:
     # This address should point to the cluster endpoint provided by the kubernetes service, not the Ingress.
@@ -27,7 +27,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: crowdsec-mw
-  namespace: traefik
+  namespace: edge
 spec:
   plugin:
     crowdsec-bouncer-traefik-plugin:
