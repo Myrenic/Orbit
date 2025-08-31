@@ -54,6 +54,7 @@ spec:
             - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
             - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"
             - --accesslog=true
+            - --accesslog.filepath=/var/log/traefik/traefik.log
             - --accesslog.filters.statuscodes=100-599
             - --accesslog.format=json
             - --accesslog.fields.headers.defaultmode=keep
@@ -79,6 +80,8 @@ spec:
             - name: crowdsec-api-token
               mountPath: /etc/crowdsec
               readOnly: true
+            - name: traefik-logs
+              mountPath: /var/log/traefik
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
@@ -86,3 +89,6 @@ spec:
         - name: crowdsec-api-token
           secret:
             secretName: crowdsec-api-token
+        - name: traefik-logs
+          persistentVolumeClaim:
+            claimName: traefik-logs-pvc

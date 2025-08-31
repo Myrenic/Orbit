@@ -51,11 +51,18 @@ console:
     port: 8081
 
 agent:
+  enabled: true
   acquisition:
     - namespace: edge
       podName: traefik-*
       program: traefik
-  enabled: true
+  volumes:
+    - name: traefik-logs
+      persistentVolumeClaim:
+        claimName: traefik-logs-pvc
+  volumeMounts:
+    - name: traefik-logs
+      mountPath: /logs/traefik
   env: 
     - name: REGISTRATION_TOKEN
       valueFrom:
