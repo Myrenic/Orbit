@@ -1,18 +1,28 @@
----
 name: Validate Terraform
-on:  # yamllint disable-line rule:truthy
+on:
   push:
+
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      - name: Validate Terraform configuration (encom-tower)
-        uses: devops-infra/action-terraform-validate@v0.3.1
-        with:
-          working-directory: infrastructure/terraform/encom-tower
-      - name: Validate Terraform configuration (identity-disc)
-        uses: devops-infra/action-terraform-validate@v0.3.1
-        with:
-          working-directory: infrastructure/terraform/identity-disc
+
+      - name: Find Terraform root directories
+        id: find_dirs
+        run: |
+          dirs=$(find . -type f -name "*.tf" -exec dirname {} \; \
+                | grep -v "/modules/" \
+                | sort -u)
+          echo "dirs=$dirs" >> $GITHUB_OUTPUT
+
+      - name: Validate Terraform configurations
+        run: |
+          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
+            echo "Validating $dir"
+            cd $dir
+            terraform init -backend=false
+            terraform validate
+            cd - > /dev/null
+          done
