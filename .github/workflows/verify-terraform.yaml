@@ -5,13 +5,10 @@ on:
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
+    container: colinbut/terraform-build-container:1.0.0
     steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.7.6
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
       - name: Find Terraform root directories
         id: find_dirs
@@ -31,4 +28,16 @@ jobs:
             terraform init -backend=false
             terraform validate
             cd - > /dev/null
+          done
+
+      - name: Run tflint
+        run: |
+          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
+            tflint $dir
+          done
+
+      - name: Run tfsec
+        run: |
+          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
+            tfsec $dir
           done
