@@ -45,6 +45,6 @@ spec:
           port: 80
       middlewares:
         - name: crowdsec-mw
-          namespace: traefik
+          namespace: edge
   tls:
     certResolver: letsencrypt
