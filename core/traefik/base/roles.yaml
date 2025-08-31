@@ -3,7 +3,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: traefik-access
-  namespace: edge
 rules:
   - apiGroups: [""]
     resources: ["secrets", "endpoints", "services"]
@@ -28,12 +27,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: traefik-access-binding
-  namespace: edge
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: traefik-access
-  namespace: edge
 subjects:
   - kind: ServiceAccount
     name: traefik-sa
