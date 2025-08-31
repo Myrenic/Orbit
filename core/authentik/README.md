@@ -4,7 +4,7 @@
 
 Make sure your authentik pod is ready:  
 
-1. Go to **https://auth.ingress.tuntelder.com/if/flow/initial-setup/**.  
+1. Go to **https://auth.test.tuntelder.com/if/flow/initial-setup/**.  
 2. Fill in the form
 
 ## Step 1: Check Your Outpost 🖥️
@@ -28,8 +28,8 @@ Your provider is the gateway to the grid.
 - **Name:** encom-tower  
 - **Auth Flow:** explicit or implicit
 - **Use Domain Level Forwarding**  
-- **Auth URL:** `https://auth.ingress.tuntelder.com/`  
-- **Cookie Domain:** `.ingress.tuntelder.com`  
+- **Auth URL:** `https://auth.test.tuntelder.com/`  
+- **Cookie Domain:** `.test.tuntelder.com`  
 
 ---
 
