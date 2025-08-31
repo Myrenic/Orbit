@@ -1,4 +1,7 @@
 ---
+rbac:
+  create: true
+  
 global:
   env:
     - name: AUTHENTIK_SECRET_KEY
