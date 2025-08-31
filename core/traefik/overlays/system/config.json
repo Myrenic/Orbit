@@ -1,7 +1,7 @@
 {
   "appName": "traefik",
   "userGivenName": "traefik",
-  "destNamespace": "traefik",
+  "destNamespace": "edge",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "core/traefik/overlays/system",
   "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",

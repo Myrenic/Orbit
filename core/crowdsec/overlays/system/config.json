@@ -1,7 +1,7 @@
 {
   "appName": "crowdsec",
   "userGivenName": "crowdsec",
-  "destNamespace": "crowdsec",
+  "destNamespace": "edge",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "core/crowdsec/overlays/system",
   "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
