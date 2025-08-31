@@ -12,9 +12,11 @@ jobs:
       - name: Find Terraform root directories
         id: find_dirs
         run: |
-          dirs=$(find . -type f -name "*.tf" -exec dirname {} \; \
+          dirs=$(find . -type f -name "*.tf" \
                 | grep -v "/modules/" \
-                | sort -u)
+                | xargs -n1 dirname \
+                | sort -u \
+                | tr '\n' ' ')
           echo "dirs=$dirs" >> $GITHUB_OUTPUT
 
       - name: Validate Terraform configurations
