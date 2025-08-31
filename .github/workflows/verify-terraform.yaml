@@ -2,10 +2,10 @@ name: Validate Terraform
 on:
   push:
 
+
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
-    container: colinbut/terraform-build-container:1.0.0
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -24,20 +24,13 @@ jobs:
         run: |
           for dir in ${{ steps.find_dirs.outputs.dirs }}; do
             echo "Validating $dir"
-            cd $dir
-            terraform init -backend=false
-            terraform validate
-            cd - > /dev/null
+            gh_actions_path="$dir"
+            echo "path=$gh_actions_path"
+            gh_actions_path=$dir
+            gh_actions_path=$dir
           done
-
-      - name: Run tflint
-        run: |
-          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
-            tflint $dir
-          done
-
-      - name: Run tfsec
-        run: |
-          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
-            tfsec $dir
-          done
+        # Using dflook/terraform-validate
+      - name: Terraform validate
+        uses: dflook/terraform-validate@v2
+        with:
+          path: ${{ steps.find_dirs.outputs.dirs }}
