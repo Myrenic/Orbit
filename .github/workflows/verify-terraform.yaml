@@ -6,31 +6,13 @@ on:
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [./infrastructure/encom-tower, ./infrastructure/identity-disc]  # replace with dynamic dirs if needed
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Find Terraform root directories
-        id: find_dirs
-        run: |
-          dirs=$(find . -type f -name "*.tf" \
-                 | grep -v "/modules/" \
-                 | xargs -n1 dirname \
-                 | sort -u \
-                 | tr '\n' ' ')
-          echo "dirs=$dirs" >> $GITHUB_OUTPUT
-
-      - name: Validate Terraform configurations
-        run: |
-          for dir in ${{ steps.find_dirs.outputs.dirs }}; do
-            echo "Validating $dir"
-            gh_actions_path="$dir"
-            echo "path=$gh_actions_path"
-            gh_actions_path=$dir
-            gh_actions_path=$dir
-          done
-        # Using dflook/terraform-validate
       - name: Terraform validate
         uses: dflook/terraform-validate@v2
         with:
-          path: ${{ steps.find_dirs.outputs.dirs }}
+          path: ${{ matrix.dir }}
