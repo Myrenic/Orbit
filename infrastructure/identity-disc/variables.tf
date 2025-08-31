@@ -25,3 +25,8 @@ variable "proxmox" {
     host_tags               = list(string)
   })
 }
+
+variable "ssh_private_key" {
+  type      = string
+  sensitive = true
+}

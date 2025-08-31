@@ -111,7 +111,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
       type        = "ssh"
       host        = each.value.ip_addr
       user        = "ubuntu"
-      private_key = file("~/.ssh/mtuntelder_admin")
+      private_key = var.ssh_private_key
       password    = random_password.ubuntu_vm_password.result
       timeout     = "5m"
     }
