@@ -33,6 +33,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: traefik-access
+  namespace: edge
 subjects:
   - kind: ServiceAccount
     name: traefik-sa
