@@ -1,7 +1,8 @@
 name: Validate Terraform
 on:
   push:
-
+    branches:
+      - "**"
 
 jobs:
   terraform-validate:
