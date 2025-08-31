@@ -60,7 +60,7 @@ agent:
     - name: traefik-logs
       persistentVolumeClaim:
         claimName: traefik-logs-pvc
-  volumeMounts:
+  extraVolumeMounts:
     - name: traefik-logs
       mountPath: /logs/traefik
   env: 
