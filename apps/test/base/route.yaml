@@ -16,7 +16,7 @@ spec:
       middlewares:
         - name: crowdsec-mw
           namespace: edge
-        # - name: local-only
-        #   namespace: edge
+          # - name: local-only
+          #   namespace: edge
   tls:
     certResolver: letsencrypt
