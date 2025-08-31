@@ -39,7 +39,17 @@ spec:
       crowdsecLapiHost: crowdsec-service:8080
       crowdsecLapiScheme: http
       crowdsecLapiKey: "R3XUxWkP2tstRUYySypkUjFg"
-      # clientTrustedIPs:
-        # - "10.0.0.0/16"
-      #   - "127.0.0.1/32"
-
+      clientTrustedIPs:
+        - "10.0.0.0/16"
+        - "127.0.0.1/32"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: local-only
+  namespace: edge
+spec:
+  ipWhiteList:
+    sourceRange:
+      - "10.0.0.0/16"
+      - "127.0.0.1/32"
