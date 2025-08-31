@@ -55,7 +55,7 @@ agent:
   additionalAcquisition:
     - source: file
       filenames:
-        - '/var/logs/traefik/traefik.log' ## Single file
+        - '/var/logs/traefik/traefik.log'     ## Single file
       labels:
         type: traefik
   extraVolumes:

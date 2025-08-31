@@ -1,0 +1,22 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hello-world-ingressroute
+  namespace: test
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hello.test.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: hello-world-service
+          port: 80
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        # - name: local-only
+        #   namespace: edge
+  tls:
+    certResolver: letsencrypt
