@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: edge
 
 resources:
-  - ns.yaml
   - roles.yaml
   - volumes.yaml
   - deployment.yaml

@@ -5,7 +5,6 @@ namespace: edge
 
 resources:
   - secret.yaml
-  - ns.yaml
   - css-configmap.yaml
 
 helmCharts:
