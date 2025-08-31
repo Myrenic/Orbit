@@ -52,17 +52,19 @@ console:
 
 agent:
   enabled: true
-  acquisition:
-    - namespace: edge
-      podName: traefik-*
-      program: traefik
+  additionalAcquisition:
+    - source: file
+      filenames:
+        - '/var/logs/traefik/traefik.log' ## Single file
+      labels:
+        type: traefik
   extraVolumes:
     - name: traefik-logs
       persistentVolumeClaim:
         claimName: traefik-logs-pvc
   extraVolumeMounts:
     - name: traefik-logs
-      mountPath: var/logs/traefik/traefik.log
+      mountPath: /var/logs/traefik/traefik.log
       subPath: traefik.log
   env: 
     - name: REGISTRATION_TOKEN
