@@ -6,17 +6,21 @@ jobs:
   terraform-validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.6
 
       - name: Find Terraform root directories
         id: find_dirs
         run: |
           dirs=$(find . -type f -name "*.tf" \
-                | grep -v "/modules/" \
-                | xargs -n1 dirname \
-                | sort -u \
-                | tr '\n' ' ')
+                 | grep -v "/modules/" \
+                 | xargs -n1 dirname \
+                 | sort -u \
+                 | tr '\n' ' ')
           echo "dirs=$dirs" >> $GITHUB_OUTPUT
 
       - name: Validate Terraform configurations
