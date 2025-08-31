@@ -56,7 +56,7 @@ agent:
     - namespace: edge
       podName: traefik-*
       program: traefik
-  volumes:
+  extraVolumes:
     - name: traefik-logs
       persistentVolumeClaim:
         claimName: traefik-logs-pvc
