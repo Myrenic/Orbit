@@ -1,7 +1,7 @@
 ---
 rbac:
   create: true
-  
+
 global:
   env:
     - name: AUTHENTIK_SECRET_KEY
@@ -26,10 +26,10 @@ server:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
     hosts:
-      - auth.traefik.tuntelder.com
+      - auth.ingress.tuntelder.com
     tls:
       - hosts:
-          - auth.traefik.tuntelder.com
+          - auth.ingress.tuntelder.com
 
   readinessProbe:
     httpGet:
