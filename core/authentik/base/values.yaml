@@ -58,13 +58,6 @@ server:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
-  volumes:
-    - name: blueprints
-      configMap:
-        name: authentik-blueprints
-  volumeMounts:
-    - name: blueprints
-      mountPath: /blueprints
 
 postgresql:
   enabled: true
@@ -76,3 +69,7 @@ postgresql:
 
 redis:
   enabled: true
+
+blueprints:
+  configMaps:
+    - name: authentik-blueprints
