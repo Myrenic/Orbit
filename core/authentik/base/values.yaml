@@ -72,4 +72,4 @@ redis:
 
 blueprints:
   configMaps:
-    - name: authentik-blueprints
+    - authentik-blueprints
