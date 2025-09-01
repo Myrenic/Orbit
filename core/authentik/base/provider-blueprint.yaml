@@ -12,8 +12,6 @@ data:
           provider: 1
           slug: encom
         conditions: []
-        identifiers:
-          pk: 865bc3ca-badf-4c41-8d4b-2f0d4dd51c24
         model: authentik_core.application
         permissions: []
         state: present
