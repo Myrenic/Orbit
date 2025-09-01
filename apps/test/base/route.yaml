@@ -8,7 +8,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`hello.test.tuntelder.com`)
+    - match: Host(`hello.ingress.tuntelder.com`)
       kind: Rule
       services:
         - name: hello-world-service

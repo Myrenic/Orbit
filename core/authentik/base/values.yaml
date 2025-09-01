@@ -26,10 +26,10 @@ server:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
     hosts:
-      - auth.test.tuntelder.com
+      - auth.ingress.tuntelder.com
     tls:
       - hosts:
-          - auth.test.tuntelder.com
+          - auth.ingress.tuntelder.com
 
   readinessProbe:
     httpGet:
