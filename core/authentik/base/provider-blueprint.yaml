@@ -6,42 +6,67 @@ metadata:
 data:
   encom-tower.yaml: |
     entries:
-      # OAuth2 Provider
-      - model: authentik_providers_oauth2.oauth2provider
-        attrs:
+      - attrs:
           name: encom
-          client_type: confidential
-          include_claims_in_id_token: true
-          sub_mode: hashed_user_id
-          issuer_mode: per_provider
+          policy_engine_mode: any
+          provider: 1
+          slug: encom
+        conditions: []
+        identifiers:
+          pk: 865bc3ca-badf-4c41-8d4b-2f0d4dd51c24
+        model: authentik_core.application
+        permissions: []
+        state: present
+      - attrs:
           access_code_validity: minutes=1
           access_token_validity: hours=24
-          refresh_token_validity: days=30
+          authorization_flow: 6b797033-4eab-4651-84cd-25763cb68345
+          client_id: i99MPBzw3AaepBUIl43Qd9a4Zzp3i83FiIc7vG6n
+          client_secret: P6gdxvq0KpzrklettpXgtKpHSN8El83g6z36e7ZI8fXXO9o2Q25pNuezItiajEmuEVADT62LJI5UDovx0T2jpWmSNibUPgZf0NyyAnuHVKhUrHPZIpMqx4zDNjSsIn8Q
+          client_type: confidential
+          include_claims_in_id_token: true
+          invalidation_flow: fdd73bfd-e25c-4002-8521-417d2f50e976
+          issuer_mode: per_provider
+          name: encom
+          property_mappings:
+          - db3e46e1-a3b9-46ce-a1fc-fe1038428568
+          - ab1e1a49-8fc6-4810-8e96-a882c721d285
+          - 1b6e5497-198b-4f4d-b31a-9eb879aa93f8
+          - 6afc54d9-5acb-4d53-86e0-9c7a3967cd06
+          - 8f60018b-f7b4-4d6d-a3b1-04ccf9231b5e
           redirect_uris:
-            - matching_mode: strict
-              url: https://auth.ingress.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
-            - matching_mode: strict
-              url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
+          - matching_mode: strict
+            url: https://auth.ingress.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
+          - matching_mode: strict
+            url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
+          refresh_token_validity: days=30
+          sub_mode: hashed_user_id
+        conditions: []
+        identifiers:
+          pk: 1
+        model: authentik_providers_oauth2.oauth2provider
+        permissions: []
         state: present
-
-      # Authentik Application
-      - model: authentik_core.application
-        attrs:
-          name: encom
-          slug: encom
-          policy_engine_mode: any
-          provider_name: encom
-        state: present
-
-      # Proxy Provider
-      - model: authentik_providers_proxy.proxyprovider
-        attrs:
-          name: encom
-          mode: forward_domain
-          external_host: https://auth.ingress.tuntelder.com
+      - attrs:
+          access_token_validity: hours=24
+          authorization_flow: 6b797033-4eab-4651-84cd-25763cb68345
           cookie_domain: .ingress.tuntelder.com
+          external_host: https://auth.ingress.tuntelder.com
           intercept_header_auth: true
           internal_host_ssl_validation: true
-          access_token_validity: hours=24
+          invalidation_flow: fdd73bfd-e25c-4002-8521-417d2f50e976
+          mode: forward_domain
+          name: encom
+          property_mappings:
+          - db3e46e1-a3b9-46ce-a1fc-fe1038428568
+          - ab1e1a49-8fc6-4810-8e96-a882c721d285
+          - 1b6e5497-198b-4f4d-b31a-9eb879aa93f8
+          - 6afc54d9-5acb-4d53-86e0-9c7a3967cd06
+          - 8f60018b-f7b4-4d6d-a3b1-04ccf9231b5e
           refresh_token_validity: days=30
+        conditions: []
+        identifiers:
+          pk: 1
+        model: authentik_providers_proxy.proxyprovider
+        permissions: []
         state: present
