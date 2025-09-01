@@ -30,7 +30,6 @@ server:
     tls:
       - hosts:
           - auth.ingress.tuntelder.com
-
   readinessProbe:
     httpGet:
       path: /-/health/ready/
@@ -40,7 +39,6 @@ server:
     periodSeconds: 10
     timeoutSeconds: 10
     failureThreshold: 10
-
   livenessProbe:
     httpGet:
       path: /-/health/live/
@@ -50,6 +48,13 @@ server:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
+  volumes:
+    - name: blueprints
+      configMap:
+        name: authentik-blueprints
+  volumeMounts:
+    - name: blueprints
+      mountPath: /blueprints
 
 postgresql:
   enabled: true

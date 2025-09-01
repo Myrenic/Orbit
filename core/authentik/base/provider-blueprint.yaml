@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprints
+  namespace: edge
+data:
+  encom-tower.yaml: |
+    version: 1
+    metadata:
+      name: encom-tower-setup
+      labels:
+        gitops: "true"
+
+    entries:
+      - model: authentik_providers_proxy.proxyprovider
+        id: encom-tower-provider
+        attrs:
+          name: encom-tower
+          authorization_flow: !Find [authentik_flows.flow, { slug: default-provider-authorization-implicit-consent }]
+          external_host: https://auth.test.tuntelder.com/
+          cookie_domain: .test.tuntelder.com
+
+      - model: authentik_core.application
+        id: encom-tower-app
+        attrs:
+          name: encom-tower
+          slug: encom-tower
+          provider: !Ref encom-tower-provider
+
+      - model: authentik_outposts.outpost
+        id: embedded
+        identifiers:
+          name: "authentik Embedded Outpost"
+        attrs:
+          config:
+            applications:
+              - !Ref encom-tower-app
