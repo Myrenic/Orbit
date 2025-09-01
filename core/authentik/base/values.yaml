@@ -58,7 +58,9 @@ server:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
-
+  blueprints:
+    configMaps:
+      - name: authentik-blueprints
 postgresql:
   enabled: true
   auth:
@@ -70,6 +72,3 @@ postgresql:
 redis:
   enabled: true
 
-blueprints:
-  configMaps:
-    - name: authentik-blueprints
