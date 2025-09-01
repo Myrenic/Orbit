@@ -24,29 +24,13 @@ data:
               url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
         state: present
 
-      # Default Authorization Flow
-      - model: authentik_core.flow
-        attrs:
-          name: Default OAuth2 Flow
-          flow_type: authorization
-        state: present
-
-      # Default Invalidation Flow
-      - model: authentik_core.flow
-        attrs:
-          name: Default Invalidation Flow
-          flow_type: invalidation
-        state: present
-
-      # Application
+      # Authentik Application
       - model: authentik_core.application
         attrs:
           name: encom
           slug: encom
           policy_engine_mode: any
-          provider_name: encom                  # links to OAuth2 provider
-          authorization_flow_name: Default OAuth2 Flow
-          invalidation_flow_name: Default Invalidation Flow
+          provider_name: encom
         state: present
 
       # Proxy Provider
