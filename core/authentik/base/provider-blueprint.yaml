@@ -6,7 +6,7 @@ metadata:
 data:
   encom-tower.yaml: |
     entries:
-      # OAuth2 Provider first
+      # OAuth2 Provider
       - model: authentik_providers_oauth2.oauth2provider
         attrs:
           name: encom
@@ -24,13 +24,29 @@ data:
               url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
         state: present
 
-      # Authentik Application, referencing the provider by name
+      # Default Authorization Flow
+      - model: authentik_core.flow
+        attrs:
+          name: Default OAuth2 Flow
+          flow_type: authorization
+        state: present
+
+      # Default Invalidation Flow
+      - model: authentik_core.flow
+        attrs:
+          name: Default Invalidation Flow
+          flow_type: invalidation
+        state: present
+
+      # Application
       - model: authentik_core.application
         attrs:
           name: encom
           slug: encom
           policy_engine_mode: any
-          provider_name: encom   # <- reference provider by name
+          provider_name: encom                  # links to OAuth2 provider
+          authorization_flow_name: Default OAuth2 Flow
+          invalidation_flow_name: Default Invalidation Flow
         state: present
 
       # Proxy Provider
