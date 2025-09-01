@@ -6,15 +6,7 @@ metadata:
 data:
   encom-tower.yaml: |
     entries:
-      # Authentik Application
-      - model: authentik_core.application
-        attrs:
-          name: encom
-          slug: encom
-          policy_engine_mode: any
-        state: present
-
-      # OAuth2 Provider
+      # OAuth2 Provider first
       - model: authentik_providers_oauth2.oauth2provider
         attrs:
           name: encom
@@ -30,6 +22,15 @@ data:
               url: https://auth.ingress.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
             - matching_mode: strict
               url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
+        state: present
+
+      # Authentik Application, referencing the provider by name
+      - model: authentik_core.application
+        attrs:
+          name: encom
+          slug: encom
+          policy_engine_mode: any
+          provider_name: encom   # <- reference provider by name
         state: present
 
       # Proxy Provider
