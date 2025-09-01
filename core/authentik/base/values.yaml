@@ -70,6 +70,6 @@ postgresql:
 redis:
   enabled: true
 
-# blueprints:
-#   configMaps:
-#     - authentik-blueprints
+blueprints:
+  configMaps:
+    - authentik-blueprints

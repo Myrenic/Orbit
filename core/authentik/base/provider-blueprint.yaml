@@ -6,26 +6,42 @@ metadata:
 data:
   encom-tower.yaml: |
     entries:
-      - model: authentik_providers_proxy.proxyprovider
-        id: encom-tower-provider
-        attrs:
-          name: encom-tower
-          authorization_flow: !Find [authentik_flows.flow, { slug: default-provider-authorization-implicit-consent }]
-          external_host: https://auth.test.tuntelder.com/
-          cookie_domain: .test.tuntelder.com
-
+      # Authentik Application
       - model: authentik_core.application
-        id: encom-tower-app
         attrs:
-          name: encom-tower
-          slug: encom-tower
-          provider: !Ref encom-tower-provider
+          name: encom
+          slug: encom
+          provider: 1
+          policy_engine_mode: any
+        state: present
 
-      - model: authentik_outposts.outpost
-        id: embedded
-        identifiers:
-          name: "authentik Embedded Outpost"
+      # OAuth2 Provider
+      - model: authentik_providers_oauth2.oauth2provider
         attrs:
-          config:
-            applications:
-              - !Ref encom-tower-app
+          name: encom
+          client_type: confidential
+          include_claims_in_id_token: true
+          sub_mode: hashed_user_id
+          issuer_mode: per_provider
+          access_code_validity: minutes=1
+          access_token_validity: hours=24
+          refresh_token_validity: days=30
+          redirect_uris:
+            - matching_mode: strict
+              url: https://auth.ingress.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
+            - matching_mode: strict
+              url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
+        state: present
+
+      # Proxy Provider
+      - model: authentik_providers_proxy.proxyprovider
+        attrs:
+          name: encom
+          mode: forward_domain
+          external_host: https://auth.ingress.tuntelder.com
+          cookie_domain: .ingress.tuntelder.com
+          intercept_header_auth: true
+          internal_host_ssl_validation: true
+          access_token_validity: hours=24
+          refresh_token_validity: days=30
+        state: present
