@@ -13,9 +13,9 @@ jobs:
         uses: actions/checkout@v3
       - name: Install Kustomize
         run: |
-          curl -sLO https://github.com/kubernetes-sigs/kustomize/releases/latest/download/kustomize_linux_amd64.tar.gz
-          tar -xzf kustomize_linux_amd64.tar.gz
+          curl -sL -o kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/latest/download/kustomize_linux_amd64.tar.gz
+          tar -xzf kustomize.tar.gz
           sudo mv kustomize /usr/local/bin/
       - name: Build & Validate
         run: |
-          kustomize build . --load_restrictor none | kubectl apply --dry-run=client -f -
+          kustomize build apps/ --load-restrictor LoadRestrictionsNone --enable-helm | kubectl apply --dry-run=client -f -
