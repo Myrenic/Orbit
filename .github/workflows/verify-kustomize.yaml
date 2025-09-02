@@ -23,5 +23,3 @@ jobs:
       - name: Build & Validate
         run: |
           kustomize build apps/ --load-restrictor LoadRestrictionsNone --enable-helm | kubectl apply --dry-run=client -f -
-
-
