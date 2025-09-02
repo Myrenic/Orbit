@@ -1,0 +1,15 @@
+---
+name: Validate Manifest References
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  validate-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check manifest references
+        run: |
+          python3 scripts/validate_manifests.py

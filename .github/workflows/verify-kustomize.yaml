@@ -1,0 +1,21 @@
+---
+name: Kustomize GitHub Actions
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  kustomize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Kustomize
+        run: |
+          curl -sLO https://github.com/kubernetes-sigs/kustomize/releases/latest/download/kustomize_linux_amd64.tar.gz
+          tar -xzf kustomize_linux_amd64.tar.gz
+          sudo mv kustomize /usr/local/bin/
+      - name: Build & Validate
+        run: |
+          kustomize build . --load_restrictor none | kubectl apply --dry-run=client -f -

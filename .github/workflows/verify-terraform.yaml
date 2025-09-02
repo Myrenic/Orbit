@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: [./infrastructure/helios, ./infrastructure/atlas]  # replace with dynamic dirs if needed
+        dir: [./infrastructure/helios, ./infrastructure/atlas]
     steps:
       - uses: actions/checkout@v5
 
