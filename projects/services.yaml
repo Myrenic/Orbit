@@ -63,7 +63,7 @@ spec:
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
-        targetRevision: "{{ srcTargetRevision }}"
+        targetRevision: "Fix-Issues--Kustomize,-Lint,-Manifests"
       syncPolicy:
         automated:
           allowEmpty: true
