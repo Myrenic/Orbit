@@ -1,6 +1,6 @@
 ---
 name: Enforce single commit PR
-on:
+on: # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - "**"
@@ -10,11 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 
       - name: Check number of commits
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          COMMITS=$(gh pr view ${{ github.event.pull_request.number }} --json commits -q ".commits")
+          # Count commits in PR branch compared to base branch
+          COMMITS=$(git rev-list --count origin/${{ github.head_ref }} ^origin/${{ github.base_ref }})
+          echo "Commits in PR: $COMMITS"
           if [ "$COMMITS" -gt 1 ]; then
             echo "PR has more than one commit. Please squash into a single commit."
             exit 1
