@@ -1,0 +1,23 @@
+---
+bitwarden-sdk-server:
+  enabled: true
+
+installCRDs: false
+
+log:
+  level: error
+
+serviceMonitor:
+  enabled: true
+
+webhook:
+  log:
+    level: error
+
+certController:
+  log:
+    level: error
+
+prometheus:
+  servicemonitor:
+    enabled: false

@@ -1,0 +1,20 @@
+---
+name: Validate Terraform
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - "**"
+
+jobs:
+  terraform-validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [./infrastructure/helios, ./infrastructure/atlas]  # replace with dynamic dirs if needed
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Terraform validate
+        uses: dflook/terraform-validate@v2
+        with:
+          path: ${{ matrix.dir }}

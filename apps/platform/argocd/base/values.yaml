@@ -1,0 +1,15 @@
+---
+server:
+  admin:
+    existingSecret: argocd-admin-secret
+    passwordKey: admin.password
+
+configs:
+  cm:
+    kustomize.buildOptions: --enable-helm --enable-alpha-plugins --load-restrictor LoadRestrictionsNone
+  cmdParams:
+    server.insecure: false
+
+crds:
+  install: true
+  keep: true

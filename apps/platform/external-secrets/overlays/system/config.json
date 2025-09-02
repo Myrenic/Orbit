@@ -1,0 +1,11 @@
+{
+  "appName": "external-secrets",
+  "userGivenName": "external-secrets",
+  "destNamespace": "external-secrets",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/platform/external-secrets/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

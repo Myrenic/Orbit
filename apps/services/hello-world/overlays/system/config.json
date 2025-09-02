@@ -1,0 +1,11 @@
+{
+  "appName": "hello-world",
+  "userGivenName": "hello-world",
+  "destNamespace": "hello-world",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/services/hello-world/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

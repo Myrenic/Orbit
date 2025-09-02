@@ -1,0 +1,26 @@
+hosts = {
+    atlas = {
+      name    = "atlas"
+      cores   = 4
+      memory  = 4096
+      ip_addr = "10.0.69.20"
+      gateway = "10.0.69.1"
+      cidr    = "/24"
+      node_name = "proxmox"
+      network_bridge = "vmbr0"
+      vlan_id = 69
+      datastore_id = "ssd"
+      disk_size = 64
+      hdd_datastore_id = "hdd"
+      hdd_disk_size = 1024
+    }
+}
+proxmox = {
+    url                     = "https://10.0.3.10:8006/"
+    download_node_name      = "proxmox"
+    download_datastore_id   = "local"
+    host_description        = "Managed by Terraform"
+    host_tags               = ["terraform"]
+}
+
+ssh_private_key = file("/../path/to/ssh/key")

@@ -1,0 +1,72 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  annotations:
+    argocd-autopilot.argoproj-labs.io/default-dest-server: https://kubernetes.default.svc
+    argocd.argoproj.io/sync-options: PruneLast=true
+    argocd.argoproj.io/sync-wave: "-1"
+  creationTimestamp: null
+  name: core
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  description: Core Project
+  destinations:
+    - namespace: "*"
+      server: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  sourceRepos:
+    - "*"
+status: {}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  creationTimestamp: null
+  name: core
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        files:
+          - path: apps/core/**/system/config.json
+        repoURL: https://github.com/Myrenic/Light_Cycle.git
+        requeueAfterSeconds: 20
+        revision: ""
+        template:
+          metadata: {}
+          spec:
+            destination: {}
+            project: ""
+  syncPolicy: {}
+  template:
+    metadata:
+      name: core-{{ userGivenName }}
+      namespace: argocd
+    spec:
+      destination:
+        namespace: "{{ destNamespace }}"
+        server: "{{ destServer }}"
+      ignoreDifferences:
+        - group: argoproj.io
+          jsonPointers:
+            - /status
+          kind: Application
+      project: core
+      source:
+        path: "{{ srcPath }}"
+        repoURL: "{{ srcRepoURL }}"
+        targetRevision: "{{ srcTargetRevision }}"
+      syncPolicy:
+        automated:
+          allowEmpty: true
+          prune: true
+          selfHeal: true
+status: {}
