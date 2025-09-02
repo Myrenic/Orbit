@@ -14,3 +14,4 @@ helmCharts:
 resources:
   - ./job.yaml
   - ./ingress.yaml
+  - ./ns.yaml
