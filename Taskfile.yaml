@@ -74,19 +74,19 @@ tasks:
   crds:
     desc: Install 'crds'
     cmds:
-      - kustomize build bootstrap/crds | kubectl apply -f -
+      - kustomize build apps/platform/crds | kubectl apply -f -
       - kubectl rollout status deployment -l app.kubernetes.io/component=crds -n default \
         || echo "No CRDs deployment to wait for"
 
   cert-manager:
     desc: Install 'cert-manager'
     cmds:
-      - kustomize build --enable-helm bootstrap/cert-manager | kubectl apply -f -
+      - kustomize build --enable-helm apps/platform/cert-manager | kubectl apply -f -
       - kubectl rollout status deployment -l app.kubernetes.io/instance=cert-manager -n cert-manager
 
   external-secrets:
     desc: Execute Taskfile in 'external-secrets'
-    dir: bootstrap/external-secrets/base/
+    dir: apps/platform/external-secrets/base/
     cmds:
       - task all
       - kubectl rollout status deployment -l app.kubernetes.io/instance=external-secrets -n external-secrets
@@ -94,14 +94,14 @@ tasks:
   argocd:
     desc: Install 'argocd'
     cmds:
-      - kustomize build bootstrap/argocd/base --enable-helm | kubectl apply -f -
-      - kubectl apply -f bootstrap/argocd/base/ExternalSecret.yaml
+      - kustomize build apps/platform/argocd/base --enable-helm | kubectl apply -f -
+      - kubectl apply -f apps/platform/argocd/base/ExternalSecret.yaml
       - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd
 
   argocd-projects:
     desc: Add 'argocd' projects
     cmds:
-      - kustomize build bootstrap --enable-helm | kubectl apply -f -
+      - kustomize build projects --enable-helm | kubectl apply -f -
       - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd \
         || echo "No new deployments for projects"
 
@@ -161,25 +161,6 @@ tasks:
     cmds:
       - git ls-files '*.yml' '*.yaml' | xargs yamllint
 
-  replace-config-values:
-    desc: Replace repo, domain, and cert in bootstrap and subfolders, preserving other characters
-    cmds:
-      - |
-        OLD_REPO=$(grep '^github_repo=' ./bootstrap/config.yaml | cut -d'=' -f2)
-        OLD_DOMAIN=$(grep '^base_domain=' ./bootstrap/config.yaml | cut -d'=' -f2)
-        OLD_CERT=$(grep '^cert_name=' ./bootstrap/config.yaml | cut -d'=' -f2)
-        read -p "Enter new repo URL [$OLD_REPO]: " NEW_REPO
-        NEW_REPO=${NEW_REPO:-$OLD_REPO}
-        read -p "Enter new base domain [$OLD_DOMAIN]: " NEW_DOMAIN
-        NEW_DOMAIN=${NEW_DOMAIN:-$OLD_DOMAIN}
-        read -p "Enter new cert name [$OLD_CERT]: " NEW_CERT
-        NEW_CERT=${NEW_CERT:-$OLD_CERT}
-        # Replace repo literally
-        find . -type f -exec sed -i "s|$OLD_REPO|$NEW_REPO|g" {} +
-        # Replace domains while preserving prefixes like *.
-        find . -type f -exec sed -i -E "s|(\*?\.)?$OLD_DOMAIN|\1$NEW_DOMAIN|g" {} +
-        # Replace cert literally
-        find . -type f -exec sed -i "s|$OLD_CERT|$NEW_CERT|g" {} +
   # ------------------------
   # Infrastructure (terraform)
   # ------------------------

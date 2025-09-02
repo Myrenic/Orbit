@@ -5,15 +5,15 @@ metadata:
   annotations:
     argocd-autopilot.argoproj-labs.io/default-dest-server: https://kubernetes.default.svc
     argocd.argoproj.io/sync-options: PruneLast=true
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "-1"
   creationTimestamp: null
-  name: system
+  name: core
   namespace: argocd
 spec:
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
-  description: core project
+  description: Core Project
   destinations:
     - namespace: "*"
       server: "*"
@@ -28,7 +28,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "-1"
   creationTimestamp: null
   name: core
   namespace: argocd
@@ -36,7 +36,7 @@ spec:
   generators:
     - git:
         files:
-          - path: core/**/system/config.json
+          - path: apps/core/**/system/config.json
         repoURL: https://github.com/Myrenic/Light_Cycle.git
         requeueAfterSeconds: 20
         revision: ""

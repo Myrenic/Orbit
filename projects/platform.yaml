@@ -7,13 +7,13 @@ metadata:
     argocd.argoproj.io/sync-options: PruneLast=true
     argocd.argoproj.io/sync-wave: "-2"
   creationTimestamp: null
-  name: bootstrap
+  name: platform
   namespace: argocd
 spec:
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
-  description: core project
+  description: Platform Project
   destinations:
     - namespace: "*"
       server: "*"
@@ -28,15 +28,15 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "-2"
   creationTimestamp: null
-  name: bootstrap
+  name: platform
   namespace: argocd
 spec:
   generators:
     - git:
         files:
-          - path: bootstrap/**/system/config.json
+          - path: apps/platform/**/system/config.json
         repoURL: https://github.com/Myrenic/Light_Cycle.git
         requeueAfterSeconds: 20
         revision: ""
