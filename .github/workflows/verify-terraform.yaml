@@ -6,6 +6,7 @@ on:  # yamllint disable-line rule:truthy
       - "*"
     paths:
       - "infrastructure/*"
+
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
