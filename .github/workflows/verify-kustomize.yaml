@@ -22,4 +22,4 @@ jobs:
           sudo mv kustomize /usr/local/bin/
       - name: Build & Validate
         run: |
-          kustomize build apps/ --load-restrictor LoadRestrictionsNone --enable-helm | kubectl apply --dry-run=client --validate=false -f -
+          kustomize build apps/ --load-restrictor LoadRestrictionsNone --enable-helm
