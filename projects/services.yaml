@@ -39,7 +39,7 @@ spec:
           - path: apps/services/**/system/config.json
         repoURL: https://github.com/Myrenic/Light_Cycle.git
         requeueAfterSeconds: 20
-        revision: "{{ srcTargetRevision }}"
+        revision: "Fix-Issues--Kustomize,-Lint,-Manifests"
         template:
           metadata: {}
           spec:
