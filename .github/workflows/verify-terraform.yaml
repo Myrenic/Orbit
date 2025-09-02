@@ -3,8 +3,9 @@ name: Validate Terraform
 on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
-      - "**"
-
+      - "*"
+    paths:
+      - "infrastructure/*"
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
