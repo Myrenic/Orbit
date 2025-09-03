@@ -5,3 +5,7 @@ persistence:
 
 defaultBackupStore:
   backupTarget: "nfs://10.0.69.20:/mnt/nfs_disk/backup"
+
+serviceAccount:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
