@@ -64,8 +64,7 @@ agent:
         claimName: traefik-logs-pvc
   extraVolumeMounts:
     - name: traefik-logs
-      mountPath: /var/logs/traefik/traefik.log
-      subPath: traefik.log
+      mountPath: /var/logs/traefik/
   env: 
     - name: REGISTRATION_TOKEN
       valueFrom:
