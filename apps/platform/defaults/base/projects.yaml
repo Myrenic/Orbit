@@ -21,6 +21,7 @@ spec:
   source:
     path: projects
     repoURL: https://github.com/Myrenic/Light_Cycle.git
+    targetRevision: "main"
   syncPolicy:
     automated:
       allowEmpty: true
