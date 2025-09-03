@@ -20,7 +20,7 @@ spec:
   project: default
   source:
     path: projects
-    repoURL: https://github.com/Myrenic/Light_Cycle.git
+    repoURL: https://github.com/Myrenic/Orbit.git
     targetRevision: "main"
   syncPolicy:
     automated:

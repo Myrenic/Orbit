@@ -37,7 +37,7 @@ spec:
     - git:
         files:
           - path: apps/platform/**/system/config.json
-        repoURL: https://github.com/Myrenic/Light_Cycle.git
+        repoURL: https://github.com/Myrenic/Orbit.git
         requeueAfterSeconds: 20
         revision: "main"
         template:
