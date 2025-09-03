@@ -5,6 +5,4 @@ metadata:
   name: longhorn-service-account
   namespace: longhorn-system
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    helm.sh/resource-policy: keep
-  behavior: merge
+    argocd.argoproj.io/sync-wave: "-10" 

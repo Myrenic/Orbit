@@ -16,6 +16,4 @@ resources:
   - ./ingress.yaml
   - ./ns.yaml
   - ./role.yaml
-
-patchesStrategicMerge:
-  - ./sa-patch.yaml
+  - ./sa.yaml
