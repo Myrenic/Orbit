@@ -161,6 +161,65 @@ tasks:
     cmds:
       - git ls-files '*.yml' '*.yaml' | xargs yamllint
 
+  fix-argocd-revisions:
+    aliases: [rev]
+    desc: Interactively set all ApplicationSet revisions and targetRevisions to a chosen branch
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Ensure we are in the repo root
+        if [ ! -d ".git" ]; then
+          echo "Error: Taskfile must be run from the root of the git repository." >&2
+          exit 1
+        fi
+
+        # Fetch all remote branches
+        git fetch --all --prune
+
+        # List branches for selection
+        branches=($(git branch -r | sed 's|origin/||' | grep -v HEAD | sort -u))
+        echo "Available branches:"
+        for i in "${!branches[@]}"; do
+          printf "  [%d] %s\n" "$i" "${branches[$i]}"
+        done
+
+        # Prompt user to pick branch with validation
+        while true; do
+          read -rp "Select branch by number: " branch_index
+          if [[ "$branch_index" =~ ^[0-9]+$ ]] && [ "$branch_index" -ge 0 ] && [ "$branch_index" -lt "${#branches[@]}" ]; then
+            branch="${branches[$branch_index]}"
+            break
+          else
+            echo "Invalid selection, try again."
+          fi
+        done
+        echo "Selected branch: $branch"
+
+        files=$(find ./projects ./apps/platform/defaults/base -type f \( -name '*.yaml' -o -name '*.yml' \) -exec grep -l "apiVersion: argoproj.io/v1alpha1" {} + | while read file; do
+          if grep -q "    targetRevision:" "$file"; then
+            echo "$file"
+          fi
+        done)
+        
+        if [ -z "$files" ]; then
+          echo "No ApplicationSet YAML files found."
+          exit 0
+        fi
+
+        # Replace targetRevision and revision values
+        for f in $files; do
+          echo "Updating $f ..."
+          sed -i -E \
+            -e "s|(targetRevision:).*|\1 \"$branch\"|" \
+            -e "s|(revision:).*|\1 \"$branch\"|" \
+            "$f"
+        done
+        echo "All ApplicationSets updated to branch: $branch"
+
+
+
+
   # ------------------------
   # Infrastructure (terraform)
   # ------------------------
