@@ -137,11 +137,6 @@ Essential infrastructure services powering the cluster
         <td>Identity provider enabling single sign-on (SSO) and centralized user management.</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/cert-manager.svg"></td>
-        <td><a href="https://cert-manager.io/">Cert-Manager</a></td>
-        <td>Manages TLS certificates for secure communication within Kubernetes.</td>
-    </tr>
-    <tr>
         <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/crowdsec.svg"></td>
         <td><a href="https://www.crowdsec.net/">crowdsec</a></td>
         <td>Collaborative, open-source intrusion prevention and detection system.</td>
