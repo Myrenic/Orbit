@@ -21,7 +21,7 @@ spec:
   source:
     path: projects
     repoURL: https://github.com/Myrenic/Orbit.git
-    targetRevision: "replace-crowdstrike-key-with-keyfile"
+    targetRevision: "main"
   syncPolicy:
     automated:
       allowEmpty: true

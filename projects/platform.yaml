@@ -39,7 +39,7 @@ spec:
           - path: apps/platform/**/system/config.json
         repoURL: https://github.com/Myrenic/Orbit.git
         requeueAfterSeconds: 20
-        revision: "replace-crowdstrike-key-with-keyfile"
+        revision: "main"
         template:
           metadata: {}
           spec:
@@ -86,7 +86,7 @@ spec:
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
-        targetRevision: "replace-crowdstrike-key-with-keyfile"
+        targetRevision: "main"
       syncPolicy:
         automated:
           allowEmpty: true
