@@ -4,7 +4,6 @@ kind: Kustomization
 
 resources:
   - authentik/base
-  - cert-manager/base
   - crowdsec/base
   - csi-driver-nfs/base
   - longhorn/base
