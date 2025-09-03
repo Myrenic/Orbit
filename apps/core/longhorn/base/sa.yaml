@@ -6,6 +6,7 @@ metadata:
   namespace: longhorn-system
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    helm.sh/resource-policy: keep
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
