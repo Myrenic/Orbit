@@ -38,7 +38,7 @@ spec:
       crowdsecMode: live
       crowdsecLapiHost: crowdsec-service:8080
       crowdsecLapiScheme: http
-      crowdsecLapiKey: "R3XUxWkP2tstRUYySypkUjFg"
+      CrowdsecLapiKeyFile: /etc/crowdsec/csLapiSecret
       clientTrustedIPs:
         - "10.0.0.0/16"
         - "127.0.0.1/32"
