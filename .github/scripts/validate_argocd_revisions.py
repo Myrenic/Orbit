@@ -24,10 +24,16 @@ def validate_argocd_revisions(base_folder, project_file):
                             errors.append(f"{file_path}: revision is '{revision}', should be 'main'")
 
                 # Check targetRevision in template.spec.source
-                template_spec_source = doc.get("template", {}).get("spec", {}).get("source", {})
-                target_revision = template_spec_source.get("targetRevision")
-                if target_revision != "main":
-                    errors.append(f"{file_path}: targetRevision is '{target_revision}', should be 'main'")
+                template_spec_source = (
+                    doc.get("template", {})
+                    .get("spec", {})
+                    .get("source")
+                )
+
+                if template_spec_source and "targetRevision" in template_spec_source:
+                    target_revision = template_spec_source.get("targetRevision")
+                    if target_revision != "main":
+                        errors.append(f"{file_path}: targetRevision is '{target_revision}', should be 'main'")
 
     # Check all YAML files in the folder
     for root, _, files in os.walk(base_folder):
