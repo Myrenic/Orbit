@@ -1,0 +1,94 @@
+---
+- name: Configure Ubuntu VM
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+  # Needs to stay because qemu-guest-agent is not yet working
+  # Terraform does not know if the VM is done provisioning or not.  
+    - name: Give the VM some time to start up 
+      ansible.builtin.shell: |
+        sleep 30 
+
+    - name: Update and upgrade packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install required packages
+      apt:
+        name:
+          - nfs-kernel-server
+          - nfs-common
+          - qemu-guest-agent
+        state: present
+
+    - name: Check if /dev/vdb has a filesystem
+      command: blkid /dev/vdb
+      register: vdb_fs
+      ignore_errors: true
+
+    - name: Create ext4 filesystem on /dev/vdb if missing
+      filesystem:
+        fstype: ext4
+        dev: /dev/vdb
+        force: yes
+      when: vdb_fs.rc != 0
+
+    - name: Ensure mount point exists
+      file:
+        path: /mnt/nfs_disk
+        state: directory
+
+    - name: Mount /dev/vdb
+      mount:
+        path: /mnt/nfs_disk
+        src: /dev/vdb
+        fstype: ext4
+        state: mounted
+
+    - name: Ensure mount persists in fstab
+      mount:
+        path: /mnt/nfs_disk
+        src: /dev/vdb
+        fstype: ext4
+        opts: defaults
+        state: present
+
+    - name: Create export directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: nobody
+        group: nogroup
+      loop:
+        - /mnt/nfs_disk/media
+        - /mnt/nfs_disk/config
+        - /mnt/nfs_disk/backup
+
+    - name: Configure NFS exports
+      copy:
+        dest: /etc/exports
+        content: |
+          /mnt/nfs_disk/media 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
+          /mnt/nfs_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
+          /mnt/nfs_disk/backup 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload NFS exports
+      command: exportfs -ra
+
+    - name: Enable and start NFS server
+      systemd:
+        name: nfs-server
+        enabled: true
+        state: started
+
+    - name: Enable and start qemu-guest-agent
+      systemd:
+        name: qemu-guest-agent
+        enabled: true
+        state: started

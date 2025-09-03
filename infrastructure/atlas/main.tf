@@ -83,39 +83,20 @@ resource "proxmox_virtual_environment_vm" "vm" {
       keys     = split("\n", chomp(data.http.github_keys.response_body))
     }
   }
+}
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update -y",
-      "sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y",
-      "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nfs-kernel-server nfs-common qemu-guest-agent",
-      "sudo mkfs.ext4 -F /dev/vdb",
-      "sudo mkdir -p /mnt/nfs_disk",
-      "sudo mount /dev/vdb /mnt/nfs_disk",
-      "echo '/dev/vdb /mnt/nfs_disk ext4 defaults 0 2' | sudo tee -a /etc/fstab",
-      "sudo mkdir -p /mnt/nfs_disk/media",
-      "sudo mkdir -p /mnt/nfs_disk/config",
-      "sudo mkdir -p /mnt/nfs_disk/backup",
-      "sudo chown nobody:nogroup /mnt/nfs_disk/media",
-      "sudo chown nobody:nogroup /mnt/nfs_disk/config",
-      "sudo chown nobody:nogroup /mnt/nfs_disk/backup",
-      "echo '/mnt/nfs_disk/media 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
-      "echo '/mnt/nfs_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
-      "echo '/mnt/nfs_disk/backup 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)' | sudo tee -a /etc/exports",
-      "sudo systemctl enable --now nfs-server",
-      "sudo systemctl enable --now qemu-guest-agent",
-      "sudo exportfs -ra"
-    ]
+resource "ansible_playbook" "deploy_apps" {
+  for_each = proxmox_virtual_environment_vm.vm
+  name     = each.value.name
+  playbook = "playbook.yaml"
 
-    connection {
-      type        = "ssh"
-      host        = each.value.ip_addr
-      user        = "ubuntu"
-      private_key = var.ssh_private_key
-      password    = random_password.ubuntu_vm_password.result
-      timeout     = "5m"
-    }
+  extra_vars = {
+    ansible_host                = split("/", each.value.initialization[0].ip_config[0].ipv4[0].address)[0]
+    ansible_user                = "ubuntu"
+    ansible_ssh_extra_args      = "-o StrictHostKeyChecking=no -o PreferredAuthentications=password"
   }
+
+  replayable = true
 }
 
 output "ubuntu_vm_password" {
