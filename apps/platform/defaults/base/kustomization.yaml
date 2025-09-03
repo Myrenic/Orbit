@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - ns.yaml
   - projects.yaml
-  - sa.yaml
+

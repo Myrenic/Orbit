@@ -98,10 +98,10 @@ tasks:
       - kubectl apply -f apps/platform/argocd/base/ExternalSecret.yaml
       - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd
 
-  argocd-projects:
-    desc: Add 'argocd' projects
+  argocd-defaults:
+    desc: Add 'argocd' defaults
     cmds:
-      - kustomize build projects --enable-helm | kubectl apply -f -
+      - kustomize build apps/platform/defaults/base --enable-helm | kubectl apply -f -
       - kubectl rollout status deployment -l app.kubernetes.io/part-of=argocd -n argocd \
         || echo "No new deployments for projects"
 
@@ -143,7 +143,7 @@ tasks:
       - task cert-manager
       - task external-secrets
       - task argocd
-      - task argocd-projects
+      - task argocd-defaults
       - task password-argocd
 
   # ------------------------
