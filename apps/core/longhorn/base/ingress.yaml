@@ -13,8 +13,8 @@ spec:
       services:
         - name: longhorn-frontend
           port: 80
-      # middlewares:
-      #   - name: authentik
-      #     namespace: edge
+          # middlewares:
+          #   - name: authentik
+          #     namespace: edge
   tls:
     certResolver: letsencrypt
