@@ -1,4 +1,4 @@
-# ⚡ Light_Cycle | Authentik Application Control ⚡
+# ⚡ Orbit | Authentik Application Control ⚡
 
 ## Step 0: Change default admin password👤
 

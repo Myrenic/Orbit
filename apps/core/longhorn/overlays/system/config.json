@@ -4,7 +4,7 @@
   "destNamespace": "longhorn-system",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "apps/core/longhorn/overlays/system",
-  "srcRepoURL": "https://github.com/Myrenic/Light_Cycle.git",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
   "srcTargetRevision": "",
   "labels": null,
   "annotations": null
