@@ -1,33 +1,27 @@
-apiVersion: v1
-kind: Service
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
 metadata:
-  name: homeassistant
+  name: home-assistant-forward
   namespace: homeassistant
 spec:
-  ports:
-    - port: 8123
-      targetPort: 8123
+  forward:
+    address: http://10.0.100.11:8123
 ---
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
+apiVersion: traefik.containo.us/v1alpha1
+kind: TraefikService
 metadata:
-  name: homeassistant
+  name: home-assistant-service
   namespace: homeassistant
-  labels:
-    kubernetes.io/service-name: homeassistant
-addressType: IPv4
-ports:
-  - port: 8123
-    protocol: TCP
-    name: http
-endpoints:
-  - addresses:
-      - 10.0.100.11
+spec:
+  weighted:
+    services:
+      - name: home-assistant-forward
+        weight: 1
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: homeassistant
+  name: home-assistant
   namespace: homeassistant
 spec:
   entryPoints:
@@ -36,7 +30,8 @@ spec:
     - match: Host(`home.tuntelder.com`)
       kind: Rule
       services:
-        - name: homeassistant
-          port: 8123
+        - name: home-assistant-service
+          kind: TraefikService
+          namespace: homeassistant
   tls:
     certResolver: letsencrypt
