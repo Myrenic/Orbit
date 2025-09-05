@@ -64,10 +64,10 @@ spec:
     address: http://10.0.100.11:8123
 ---
 apiVersion: traefik.containo.us/v1alpha1
-kind: edge
+kind: TraefikService
 metadata:
   name: home-assistant-service
-  namespace: homeassistant
+  namespace: edge
 spec:
   weighted:
     services:
