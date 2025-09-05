@@ -27,7 +27,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`home.tuntelder.com`)
+    - match: Host(`home.ingress.tuntelder.com`)
       kind: Rule
       services:
         - name: home-assistant-service
