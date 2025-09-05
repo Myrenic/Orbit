@@ -39,7 +39,7 @@ spec:
           - path: apps/platform/**/system/config.json
         repoURL: https://github.com/Myrenic/Orbit.git
         requeueAfterSeconds: 20
-        revision: "main"
+        revision: "newSabnzbdService"
         template:
           metadata: {}
           spec:
@@ -86,7 +86,7 @@ spec:
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
-        targetRevision: "main"
+        targetRevision: "newSabnzbdService"
       syncPolicy:
         automated:
           allowEmpty: true
