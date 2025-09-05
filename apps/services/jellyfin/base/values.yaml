@@ -17,6 +17,8 @@ ingress:
 
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
+  - PUID: 1000
+  - PGID: 1000
 
 pvcs:
   - name: jellyfin-config
