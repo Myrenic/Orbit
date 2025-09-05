@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{.name}}-pv
+  name: {{ .Release.Name }}-{{ .name }}-pv
 spec:
   capacity:
     storage: {{ .size | default "1000Gi" }}
@@ -32,15 +32,16 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .name }}-pvc
+  name: {{ .Release.Name }}-{{ .name }}-pvc
 spec:
   accessModes:
     - {{ .accessMode | default "ReadWriteMany" }}
   resources:
     requests:
       storage: {{ .size | default "1000Gi" }}
-  volumeName: {{ .name }}-pv
+  volumeName: {{ .Release.Name }}-{{ .name }}-pv
   storageClassName: ""
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
