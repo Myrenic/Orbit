@@ -1,11 +1,10 @@
----
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: home-assistant-forward
   namespace: homeassistant
 spec:
-  forward:
+  forwarder:
     address: http://10.0.100.11:8123
 ---
 apiVersion: traefik.containo.us/v1alpha1
