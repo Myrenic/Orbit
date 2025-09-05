@@ -1,0 +1,43 @@
+---
+image:
+  repository: "ghcr.io/home-operations/radarr"
+  tag: "5.27.5"
+
+ports:
+  - name: main
+    containerPort: 7878
+
+ingress:
+  host: radarr.ingress.tuntelder.com
+  # middlewares:
+    # - name: crowdsec-mw
+    #   namespace: edge
+    # - name: local-only
+    #   namespace: edge
+
+pvcs:
+  - name: radarr-config
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 2Gi
+    mountPath: /config
+  - name: library
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/media
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /library
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
