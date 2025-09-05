@@ -1,7 +1,7 @@
 ---
 image:
-  repository: "linuxserver/jellyfin"
-  tag: "10.10.6"
+  repository: "jellyfin/jellyfin"
+  tag: "2025090105"
 
 ports:
   - name: main
@@ -17,8 +17,7 @@ ingress:
 
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
-  - PUID: 1000
-  - PGID: 1000
+
 
 pvcs:
   - name: jellyfin-config
