@@ -60,8 +60,9 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: nobody
-        group: nogroup
+        owner: 65534
+        group: 65534
+        mode: '0775'
       loop:
         - /mnt/nfs_disk/media
         - /mnt/nfs_disk/config

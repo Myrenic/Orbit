@@ -1,0 +1,11 @@
+{
+  "appName": "sabnzbd",
+  "userGivenName": "sabnzbd",
+  "destNamespace": "sabnzbd",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/core/sabnzbd/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

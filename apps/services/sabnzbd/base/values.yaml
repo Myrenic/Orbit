@@ -1,0 +1,50 @@
+image:
+  repository: "ghcr.io/home-operations/sabnzbd"
+  tag: "4.5.3"
+
+ports:
+  - name: main
+    containerPort: 8080
+
+ingress:
+  host: sabnzbd.ingress.tuntelder.com
+  # middlewares:
+    # - name: crowdsec-mw
+    #   namespace: edge
+    # - name: local-only
+    #   namespace: edge
+
+envs:
+  - SABNZBD__PORT: 8080
+  - SABNZBD__HOST_WHITELIST_ENTRIES: sabnzbd.ingress.tuntelder.com
+
+pvcs:
+  - name: sabnzbd-config
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 2Gi
+    mountPath: /config
+  - name: library
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/media
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /library
+  - name: config-file
+    type: secret
+    secretName: sabnzbd.ini
+    mountPath: /defaults
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL

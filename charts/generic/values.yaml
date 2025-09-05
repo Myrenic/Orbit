@@ -1,0 +1,138 @@
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  annotations: {}
+
+podLabels: {}
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+hostNetwork: false
+
+ports: []
+# - name: ""
+#   containerPort: 0
+#   protocol: TCP
+
+service:
+  type: ClusterIP
+  externalTrafficPolicy: ""
+  loadBalancerIP: ""
+
+health:
+  enabled: true
+  startupProbeSeconds: 60
+  port: main
+  type: HTTP
+  path: /
+
+ingress:
+  host: ""
+  path: /
+  public: false
+  publicPath: /
+  port: main
+  annotations: {}
+  annotationsPublic: {}
+  annotationsPrivate: {}
+  # middlewares:
+  #   - name: ""
+  #     namespace: ""
+
+replicas: 1
+strategyType: Recreate
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+terminationGracePeriodSeconds: 30
+
+command: []
+args: []
+
+envs: []
+
+secretEnvs: []
+
+configMaps: []
+# - name: ""
+#   defaultMode: 0644
+#   mountPath: ""
+#   subPath: ""
+#   content: ""
+
+hostPaths: []
+# - name: ""
+#   hostPath: ""
+#   containerPath: ""
+#   readOnly: false
+#   type: "DirectoryOrCreate"
+
+emptyDirs: []
+
+# - name: ""
+#   containerPath: ""
+
+envsubst:
+  image:
+    repository: nixery.dev/shell/envsubst
+    tag: "latest"
+  files: []
+  # - src:
+  #   dest:
+
+database:
+  enabled: false
+  resources: {}
+  hostPath: ""
+  rootPassword: ""
+  userPassword: ""
+  type: mariadb
+  mariadb:
+    image:
+      repository: mariadb
+      tag: "12.0.2@sha256:b30cc65b57a11a2e791ad5c06284e599fe9f1bf3fe9081a88d85bcf36389be4a"
+    backup:
+      schedule: "0 4 * * *"
+      image:
+        repository: fradelg/mysql-cron-backup
+        tag: "latest@sha256:d9b9b1514ef5f879031ea88c656c0b64acb98bb787f401c2fc3f62ed6fafb308"
+  postgresql:
+    image:
+      repository: postgres
+      tag: "17.6@sha256:29e0bb09c8e7e7fc265ea9f4367de9622e55bae6b0b97e7cce740c2d63c2ebc0"
+    backup:
+      schedule: "0 4 * * *"
+      image:
+        repository: prodrigestivill/postgres-backup-local
+        tag: "17@sha256:483fa15ecd998302bd312fc380cb1b3683a940881d9099d6dfe65bcc1e2714e8"
+
+helper:
+  image:
+    repository: busybox
+    tag: "1.37.0@sha256:ab33eacc8251e3807b85bb6dba570e4698c3998eca6f0fc2ccb60575a563ea74"
+
+wait4x:
+  image:
+    repository: wait4x/wait4x
+    tag: "3.5.1@sha256:52e6791d4d8b8c80b2106e4d4f1e44ee69477c6dd461bdeb1aae2db6ccd5d038"
