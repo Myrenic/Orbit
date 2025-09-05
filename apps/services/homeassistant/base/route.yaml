@@ -1,22 +1,3 @@
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: home-assistant-forward
-  namespace: homeassistant
-spec:
-  forwarder:
-    address: http://10.0.100.11:8123
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: TraefikService
-metadata:
-  name: home-assistant-service
-  namespace: homeassistant
-spec:
-  weighted:
-    services:
-      - name: home-assistant-forward
-        weight: 1
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -32,6 +13,6 @@ spec:
       services:
         - name: home-assistant-service
           kind: TraefikService
-          namespace: homeassistant
+          namespace: edge
   tls:
     certResolver: letsencrypt
