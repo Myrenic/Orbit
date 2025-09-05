@@ -1,8 +1,9 @@
 ---
 persistence:
   defaultClassReplicaCount: 1
-  reclaimPolicy: Retain
-
+  allowVolumeExpansion: true
+  reclaimPolicy: Delete
+  volumeBindingMode: Immediate
 defaultBackupStore:
   backupTarget: "nfs://10.0.69.20:/mnt/nfs_disk/backup"
 
