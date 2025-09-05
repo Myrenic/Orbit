@@ -26,7 +26,5 @@ spec:
       kind: Rule
       services:
         - name: homeassistant
-          kind: Service
-          namespace: homeassistant
   tls:
     certResolver: letsencrypt
