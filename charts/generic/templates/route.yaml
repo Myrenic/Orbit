@@ -1,0 +1,36 @@
+---
+{{- if and .Values.ports .Values.ingress.host -}}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "generic-service.name" . }}
+  labels:
+    {{- include "generic-service.labels" . | nindent 4 }}
+  annotations:
+  {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.annotationsPrivate }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingress.host }}`)"
+      kind: Rule
+      services:
+        - name: {{ include "generic-service.name" . }}
+          port: {{ include "generic-service.httpRoutePort" . }}
+      {{- with .Values.ingress.middlewares }}
+      middlewares:
+        {{- range . }}
+        - name: {{ .name }}
+          {{- if .namespace }}
+          namespace: {{ .namespace }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+  tls:
+    certResolver: letsencrypt
+{{- end }}

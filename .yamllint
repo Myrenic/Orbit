@@ -10,3 +10,8 @@ rules:
   line-length:
     max: 240
     level: warning
+  comments-indentation: disable
+  braces: disable
+
+ignore:
+  - charts/

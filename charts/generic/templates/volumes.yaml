@@ -1,0 +1,46 @@
+---
+{{- if .Values.pvcs }}
+{{- range .Values.pvcs }}
+{{- if eq .type "longhorn" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}
+spec:
+  accessModes:
+    - {{ .accessMode }}
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: {{ .size }}
+---
+{{- else if eq .type "nfs" }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{.name}}-pv
+spec:
+  capacity:
+    storage: {{ .size | default "1000Gi" }}
+  accessModes:
+    - {{ .accessMode | default "ReadWriteMany" }}
+  nfs:
+    server: {{ .server }}
+    path: {{ .path }}
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-pvc
+spec:
+  accessModes:
+    - {{ .accessMode | default "ReadWriteMany" }}
+  resources:
+    requests:
+      storage: {{ .size | default "1000Gi" }}
+  volumeName: {{ .name }}-pv
+  storageClassName: ""
+{{- end }}
+{{- end }}
+{{- end }}
