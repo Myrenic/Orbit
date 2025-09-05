@@ -64,9 +64,6 @@ spec:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
         targetRevision: "NewArrApps"
-      syncPolicy:
-        automated:
-          allowEmpty: true
-          prune: true
-          selfHeal: false
+
+
 status: {}
