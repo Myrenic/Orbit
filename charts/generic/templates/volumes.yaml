@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ include "generic-service.name" . }}-{{ .name }}-pv
+  name: {{.name}}-pv
 spec:
   capacity:
     storage: {{ .size | default "1000Gi" }}
@@ -32,14 +32,14 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "generic-service.name" . }}-{{ .name }}-pvc
+  name: {{ .name }}-pvc
 spec:
   accessModes:
     - {{ .accessMode | default "ReadWriteMany" }}
   resources:
     requests:
       storage: {{ .size | default "1000Gi" }}
-  volumeName: {{ include "generic-service.name" . }}-{{ .name }}-pv
+  volumeName: {{ .name }}-pv
   storageClassName: ""
 {{- end }}
 {{- end }}
