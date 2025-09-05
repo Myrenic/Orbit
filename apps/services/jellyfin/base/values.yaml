@@ -1,0 +1,46 @@
+---
+image:
+  repository: "linuxserver/jellyfin"
+  tag: "10.10.6"
+
+ports:
+  - name: main
+    containerPort: 8096
+
+ingress:
+  host: jellyfin.ingress.tuntelder.com
+  # middlewares:
+    # - name: crowdsec-mw
+    #   namespace: edge
+    # - name: local-only
+    #   namespace: edge
+
+envs:
+  - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
+
+pvcs:
+  - name: jellyfin-config
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 2Gi
+    mountPath: /config
+  - name: jellyfin-library
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/media
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /library
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
