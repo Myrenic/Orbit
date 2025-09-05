@@ -5,15 +5,15 @@
   gather_facts: true
 
   tasks:
-  # Needs to stay because qemu-guest-agent is not yet working
-  # Terraform does not know if the VM is done provisioning or not.  
+      # Needs to stay because qemu-guest-agent is not yet working
+      # Terraform does not know if the VM is done provisioning or not.  
     - name: Give the VM some time to start up 
       ansible.builtin.shell: |
         sleep 30 
 
     - name: Update and upgrade packages
       apt:
-        update_cache: yes
+        update_cache: yes     # yamllint disable-line rule:truthy
         upgrade: dist
 
     - name: Install required packages
@@ -33,7 +33,7 @@
       filesystem:
         fstype: ext4
         dev: /dev/vdb
-        force: yes
+        force: yes    # yamllint disable-line rule:truthy
       when: vdb_fs.rc != 0
 
     - name: Ensure mount point exists

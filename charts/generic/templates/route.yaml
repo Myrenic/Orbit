@@ -1,3 +1,4 @@
+---
 {{- if and .Values.ports .Values.ingress.host -}}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
