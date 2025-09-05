@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant
+  namespace: home
+spec:
+  type: ExternalName
+  externalName: 10.0.100.11
+  ports:
+    - port: 8123
+      targetPort: 8123
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homeassistant
+  namespace: home
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`home.ingress.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: homeassistant
+          port: 8123
+  tls:
+    certResolver: letsencrypt
