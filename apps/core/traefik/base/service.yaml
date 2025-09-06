@@ -21,35 +21,24 @@ spec:
   selector:
     app: traefik
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
 metadata:
-  name: traefik-dashboard
+  name: traefik-ingressroute
   namespace: edge
-  annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
-  rules:
-    - host: traefik.tuntelder.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: traefik
-                port:
-                  name: admin
-                middlewares:
-                  - name: crowdsec-mw
-                    namespace: edge
-                  - name: authentik
-                    namespace: edge
-                  - name: local-only
-                    namespace: edge
-
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: traefik
+          port: 8080
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        - name: local-only
+          namespace: edge
   tls:
-    - hosts:
-        - "traefik.tuntelder.com"
+    certResolver: letsencrypt
