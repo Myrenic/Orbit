@@ -17,7 +17,7 @@ pvcs:
   - name: jellyseerr-app
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/config/jellyseerr
+    path: /mnt/ssd_disk/config/jellyseerr
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /app/config

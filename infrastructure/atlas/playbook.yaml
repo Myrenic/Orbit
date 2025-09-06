@@ -65,7 +65,7 @@
         mode: '0775'
       loop:
         - /mnt/ssd_disk/config
-        - /mnt/nfs_disk/config
+        - /mnt/ssd_disk/config
         - /mnt/nfs_disk/backup
 
     - name: Configure NFS exports
@@ -73,7 +73,7 @@
         dest: /etc/exports
         content: |
           /mnt/ssd_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
-          /mnt/nfs_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
+          /mnt/ssd_disk/config 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
           /mnt/nfs_disk/backup 10.0.69.0/24(rw,sync,no_subtree_check,no_root_squash)
         owner: root
         group: root

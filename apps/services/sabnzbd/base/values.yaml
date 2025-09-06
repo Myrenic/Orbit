@@ -23,7 +23,7 @@ pvcs:
   - name: sabnzbd-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/config/sabnzbd
+    path: /mnt/ssd_disk/config/sabnzbd
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /config

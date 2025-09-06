@@ -19,7 +19,7 @@ pvcs:
   - name: prowlarr-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/config/prowlarr
+    path: /mnt/ssd_disk/config/prowlarr
     accessMode: ReadWriteMany
     size: 5Gi
     mountPath: /config
