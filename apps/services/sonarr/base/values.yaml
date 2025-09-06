@@ -19,7 +19,7 @@ pvcs:
   - name: sonarr-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/ssd_disk/config/sonarr
+    path: /mnt/nfs_disk/config/sonarr
     accessMode: ReadWriteMany
     size: 5Gi
     mountPath: /config
