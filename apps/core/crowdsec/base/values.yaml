@@ -8,18 +8,6 @@ secrets:
     registrationTokenKey: registrationToken
 
 lapi:
-  config:
-    notifications:
-      telegram:
-        type: telegram
-        tokenFromSecret:
-          name: crowdsec-api-token
-          key: TELEGRAM_BOT_TOKEN
-        chat_ids:
-          - -1003081346556
-        topics:
-          - 2
-        enabled: true
   enabled: true
   service:
     type: ClusterIP
