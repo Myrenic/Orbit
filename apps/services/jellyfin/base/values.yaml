@@ -18,6 +18,8 @@ ingress:
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
   - S6_READ_ONLY_ROOT: 1
+  - PUID: 1000
+  - PGID: 1000
 
 health:
   enabled: true
@@ -40,10 +42,9 @@ pvcs:
     mountPath: /library
 
 podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  seccompProfile:
-    type: RuntimeDefault
+  runAsNonRoot: false   
+  runAsUser: 0          
+  fsGroup: 1000         
 
 securityContext:
   runAsNonRoot: true
