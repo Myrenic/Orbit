@@ -8,13 +8,17 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`longhorn.ingress.tuntelder.com`)
+    - match: Host(`longhorn.tuntelder.com`)
       kind: Rule
       services:
         - name: longhorn-frontend
           port: 80
-          # middlewares:
-          #   - name: authentik
-          #     namespace: edge
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        - name: authentik
+          namespace: edge
+        - name: local-only
+          namespace: edge
   tls:
     certResolver: letsencrypt

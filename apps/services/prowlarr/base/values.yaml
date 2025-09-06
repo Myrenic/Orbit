@@ -1,26 +1,29 @@
 ---
 image:
-  repository: "ghcr.io/fallenbagel/jellyseerr"
-  tag: "2.7.3"
+  repository: "ghcr.io/home-operations/prowlarr"
+  tag: "2.0.5.5160"
 
 ports:
   - name: main
-    containerPort: 5055
+    containerPort: 9696
 
 ingress:
-  host: jellyseerr.tuntelder.com
+  host: prowlarr.tuntelder.com
   middlewares:
     - name: crowdsec-mw
       namespace: edge
+    - name: authentik
+      namespace: edge
 
 pvcs:
-  - name: jellyseerr-app
+  - name: prowlarr-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/config/jellyseerr
+    path: /mnt/nfs_disk/config/prowlarr
     accessMode: ReadWriteMany
-    size: 800Gi
-    mountPath: /app/config
+    size: 5Gi
+    mountPath: /config
+
 
 podSecurityContext:
   runAsNonRoot: true

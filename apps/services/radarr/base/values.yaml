@@ -8,23 +8,25 @@ ports:
     containerPort: 7878
 
 ingress:
-  host: radarr.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: radarr.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: authentik
+      namespace: edge
 
 pvcs:
   - name: radarr-config
-    type: longhorn
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/config/radarr
     accessMode: ReadWriteMany
-    size: 2Gi
+    size: 5Gi
     mountPath: /config
   - name: radarr-library
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/media
+    path: /mnt/ssd_disk/config
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /library

@@ -1,24 +1,10 @@
----
-{{- if .Values.pvcs }}
 {{- range .Values.pvcs }}
-{{- if eq .type "longhorn" }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ .name }}
-spec:
-  accessModes:
-    - {{ .accessMode }}
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: {{ .size }}
+{{- if eq .type "nfs" }}
 ---
-{{- else if eq .type "nfs" }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{.name}}-pv
+  name: {{ .name }}-pv
 spec:
   capacity:
     storage: {{ .size | default "1000Gi" }}
@@ -41,6 +27,18 @@ spec:
       storage: {{ .size | default "1000Gi" }}
   volumeName: {{ .name }}-pv
   storageClassName: ""
-{{- end }}
+{{- else if eq .type "longhorn" }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}
+spec:
+  accessModes:
+    - {{ .accessMode }}
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: {{ .size }}
 {{- end }}
 {{- end }}

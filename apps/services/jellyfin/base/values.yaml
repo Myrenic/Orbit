@@ -1,47 +1,56 @@
 ---
 image:
-  repository: "jellyfin/jellyfin"
-  tag: "2025090105"
+  repository: "linuxserver/jellyfin"
+  tag: "10.10.7"
 
 ports:
   - name: main
     containerPort: 8096
 
 ingress:
-  host: jellyfin.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: jellyfin.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
 
 envs:
-  - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
+  - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
+  - S6_READ_ONLY_ROOT: 1
+  - PGID: "1000"
+  - PUID: "1000"
 
+health:
+  enabled: true
+  startupProbeSeconds: 220
 
 pvcs:
   - name: jellyfin-config
-    type: longhorn
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/config/jellyfin
     accessMode: ReadWriteMany
-    size: 15Gi
+    size: 800Gi
     mountPath: /config
   - name: jellyfin-library
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/media
+    path: /mnt/ssd_disk/config
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /library
 
 podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
+  runAsNonRoot: false     # allow root start
+  runAsUser: 0            # start as root
+  fsGroup: 1000           # ensure mounted volumes writable
   seccompProfile:
     type: RuntimeDefault
 
 securityContext:
-  runAsNonRoot: true
   allowPrivilegeEscalation: false
   capabilities:
     drop:
       - ALL
+    add:
+      - SETUID
+      - SETGID

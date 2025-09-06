@@ -35,11 +35,13 @@ server:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+      traefik.ingress.kubernetes.io/router.middlewares: edge-crowdsec-mw@kubernetescrd
     hosts:
-      - auth.ingress.tuntelder.com
+      - auth.tuntelder.com
     tls:
       - hosts:
-          - auth.ingress.tuntelder.com
+          - auth.tuntelder.com
+
   readinessProbe:
     httpGet:
       path: /-/health/ready/

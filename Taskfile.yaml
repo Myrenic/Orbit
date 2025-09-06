@@ -232,7 +232,6 @@ tasks:
     cmds:
       - >
         terraform -chdir=infrastructure/helios plan &
-        terraform -chdir=infrastructure/atlas plan &
         wait
         
   terraform-apply:
@@ -241,7 +240,6 @@ tasks:
     cmds:
       - >
         terraform -chdir=infrastructure/helios apply -auto-approve &
-        terraform -chdir=infrastructure/atlas apply -auto-approve &
         wait
         
   terraform-destroy:
@@ -250,7 +248,6 @@ tasks:
     cmds:
       - >
         terraform -chdir=infrastructure/helios destroy -auto-approve &
-        terraform -chdir=infrastructure/atlas destroy -auto-approve &
         wait
 
   terraform-import:
