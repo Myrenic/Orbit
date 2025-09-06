@@ -1,5 +1,6 @@
 ---
-{{- if .Values.pvcs.nfs }}
+{{- range .Values.pvcs }}
+{{- if eq .type "nfs" }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -14,4 +15,5 @@ spec:
     path: {{ .path }}
   persistentVolumeReclaimPolicy: Retain
 
+{{- end }}
 {{- end }}
