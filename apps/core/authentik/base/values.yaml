@@ -35,7 +35,6 @@ server:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-      traefik.ingress.kubernetes.io/router.middlewares: edge-crowdsec-mw@kubernetescrd
     hosts:
       - auth.tuntelder.com
     tls:
@@ -47,7 +46,7 @@ server:
       path: /-/health/ready/
       port: http
       scheme: HTTP
-    initialDelaySeconds: 60
+    initialDelaySeconds: 120
     periodSeconds: 10
     timeoutSeconds: 10
     failureThreshold: 10
@@ -56,10 +55,10 @@ server:
       path: /-/health/live/
       port: http
       scheme: HTTP
-    initialDelaySeconds: 10
+    initialDelaySeconds: 120
     periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 5
+    timeoutSeconds: 10
+    failureThreshold: 10
 
 postgresql:
   enabled: true
