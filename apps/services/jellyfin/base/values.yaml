@@ -18,6 +18,9 @@ ingress:
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
 
+health:
+  enabled: true
+  startupProbeSeconds: 220
 
 pvcs:
   - name: jellyfin-config
