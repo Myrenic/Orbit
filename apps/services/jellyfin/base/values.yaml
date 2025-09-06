@@ -15,12 +15,10 @@ ingress:
       namespace: edge
 
 envs:
-  - name: PUID
-    value: "1000"
-  - name: PGID
-    value: "1000"
-  - name: JELLYFIN_PublishedServerUrl
-    value: "jellyfin.tuntelder.com"
+  - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
+  - S6_READ_ONLY_ROOT: 1
+  - PGID: "1000"
+  - PUID: "1000"
 
 health:
   enabled: true
