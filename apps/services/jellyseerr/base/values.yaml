@@ -17,9 +17,11 @@ ingress:
 
 pvcs:
   - name: jellyseerr-app
-    type: longhorn
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/config/jellyseerr
     accessMode: ReadWriteMany
-    size: 10Gi
+    size: 800Gi
     mountPath: /app/config
 
 podSecurityContext:

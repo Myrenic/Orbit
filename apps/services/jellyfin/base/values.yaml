@@ -21,9 +21,11 @@ envs:
 
 pvcs:
   - name: jellyfin-config
-    type: longhorn
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/config/config
     accessMode: ReadWriteMany
-    size: 15Gi
+    size: 800Gi
     mountPath: /config
   - name: jellyfin-library
     type: nfs
