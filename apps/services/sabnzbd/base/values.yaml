@@ -30,7 +30,7 @@ pvcs:
   - name: sabnzbd-library
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/media
+    path: /mnt/ssd_disk/config
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /library
