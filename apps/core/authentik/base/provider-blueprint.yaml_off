@@ -35,9 +35,9 @@ data:
           - 8f60018b-f7b4-4d6d-a3b1-04ccf9231b5e
           redirect_uris:
           - matching_mode: strict
-            url: https://auth.ingress.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
+            url: https://auth.tuntelder.com/outpost.goauthentik.io/callback?X-authentik-auth-callback=true
           - matching_mode: strict
-            url: https://auth.ingress.tuntelder.com?X-authentik-auth-callback=true
+            url: https://auth.tuntelder.com?X-authentik-auth-callback=true
           refresh_token_validity: days=30
           sub_mode: hashed_user_id
         conditions: []
@@ -49,8 +49,8 @@ data:
       - attrs:
           access_token_validity: hours=24
           authorization_flow: 6b797033-4eab-4651-84cd-25763cb68345
-          cookie_domain: .ingress.tuntelder.com
-          external_host: https://auth.ingress.tuntelder.com
+          cookie_domain: .tuntelder.com
+          external_host: https://auth.tuntelder.com
           intercept_header_auth: true
           internal_host_ssl_validation: true
           invalidation_flow: fdd73bfd-e25c-4002-8521-417d2f50e976

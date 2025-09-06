@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: HostSNI(`home.ingress.tuntelder.com`)
+    - match: HostSNI(`home.tuntelder.com`)
       services:
         - name: homeassistant-tcp
           port: 8123

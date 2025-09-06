@@ -8,12 +8,12 @@ ports:
     containerPort: 7878
 
 ingress:
-  host: radarr.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: radarr.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
+      namespace: edge
 
 pvcs:
   - name: radarr-config

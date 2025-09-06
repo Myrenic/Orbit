@@ -8,12 +8,12 @@ ports:
     containerPort: 8989
 
 ingress:
-  host: sonarr.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: sonarr.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
+      namespace: edge
 
 pvcs:
   - name: sonarr-config

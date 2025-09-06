@@ -8,12 +8,12 @@ ports:
     containerPort: 9696
 
 ingress:
-  host: prowlarr.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: prowlarr.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
+      namespace: edge
 
 pvcs:
   - name: prowlarr-config

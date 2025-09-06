@@ -8,15 +8,15 @@ ports:
     containerPort: 8096
 
 ingress:
-  host: jellyfin.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: jellyfin.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
+      namespace: edge
 
 envs:
-  - JELLYFIN_PublishedServerUrl: jellyfin.ingress.tuntelder.com
+  - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
 
 health:
   enabled: true

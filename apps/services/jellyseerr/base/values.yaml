@@ -8,12 +8,12 @@ ports:
     containerPort: 5055
 
 ingress:
-  host: jellyseerr.ingress.tuntelder.com
-  # middlewares:
-    # - name: crowdsec-mw
-    #   namespace: edge
-    # - name: local-only
-    #   namespace: edge
+  host: jellyseerr.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
+      namespace: edge
 
 pvcs:
   - name: jellyseerr-app
