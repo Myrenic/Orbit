@@ -26,7 +26,7 @@ pvcs:
   - name: radarr-library
     type: nfs
     server: 10.0.69.20
-    path: /mnt/ssd_disk/config
+    path: /mnt/nfs_disk/media
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /library
