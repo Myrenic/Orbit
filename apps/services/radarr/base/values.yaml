@@ -19,7 +19,7 @@ pvcs:
   - name: radarr-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/nfs_disk/config/radarr
+    path: /mnt/ssd_disk/config/radarr
     accessMode: ReadWriteMany
     size: 5Gi
     mountPath: /config
