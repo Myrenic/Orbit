@@ -12,7 +12,7 @@ ingress:
   middlewares:
     - name: crowdsec-mw
       namespace: edge
-    - name: local-only
+    - name: authentik
       namespace: edge
 
 envs:

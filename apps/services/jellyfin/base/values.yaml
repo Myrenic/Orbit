@@ -11,8 +11,6 @@ ingress:
   middlewares:
     - name: crowdsec-mw
       namespace: edge
-    - name: local-only
-      namespace: edge
 
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com

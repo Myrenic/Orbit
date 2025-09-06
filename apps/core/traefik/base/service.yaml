@@ -42,6 +42,14 @@ spec:
                 name: traefik
                 port:
                   name: admin
+                middlewares:
+                  - name: crowdsec-mw
+                    namespace: edge
+                  - name: authentik
+                    namespace: edge
+                  - name: local-only
+                    namespace: edge
+
   tls:
     - hosts:
         - "traefik.tuntelder.com"
