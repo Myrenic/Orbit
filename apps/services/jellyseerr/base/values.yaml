@@ -1,0 +1,36 @@
+---
+image:
+  repository: "ghcr.io/fallenbagel/jellyseerr"
+  tag: "2.7.2"
+
+ports:
+  - name: main
+    containerPort: 5055
+
+ingress:
+  host: jellyseerr.ingress.tuntelder.com
+  # middlewares:
+    # - name: crowdsec-mw
+    #   namespace: edge
+    # - name: local-only
+    #   namespace: edge
+
+pvcs:
+  - name: jellyseerr-app
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 10Gi
+    mountPath: /app/config
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL

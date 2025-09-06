@@ -1,0 +1,11 @@
+{
+  "appName": "radarr",
+  "userGivenName": "radarr",
+  "destNamespace": "radarr",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/services/radarr/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}
