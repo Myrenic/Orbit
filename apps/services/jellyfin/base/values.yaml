@@ -17,6 +17,7 @@ ingress:
 
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
+  - S6_READ_ONLY_ROOT: 1
 
 health:
   enabled: true
