@@ -53,4 +53,5 @@ securityContext:
     drop:
       - ALL
     add:
+      - SETUID
       - SETGID
