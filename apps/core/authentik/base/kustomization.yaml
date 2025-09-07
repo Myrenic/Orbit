@@ -5,7 +5,7 @@ namespace: edge
 
 resources:
   - secret.yaml
-  - css-configmap.yaml
+  - volume.yaml
 
 helmCharts:
   - name: authentik
