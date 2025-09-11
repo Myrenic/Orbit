@@ -47,7 +47,7 @@ server:
       path: /-/health/ready/
       port: http
       scheme: HTTP
-    initialDelaySeconds: 60
+    initialDelaySeconds: 120
     periodSeconds: 10
     timeoutSeconds: 10
     failureThreshold: 10
@@ -56,10 +56,10 @@ server:
       path: /-/health/live/
       port: http
       scheme: HTTP
-    initialDelaySeconds: 10
+    initialDelaySeconds: 120
     periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 5
+    timeoutSeconds: 10
+    failureThreshold: 10
 
 postgresql:
   enabled: true
@@ -68,6 +68,10 @@ postgresql:
     existingSecret: authentik-secret
     secretKeys:
       password: AUTHENTIK_POSTGRESQL__PASSWORD
+  primary:
+    persistence:
+      enabled: true
+      existingClaim: authentik-postgres-pvc
 
 redis:
   enabled: true
