@@ -78,7 +78,9 @@ task reset-infra
 ## Apps
 
 ### Services
+
 End-user facing applications
+
 <table>
     <tr>
         <th>Logo</th>
@@ -90,11 +92,47 @@ End-user facing applications
         <td><a href="https://github.com/crccheck/docker-hello-world">Hello-World</a></td>
         <td>Example and template application for the repository</td>
     </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg"></td>
+        <td><a href="https://jellyfin.org/">Jellyfin</a></td>
+        <td>Open-source media system for streaming movies, TV shows, and music.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyseerr.svg"></td>
+        <td><a href="https://github.com/Fallenbagel/jellyseerr">Jellyseerr</a></td>
+        <td>Media request management and discovery tool for Jellyfin.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/prowlarr.svg"></td>
+        <td><a href="https://github.com/Prowlarr/Prowlarr">Prowlarr</a></td>
+        <td>Indexer manager for integrating with Sonarr, Radarr, and more.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/radarr.svg"></td>
+        <td><a href="https://radarr.video/">Radarr</a></td>
+        <td>Movie collection manager for Usenet and BitTorrent users.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://raw.githubusercontent.com/walkxcode/dashboard-icons/master/svg/sonarr.svg"></td>
+        <td><a href="https://sonarr.tv/">Sonarr</a></td>
+        <td>Smart PVR for TV shows, automating downloads and organization.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://raw.githubusercontent.com/walkxcode/dashboard-icons/master/svg/sabnzbd.svg"></td>
+        <td><a href="https://sabnzbd.org/">SABnzbd</a></td>
+        <td>Usenet binary newsreader for automated downloads.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
+        <td><a href="https://github.com/Myrenic/RoomctrlScraper">RoomCtrlScraper</a></td>
+        <td>Custom service to scrape and manage room control data.</td>
+    </tr>
 </table>
 
-### platform
+### Platform
 
 Foundation components for running and deploying applications in my cluster
+
 <table>
     <tr>
         <th>Logo</th>
@@ -109,7 +147,7 @@ Foundation components for running and deploying applications in my cluster
     <tr>
         <td><img width="32" src="https://external-secrets.io/latest/pictures/eso-round-logo.svg"></td>
         <td><a href="https://external-secrets.io/latest/">External Secrets</a></td>
-        <td>Syncs secrets from Azure Key Vault into Kubernetes resources.</td>
+        <td>Syncs secrets from external stores into Kubernetes resources.</td>
     </tr>
     <tr>
         <td><img width="32" src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png"></td>
@@ -121,10 +159,22 @@ Foundation components for running and deploying applications in my cluster
         <td><a href="https://github.com/renovatebot/renovate">Renovate</a></td>
         <td>Automates dependency and container image updates via pull requests.</td>
     </tr>
+    <tr>
+        <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
+        <td>CRDs</td>
+        <td>Custom Resource Definitions required by various operators and apps.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
+        <td>Defaults</td>
+        <td>Cluster-wide default namespaces and ArgoCD projects.</td>
+    </tr>
 </table>
 
 ### Core
+
 Essential infrastructure services powering the cluster
+
 <table>
     <tr>
         <th>Logo</th>
