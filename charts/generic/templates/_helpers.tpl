@@ -74,14 +74,12 @@ tcpSocket:
 {{- end }}
 - name: TZ
   value: Europe/Amsterdam
-{{- range $k, $v := .Values.secretEnvs }}
-{{- range $kk, $vv := $v }}
-- name: {{ $kk | quote }}
+{{- range .Values.secretEnvs }}
+- name: {{ .envName }}
   valueFrom:
     secretKeyRef:
-      name: {{ include "generic-service.name" $ }}
-      key: {{ $kk | quote }}
-{{- end }}
+      name: {{ .secretName }}
+      key: {{ .secretKey }}
 {{- end }}
 {{- range $k, $v := .Values.envs }}
 {{- range $kk, $vv := $v }}
