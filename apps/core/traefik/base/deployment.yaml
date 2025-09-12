@@ -17,7 +17,7 @@ spec:
       serviceAccountName: traefik-sa
       containers:
         - name: traefik
-          image: traefik:v2.10
+          image: traefik:v3.5.2
           env:
             - name: CLOUDFLARE_DNS_API_TOKEN
               valueFrom:

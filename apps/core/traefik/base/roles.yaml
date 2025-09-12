@@ -6,6 +6,15 @@ metadata:
   namespace: edge
 rules:
   - apiGroups: [""]
+    resources: ["secrets", "endpoints", "services", "nodes", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "ingressclasses", "ingresses/status"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
     resources: ["secrets", "endpoints", "services"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["networking.k8s.io", "extensions"]

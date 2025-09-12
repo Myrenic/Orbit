@@ -4,27 +4,27 @@ image:
   tag: "latest"
   
 secretEnvs:
-- envName: ROOMCTRL_EMAIL
-  secretName: roomctrlscraper
-  secretKey: ROOMCTRL_EMAIL
-- envName: ROOMCTRL_PASSWORD
-  secretName: roomctrlscraper
-  secretKey: ROOMCTRL_PASSWORD
-- envName: SCAN_INTERVAL_SECONDS
-  secretName: roomctrlscraper
-  secretKey: SCAN_INTERVAL_SECONDS
-- envName: ROOMCTRL_INSTANCE_ENDPOINT
-  secretName: roomctrlscraper
-  secretKey: ROOMCTRL_INSTANCE_ENDPOINT
-- envName: TELEGRAM_BOT_TOKEN
-  secretName: roomctrlscraper
-  secretKey: TELEGRAM_BOT_TOKEN
-- envName: TELEGRAM_CHAT_ID
-  secretName: roomctrlscraper
-  secretKey: TELEGRAM_CHAT_ID
-- envName: TELEGRAM_THREAD_ID
-  secretName: roomctrlscraper
-  secretKey: TELEGRAM_THREAD_ID
+  - envName: ROOMCTRL_EMAIL
+    secretName: roomctrlscraper
+    secretKey: ROOMCTRL_EMAIL
+  - envName: ROOMCTRL_PASSWORD
+    secretName: roomctrlscraper
+    secretKey: ROOMCTRL_PASSWORD
+  - envName: SCAN_INTERVAL_SECONDS
+    secretName: roomctrlscraper
+    secretKey: SCAN_INTERVAL_SECONDS
+  - envName: ROOMCTRL_INSTANCE_ENDPOINT
+    secretName: roomctrlscraper
+    secretKey: ROOMCTRL_INSTANCE_ENDPOINT
+  - envName: TELEGRAM_BOT_TOKEN
+    secretName: roomctrlscraper
+    secretKey: TELEGRAM_BOT_TOKEN
+  - envName: TELEGRAM_CHAT_ID
+    secretName: roomctrlscraper
+    secretKey: TELEGRAM_CHAT_ID
+  - envName: TELEGRAM_THREAD_ID
+    secretName: roomctrlscraper
+    secretKey: TELEGRAM_THREAD_ID
 
 podSecurityContext:
   runAsNonRoot: true
