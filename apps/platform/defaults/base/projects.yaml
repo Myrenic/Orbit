@@ -21,7 +21,7 @@ spec:
   source:
     path: projects
     repoURL: https://github.com/Myrenic/Orbit.git
-    targetRevision: "main"
+    targetRevision: "Update-traefik"
   syncPolicy:
     automated:
       allowEmpty: true
