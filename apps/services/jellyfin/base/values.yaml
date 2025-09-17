@@ -1,6 +1,6 @@
 ---
 image:
-  repository: "linuxserver/jellyfin"
+  repository: "jellyfin/jellyfin"
   tag: "10.10.7"
 
 ports:
@@ -16,9 +16,9 @@ ingress:
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
   - S6_READ_ONLY_ROOT: 1
-  - PGID: "1000"
-  - PUID: "1000"
-  - DOCKER_MODS: linuxserver/mods:jellyfin-opencl-intel
+  # - PGID: "1000"
+  # - PUID: "1000"
+  # - DOCKER_MODS: linuxserver/mods:jellyfin-opencl-intel
 
 health:
   enabled: true
@@ -30,10 +30,10 @@ devices:
     path: /dev/dri
 
 pvcs:
-  - name: jellyfin-config
+  - name: jellyfin-config2
     type: nfs
     server: 10.0.69.20
-    path: /mnt/ssd_disk/config/jellyfin
+    path: /mnt/ssd_disk/config/jellyfin2
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /config
