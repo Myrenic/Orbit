@@ -24,7 +24,7 @@ health:
   startupProbeSeconds: 220
 
 hostPaths:
-  - name: /dev/dri
+  - name: dri
   - containerPath: /dev/dri
 
 pvcs:
