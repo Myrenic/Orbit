@@ -150,6 +150,10 @@ spec:
           mountPath: {{ printf "%s/%s" .mountPath .subPath | quote }}
           subPath: {{ .subPath | quote }}
         {{- end }}
+        {{- range .Values.devices }}
+        - name: {{ .name }}
+          mountPath: {{ .path }}
+        {{- end }}
         {{- range .Values.emptyDirs }}
         - name: emptydir-{{ .name }}
           mountPath: {{ .containerPath | quote }}
@@ -171,6 +175,12 @@ spec:
           claimName: {{ if eq .type "nfs" }}{{ .name }}-pvc{{ else }}{{ .name }}{{ end }}
         {{- end }}
       {{- end }}
+      {{- end }}
+      {{- range .Values.devices }}
+      - name: {{ .name }}
+        hostPath:
+          path: {{ .path }}
+          type: Directory
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

@@ -23,9 +23,9 @@ health:
   enabled: true
   startupProbeSeconds: 220
 
-hostPaths:
+devices:
   - name: dri
-  - containerPath: /dev/dri
+    path: /dev/dri
 
 pvcs:
   - name: jellyfin-config
