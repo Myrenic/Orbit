@@ -23,6 +23,10 @@ health:
   enabled: true
   startupProbeSeconds: 220
 
+hostPaths:
+  - name: /dev/dri
+  - containerPath: /dev/dri
+
 pvcs:
   - name: jellyfin-config
     type: nfs
