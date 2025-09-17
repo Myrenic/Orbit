@@ -46,14 +46,14 @@ pvcs:
     mountPath: /library
 
 podSecurityContext:
-  runAsNonRoot: false     # allow root start
+  runAsNonRoot: true     # allow root start
   runAsUser: 0            # start as root
   fsGroup: 1000           # ensure mounted volumes writable
   seccompProfile:
     type: RuntimeDefault
 
 securityContext:
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: true
   capabilities:
     drop:
       - ALL
