@@ -39,7 +39,7 @@ spec:
           - path: apps/platform/**/system/config.json
         repoURL: https://github.com/Myrenic/Orbit.git
         requeueAfterSeconds: 20
-        revision: "main"
+        revision: "jellyfin-gpu-passtrough"
         template:
           metadata: {}
           spec:
@@ -86,7 +86,7 @@ spec:
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
-        targetRevision: "main"
+        targetRevision: "jellyfin-gpu-passtrough"
       syncPolicy:
         automated:
           allowEmpty: true
