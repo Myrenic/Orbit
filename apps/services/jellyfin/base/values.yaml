@@ -53,10 +53,8 @@ podSecurityContext:
     type: RuntimeDefault
 
 securityContext:
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: true
   capabilities:
-    drop:
-      - ALL
     add:
-      - SETUID
-      - SETGID
+      - SYS_ADMIN
+      - IPC_LOCK
