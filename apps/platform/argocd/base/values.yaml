@@ -8,7 +8,7 @@ configs:
   cm:
     kustomize.buildOptions: --enable-helm --enable-alpha-plugins --load-restrictor LoadRestrictionsNone
   cmdParams:
-    server.insecure: false
+    server.insecure: true
 
 crds:
   install: true
