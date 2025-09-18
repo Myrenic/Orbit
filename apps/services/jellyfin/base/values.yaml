@@ -7,6 +7,10 @@ ports:
   - name: main
     containerPort: 8096
 
+resources:
+  limits:
+    gpu.intel.com/i915: 1
+
 ingress:
   host: jellyfin.tuntelder.com
   middlewares:
