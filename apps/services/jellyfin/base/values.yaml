@@ -18,7 +18,7 @@ envs:
   - S6_READ_ONLY_ROOT: 1
   - PGID: "1000"
   - PUID: "1000"
-  # - DOCKER_MODS: linuxserver/mods:jellyfin-opencl-intel
+  - DOCKER_MODS: linuxserver/mods:jellyfin-opencl-intel
 
 health:
   enabled: true
