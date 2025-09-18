@@ -28,7 +28,6 @@ health:
   enabled: true
   startupProbeSeconds: 220
 
-
 devices:
   - name: dri
     path: /dev/dri
