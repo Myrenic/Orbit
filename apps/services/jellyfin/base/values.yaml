@@ -1,6 +1,6 @@
 ---
 image:
-  repository: "jellyfin/jellyfin"
+  repository: "linuxserver/jellyfin"
   tag: "10.10.7"
 
 ports:
@@ -30,10 +30,10 @@ devices:
     path: /dev/dri
 
 pvcs:
-  - name: jellyfin-config2
+  - name: jellyfin-config
     type: nfs
     server: 10.0.69.20
-    path: /mnt/ssd_disk/config/jellyfin2
+    path: /mnt/ssd_disk/config/jellyfin
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /config
@@ -58,3 +58,4 @@ securityContext:
     add:
       - SYS_ADMIN
       - IPC_LOCK
+
