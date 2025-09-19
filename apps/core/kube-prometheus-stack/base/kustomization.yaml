@@ -1,8 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# CRDs are managed by the helm chart with includeCRDs: true
-
 helmCharts:
   - name: kube-prometheus-stack
     repo: https://prometheus-community.github.io/helm-charts
@@ -11,7 +9,6 @@ helmCharts:
     namespace: monitoring
     valuesFile: values.yaml
     includeCRDs: false
-
 
 resources:
   - volume.yaml
