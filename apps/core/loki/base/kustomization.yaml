@@ -12,3 +12,5 @@ helmCharts:
     namespace: monitoring
     valuesFile: values.yaml
 
+resources:
+  - ingress.yaml
