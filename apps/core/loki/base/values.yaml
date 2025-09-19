@@ -15,4 +15,4 @@ promtail:
           regex: ".*"  # collect all namespaces; adjust if needed
 
 grafana:
-  enabled: true  
+  enabled: false  
