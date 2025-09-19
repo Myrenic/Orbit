@@ -21,7 +21,7 @@ spec:
   source:
     path: projects
     repoURL: https://github.com/Myrenic/Orbit.git
-    targetRevision: "jellyfin-gpu-passtrough"
+    targetRevision: "main"
   syncPolicy:
     automated:
       allowEmpty: true
