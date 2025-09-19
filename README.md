@@ -46,34 +46,16 @@ export GIT_TOKEN=...
 3. **Deploy the machines** using Terraform:
 
 ```bash
-task terraform-apply
+task build
 ```
 
-4. **Import Terraform outputs** for local access:
-
-```bash
-task terraform-import
-```
-
-5. **Run pre-checks** to verify environment and CLI tools:
-
-```bash
-task pre-checks
-```
-
-6. **Bootstrap the cluster** (installs CRDs, cert-manager, external-secrets, and ArgoCD):
+3. **Bootstrap the cluster** (installs CRDs, cert-manager, external-secrets, and ArgoCD):
 
 ```bash
 task bootstrap
 ```
 
-7. **Access ArgoCD**:
-
-```bash
-task argo-port-fw
-```
-
-Then open [http://localhost:8080](http://localhost:8080) and log in using the admin password stored in Bitwarden.
+Then open [https://argocd.{{domain}}](https://argocd.{{domain}}) and log in using the admin password stored in Bitwarden.
 
 99. **Full reset**:
 

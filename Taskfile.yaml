@@ -264,3 +264,10 @@ tasks:
       - task terraform-destroy
       - task terraform-apply
       - task terraform-import
+
+  terraform-build:
+    aliases: [build]
+    desc: build infra (apply + import)
+    cmds:
+      - task terraform-apply
+      - task terraform-import
