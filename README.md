@@ -1,8 +1,16 @@
 <div align="center">
 
-![Description](https://i.redd.it/hsj3x9nwmsd71.jpg)
+<img src="https://raw.githubusercontent.com/Myrenic/Orbit/refs/heads/main/docs/branding/logo-transparant-bg.png?raw=true" alt="Orbit Logo" width="240"/>
 
-#  Homelab - Orbit 🌕
+#  Homelab - Orbit 
+
+[![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Ansible](https://img.shields.io/badge/Ansible-%231A1918.svg?logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Talos](https://img.shields.io/badge/Talos-blue?logo=kubernetes&logoColor=white)](https://www.talos.dev/)
+[![ArgoCD](https://img.shields.io/badge/ArgoCD-orange?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+[![Renovate](https://img.shields.io/badge/Renovate-enabled-brightgreen?logo=renovatebot)](https://github.com/renovatebot/renovate)
+![Commits](https://img.shields.io/badge/commits-lost--count-blueviolet)
+![Status](https://img.shields.io/badge/status-stable-green)
 
 Repository for managing a [Kubernetes](https://kubernetes.io/) cluster through [GitOps](https://en.wikipedia.org/wiki/DevOps) workflows.
 
