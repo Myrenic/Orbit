@@ -7,6 +7,10 @@ ports:
   - name: main
     containerPort: 8096
 
+resources:
+  limits:
+    gpu.intel.com/i915: 1
+
 ingress:
   host: jellyfin.tuntelder.com
   middlewares:
@@ -15,13 +19,18 @@ ingress:
 
 envs:
   - JELLYFIN_PublishedServerUrl: jellyfin.tuntelder.com
-  - S6_READ_ONLY_ROOT: 1
+  # - S6_READ_ONLY_ROOT: 1
   - PGID: "1000"
   - PUID: "1000"
+  - DOCKER_MODS: linuxserver/mods:jellyfin-opencl-intel
 
 health:
   enabled: true
   startupProbeSeconds: 220
+
+devices:
+  - name: dri
+    path: /dev/dri
 
 pvcs:
   - name: jellyfin-config
@@ -47,10 +56,8 @@ podSecurityContext:
     type: RuntimeDefault
 
 securityContext:
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: true
   capabilities:
-    drop:
-      - ALL
     add:
-      - SETUID
-      - SETGID
+      - SYS_ADMIN
+      - IPC_LOCK

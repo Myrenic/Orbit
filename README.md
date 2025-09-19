@@ -1,8 +1,16 @@
 <div align="center">
 
-![Description](https://i.redd.it/hsj3x9nwmsd71.jpg)
+<img src="https://raw.githubusercontent.com/Myrenic/Orbit/refs/heads/main/docs/branding/logo-transparant-bg.png?raw=true" alt="Orbit Logo" width="240"/>
 
-#  Homelab - Orbit 🌕
+#  Homelab - Orbit 
+
+[![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Ansible](https://img.shields.io/badge/Ansible-%231A1918.svg?logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Talos](https://img.shields.io/badge/Talos-blue?logo=kubernetes&logoColor=white)](https://www.talos.dev/)
+[![ArgoCD](https://img.shields.io/badge/ArgoCD-orange?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+[![Renovate](https://img.shields.io/badge/Renovate-enabled-brightgreen?logo=renovatebot)](https://github.com/renovatebot/renovate)
+![Commits](https://img.shields.io/badge/commits-lost--count-blueviolet)
+![Status](https://img.shields.io/badge/status-stable-green)
 
 Repository for managing a [Kubernetes](https://kubernetes.io/) cluster through [GitOps](https://en.wikipedia.org/wiki/DevOps) workflows.
 
@@ -38,34 +46,16 @@ export GIT_TOKEN=...
 3. **Deploy the machines** using Terraform:
 
 ```bash
-task terraform-apply
+task build
 ```
 
-4. **Import Terraform outputs** for local access:
-
-```bash
-task terraform-import
-```
-
-5. **Run pre-checks** to verify environment and CLI tools:
-
-```bash
-task pre-checks
-```
-
-6. **Bootstrap the cluster** (installs CRDs, cert-manager, external-secrets, and ArgoCD):
+3. **Bootstrap the cluster** (installs CRDs, cert-manager, external-secrets, and ArgoCD):
 
 ```bash
 task bootstrap
 ```
 
-7. **Access ArgoCD**:
-
-```bash
-task argo-port-fw
-```
-
-Then open [http://localhost:8080](http://localhost:8080) and log in using the admin password stored in Bitwarden.
+Then open [https://argocd.{{domain}}](https://argocd.{{domain}}) and log in using the admin password stored in Bitwarden.
 
 99. **Full reset**:
 
