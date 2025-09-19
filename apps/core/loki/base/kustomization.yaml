@@ -11,3 +11,4 @@ helmCharts:
     releaseName: loki
     namespace: monitoring
     valuesFile: values.yaml
+
