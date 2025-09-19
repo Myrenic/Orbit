@@ -1,0 +1,11 @@
+{
+  "appName": "prometheus",
+  "userGivenName": "prometheus",
+  "destNamespace": "monitoring",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/core/prometheus/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}

@@ -10,3 +10,23 @@ defaultBackupStore:
 preUpgradeChecker:
   jobEnabled: false
   upgradeVersionCheck: true
+
+nodes:
+  "talos-4y6-uzl":
+    disks:
+      "sda":
+        path: "/var/lib/longhorn-disks/sda"
+        allowScheduling: true
+        storageReserved: "0"
+  "talos-7ye-m7n":
+    disks:
+      "sda":
+        path: "/var/lib/longhorn-disks/sda"
+        allowScheduling: true
+        storageReserved: "0"
+  "talos-dvx-id0":
+    disks:
+      "sda":
+        path: "/var/lib/longhorn-disks/sda"
+        allowScheduling: true
+        storageReserved: "0"

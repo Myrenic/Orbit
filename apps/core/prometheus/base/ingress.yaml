@@ -1,0 +1,65 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-grafana
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: prometheus-operator-grafana
+          port: 80
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        - name: authentik
+          namespace: edge
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`prometheus.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: prometheus-operator-kube-p-prometheus
+          port: 9090
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        - name: authentik
+          namespace: edge
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`alertmanager.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: prometheus-operator-kube-p-alertmanager
+          port: 9093
+      middlewares:
+        - name: crowdsec-mw
+          namespace: edge
+        - name: authentik
+          namespace: edge
+  tls:
+    certResolver: letsencrypt
