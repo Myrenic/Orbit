@@ -22,3 +22,8 @@ nodeExporter:
 
 coreDns:
   enabled: false
+
+namespaceOverride: monitoring
+
+admissionWebhooks:
+  enabled: false
