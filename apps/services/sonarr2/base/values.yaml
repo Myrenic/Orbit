@@ -7,6 +7,9 @@ ports:
   - name: main
     containerPort: 8990
 
+envs:
+  - TZ: "Europe/Amsterdam"
+
 ingress:
   host: sonarr2.tuntelder.com
   middlewares:
