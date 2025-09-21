@@ -28,3 +28,5 @@ namespaceOverride: monitoring
 prometheusOperator:
   admissionWebhooks:
     enabled: false
+
+installCRDs: false
