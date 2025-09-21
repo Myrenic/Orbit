@@ -5,7 +5,7 @@ image:
 
 ports:
   - name: main
-    containerPort: 8990
+    containerPort: 8989
 
 envs:
   - TZ: "Europe/Amsterdam"
