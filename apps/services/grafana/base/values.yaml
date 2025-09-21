@@ -12,3 +12,10 @@ ingress:
   hosts:
     - grafana.tuntelder.com
 
+adminUser: admin
+adminPassword: admin  # change to a secure password
+
+admin:
+  existingSecret: authentik-secret
+  userKey: bootstrap-email
+  passwordKey: bootstrap-password
