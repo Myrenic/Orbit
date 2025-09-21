@@ -1,6 +1,6 @@
 ---
 image:
-  repository: "ghcr.io/myrenic/sonarr@sha256:"
+  repository: "ghcr.io/myrenic/sonarr@sha256"
   tag: "1844d78283b2917aefa1eb281eab6ada4f0f6dbb7e5df2f848ad6d8d7983578c"
 
 ports:
