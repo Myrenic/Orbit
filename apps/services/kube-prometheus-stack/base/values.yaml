@@ -25,5 +25,6 @@ coreDns:
 
 namespaceOverride: monitoring
 
-admissionWebhooks:
-  enabled: false
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false
