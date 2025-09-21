@@ -9,6 +9,7 @@ ports:
 
 envs:
   - TZ: "Europe/Amsterdam"
+  - EXTERNAL_AUTH: "true"
 
 ingress:
   host: sonarr2.tuntelder.com
