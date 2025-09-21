@@ -1,6 +1,9 @@
 kubeProxy:
   enabled: true
 
+admissionWebhooks:
+  enabled: false
+
 kube-state-metrics:
   metricLabelsAllowlist:
   - "persistentvolumeclaims=[*]"
