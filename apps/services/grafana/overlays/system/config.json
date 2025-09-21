@@ -1,9 +1,9 @@
 {
-  "appName": "prometheus",
-  "userGivenName": "prometheus",
-  "destNamespace": "monitoring",
+  "appName": "grafana",
+  "userGivenName": "grafana",
+  "destNamespace": "grafana",
   "destServer": "https://kubernetes.default.svc",
-  "srcPath": "apps/core/prometheus/overlays/system",
+  "srcPath": "apps/services/grafana/overlays/system",
   "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
   "srcTargetRevision": "",
   "labels": null,

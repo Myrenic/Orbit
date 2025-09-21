@@ -7,13 +7,13 @@ resources:
   - ns.yaml
 
 # Inject namespace into all resources
-namespace: jellyfin
+namespace: grafana
 
 helmGlobals:
   chartHome: ../../../../charts
 
 helmCharts:
   - name: generic
-    releaseName: jellyfin
+    releaseName: grafana
     valuesFile: values.yaml
-    namespace: jellyfin
+    namespace: grafana
