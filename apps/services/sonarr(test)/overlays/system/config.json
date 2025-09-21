@@ -1,0 +1,11 @@
+{
+  "appName": "sonarr(test)",
+  "userGivenName": "sonarr(test)",
+  "destNamespace": "sonarr",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/services/sonarr(test)/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}
