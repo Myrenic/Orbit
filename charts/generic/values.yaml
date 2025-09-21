@@ -35,7 +35,7 @@ service:
 
 health:
   enabled: true
-  startupProbeSeconds: 60
+  startupProbeSeconds: 120
   port: main
   type: HTTP
   path: /
