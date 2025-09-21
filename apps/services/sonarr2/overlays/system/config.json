@@ -1,7 +1,7 @@
 {
   "appName": "sonarr2",
   "userGivenName": "sonarr2",
-  "destNamespace": "sonarr",
+  "destNamespace": "sonarr2",
   "destServer": "https://kubernetes.default.svc",
   "srcPath": "apps/services/sonarr2/overlays/system",
   "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
