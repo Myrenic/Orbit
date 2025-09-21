@@ -13,4 +13,3 @@ helmCharts:
 
 resources:
   - ingress.yaml
-  - crds.yaml

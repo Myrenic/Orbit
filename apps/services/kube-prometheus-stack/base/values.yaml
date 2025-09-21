@@ -1,32 +1,33 @@
-# Disable unnecessary components for a lightweight setup
+crds:
+  enabled: true
+
+defaultRules:
+  create: true
+  rules:
+    kubeProxy: false
+    windows: false
+
 grafana:
-  enabled: false  # you already deploy Grafana separately
-
-prometheus:
-  prometheusSpec:
-    serviceMonitorSelectorNilUsesHelmValues: false
-    replicas: 1
-    retention: 7d
-    storageSpec:
-      emptyDir: {}  # or configure persistent volume if needed
-
-alertmanager:
-  alertmanagerSpec:
-    replicas: 1
-
-kubeStateMetrics:
+  enabled: false
+kubeProxy:
   enabled: false
 
 nodeExporter:
   enabled: false
+  operatingSystems:
+    linux:
+      enabled: false
+    darwin:
+      enabled: false
 
-coreDns:
-  enabled: false
-
-namespaceOverride: monitoring
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 30d
 
 prometheusOperator:
   admissionWebhooks:
     enabled: false
 
-installCRDs: false
