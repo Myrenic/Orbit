@@ -14,3 +14,4 @@ helmCharts:
 resources:
   - ns.yaml
   - secret.yaml
+  - ingress.yaml
