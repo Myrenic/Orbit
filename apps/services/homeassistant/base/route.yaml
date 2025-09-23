@@ -1,30 +1,38 @@
-apiVersion: traefik.io/v1alpha1
-kind: TraefikService
+---
+apiVersion: v1
+kind: Service
 metadata:
-  name: home-assistant
-  namespace: default
+  name: home-assistant-external
+  namespace: homeassistant
 spec:
-  weighted:
-    services:
-      - name: external-ha
-        kind: Service
-        weight: 1
-        servers:
-          - url: "http://10.0.100.11:8123"
+  ports:
+    - port: 8123
+      targetPort: 8123
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: home-assistant-external
+  namespace: homeassistant
+subsets:
+  - addresses:
+      - ip: 10.0.100.11
+    ports:
+      - port: 8123
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: home-assistant
-  namespace: default
+  namespace: homeassistant
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`home2.tuntelder.com`)
+    - match: Host(`home.tuntelder.com`)
       kind: Rule
       services:
-        - kind: TraefikService
-          name: home-assistant
+        - name: home-assistant-external
+          port: 8123
   tls:
     certResolver: letsencrypt

@@ -7,6 +7,15 @@ server:
 configs:
   cm:
     kustomize.buildOptions: --enable-helm --enable-alpha-plugins --load-restrictor LoadRestrictionsNone
+    resource.exclusions: |
+      - apiGroups:
+          - ""
+        kinds:
+          - Endpoints
+        clusters:
+          - "*"
+        namespaces:
+          - "!homeassistant"
   params:
     server.insecure: true
 
