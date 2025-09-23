@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`home.tuntelder.com`)
+    - match: Host(`home2.tuntelder.com`)
       kind: Rule
       services:
         - kind: TraefikService
