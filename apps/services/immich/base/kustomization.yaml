@@ -6,11 +6,7 @@ namespace: immich
 resources:
   - ns.yaml
   - volumes.yaml
-
-helmCharts:
-  - name: immich
-    repo: https://immich-app.github.io/immich-charts
-    namespace: immich
-    releaseName: immich
-    valuesFile: values.yaml
-    version: 0.9.3
+  - immich.yaml
+  - redis.yaml
+  - postgres.yaml
+  - secrets.yaml
