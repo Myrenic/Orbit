@@ -6,6 +6,7 @@ namespace: immich
 resources:
   - ns.yaml
   - volumes.yaml
+  - secrets.yaml
 
 helmCharts:
   - name: immich

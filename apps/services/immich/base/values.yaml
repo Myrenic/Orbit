@@ -1,3 +1,6 @@
+image:
+  tag: v1.106.1   # pick the Immich version you want to run
+
 immich:
   persistence:
     library:
@@ -6,6 +9,20 @@ immich:
     uploads:
       enabled: true
       existingClaim: immich-uploads-pvc
+
+  redis:
+    enabled: true   # let the chart deploy Redis for you
+
+
+  postgresql:
+    enabled: false
+    host: immich-postgres
+    port: 5432
+    user: immich
+    password:
+      existingSecret: immich-secret
+      key: password
+    database: immich
 
 ingress:
   main:
@@ -16,7 +33,3 @@ ingress:
         paths:
           - path: /
             pathType: Prefix
-    # tls:
-    #   - secretName: immich-tls
-    #     hosts:
-    #       - immich.example.com
