@@ -1,32 +1,26 @@
-image:
-  tag: v1.106.1   # pick the Immich version you want to run
-
 immich:
-  persistence:
-    library:
-      enabled: true
-      existingClaim: immich-library-pvc
-    uploads:
-      enabled: true
-      existingClaim: immich-uploads-pvc
-
-  redis:
-    enabled: true   # let the chart deploy Redis for you
-
-  postgresql:
-    enabled: true  # chart doesn’t provide Postgres
-    host: immich-postgres
+  app:
+    host: immich.local
+    port: 2283
+  database:
+    host: postgres
     port: 5432
-    user: immich
-    password: supersecret
-    database: immich
+    username: immich
+    password: postgrespass
+    db: immich
+  redis:
+    host: redis
+    port: 6379
+    password: redispass
 
-ingress:
-  main:
-    enabled: true
-    ingressClassName: traefik
-    hosts:
-      - host: immich.tuntelder.com
-        paths:
-          - path: /
-            pathType: Prefix
+storage:
+  type: local
+  local:
+    libraryPath: /immich-library
+    uploadsPath: /immich-uploads
+
+
+service:
+  type: ClusterIP
+
+
