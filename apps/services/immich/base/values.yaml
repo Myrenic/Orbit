@@ -13,15 +13,12 @@ immich:
   redis:
     enabled: true   # let the chart deploy Redis for you
 
-
   postgresql:
-    enabled: false
+    enabled: true  # chart doesn’t provide Postgres
     host: immich-postgres
     port: 5432
     user: immich
-    password:
-      existingSecret: immich-secret
-      key: password
+    password: supersecret
     database: immich
 
 ingress:
