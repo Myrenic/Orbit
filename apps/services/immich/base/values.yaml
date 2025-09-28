@@ -1,13 +1,11 @@
----
-persistence:
-  config:
-    enabled: true
-    type: pvc
-    accessMode: ReadWriteOnce
-    size: 100Gi
-    storageClass: longhorn
-    mountPath: /config
-    retain: true
+immich:
+  persistence:
+    library:
+      enabled: true
+      existingClaim: immich-library-pvc
+    uploads:
+      enabled: true
+      existingClaim: immich-uploads-pvc
 
 ingress:
   main:
