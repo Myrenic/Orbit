@@ -7,13 +7,13 @@ resources:
   - ns.yaml
 
 # Inject namespace into all resources
-namespace: sonarr2
+namespace: sonarr
 
 helmGlobals:
   chartHome: ../../../../charts
 
 helmCharts:
   - name: generic
-    releaseName: sonarr2
+    releaseName: sonarr
     valuesFile: values.yaml
-    namespace: sonarr2
+    namespace: sonarr
