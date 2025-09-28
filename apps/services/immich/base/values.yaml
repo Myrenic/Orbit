@@ -12,14 +12,6 @@ immich:
     host: redis
     port: 6379
     password: redispass
-
-storage:
-  type: local
-  local:
-    libraryPath: /immich-library
-    uploadsPath: /immich-uploads
-
-
 service:
   type: ClusterIP
 
