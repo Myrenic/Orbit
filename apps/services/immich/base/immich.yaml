@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich
+  template:
+    metadata:
+      labels:
+        app: immich
+    spec:
+      containers:
+        - name: immich
+          image: ghcr.io/immich-app/immich:latest
+          env:
+            - name: DATABASE_HOST
+              value: postgres
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: immich
+            - name: DATABASE_USERNAME
+              value: immich
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: password
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: password
+            - name: STORAGE_LIBRARY_PATH
+              value: /immich-library
+            - name: STORAGE_UPLOADS_PATH
+              value: /immich-uploads
+          ports:
+            - containerPort: 2283
+          volumeMounts:
+            - name: immich-library
+              mountPath: /immich-library
+            - name: immich-uploads
+              mountPath: /immich-uploads
+      volumes:
+        - name: immich-library
+          persistentVolumeClaim:
+            claimName: immich-library-pvc
+        - name: immich-uploads
+          persistentVolumeClaim:
+            claimName: immich-uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  type: ClusterIP
+  ports:
+    - port: 2283
+  selector:
+    app: immich
