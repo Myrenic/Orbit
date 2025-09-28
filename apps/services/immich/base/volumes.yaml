@@ -3,6 +3,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: immich-library-pvc
   namespace: immich
+  annotations:
+    longhorn.io/volume-name: immich-library
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,6 +18,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: immich-uploads-pvc
   namespace: immich
+  annotations:
+    longhorn.io/volume-name: immich-uploads
 spec:
   accessModes:
     - ReadWriteOnce
