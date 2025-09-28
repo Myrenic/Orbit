@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: immich
-          image: ghcr.io/immich-app/immich:latest
+          image: immich/immich-server:latest
           env:
             - name: DATABASE_HOST
               value: postgres
