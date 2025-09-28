@@ -1,0 +1,24 @@
+---
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    accessMode: ReadWriteOnce
+    size: 100Gi
+    storageClass: longhorn
+    mountPath: /config
+    retain: true
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - host: immich.tuntelder.com
+        paths:
+          - path: /
+            pathType: Prefix
+    # tls:
+    #   - secretName: immich-tls
+    #     hosts:
+    #       - immich.example.com
