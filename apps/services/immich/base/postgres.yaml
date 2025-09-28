@@ -13,6 +13,18 @@ spec:
       labels:
         app: postgres
     spec:
+      initContainers:
+        - name: init-postgres-dir
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /var/lib/postgresql/data/pgdata
+              chown -R 999:999 /var/lib/postgresql/data
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: postgres
           image: postgres:15
