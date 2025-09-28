@@ -1,15 +1,11 @@
 ---
 image:
-  repository: "ghcr.io/myrenic/sonarr@sha256"
-  tag: "94fcfd29db7a5ef98eb0aa54655565259a541c4e28dacba4b0baf4aaee09c93e"
+  repository: "ghcr.io/home-operations/sonarr"
+  tag: "4.0.15.2940"
 
 ports:
   - name: main
     containerPort: 8989
-
-envs:
-  - TZ: "Europe/Amsterdam"
-  - EXTERNAL_AUTH: "true"
 
 ingress:
   host: sonarr.tuntelder.com
