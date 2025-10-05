@@ -1,0 +1,19 @@
+---
+loki:
+  persistence:
+    enabled: true
+    size: 10Gi
+
+promtail:
+  enabled: true
+  extraScrapeConfigs: |
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+        - role: pod
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          action: keep
+          regex: ".*"  # collect all namespaces; adjust if needed
+
+grafana:
+  enabled: false  
