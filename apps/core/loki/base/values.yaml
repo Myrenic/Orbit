@@ -1,3 +1,4 @@
+---
 loki:
   persistence:
     enabled: true
