@@ -2,23 +2,13 @@
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-
-{{- define "extractLatest" -}}
-{{- $split := splitList ":" . -}}
-{{- $split := splitList "@" (index $split 0) -}}
-{{- index $split 0 | trunc 63 | quote -}}
-{{- end -}}
-
-
 {{- define "generic-service.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "generic-service.name" . }}
 app.kubernetes.io/instance: {{ printf "%s-%s" .Chart.Name .Release.Name }}
 {{- end }}
 
-
 {{- define "generic-service.labels" -}}
 {{ include "generic-service.selectorLabels" . }}
-app.kubernetes.io/version: {{ include "extractLatest" .Values.image.tag }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 

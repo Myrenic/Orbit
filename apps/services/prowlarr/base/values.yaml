@@ -1,7 +1,5 @@
 ---
-image:
-  repository: "ghcr.io/home-operations/prowlarr"
-  tag: "2.1.3.5208"
+image: "ghcr.io/home-operations/prowlarr:2.1.3.5208"
 
 ports:
   - name: main

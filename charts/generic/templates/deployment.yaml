@@ -106,8 +106,8 @@ spec:
       containers:
       - name: {{ include "generic-service.name" . }}
         securityContext: {{- toYaml .Values.securityContext | nindent 10 }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "{{ .Values.image }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- with .Values.command }}
         command: {{ toYaml . | nindent 8 }}
         {{- end }}
