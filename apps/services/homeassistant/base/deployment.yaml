@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home-assistant-nginx
+  namespace: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: home-assistant-nginx
+  template:
+    metadata:
+      labels:
+        app: home-assistant-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: home-assistant-nginx-config
