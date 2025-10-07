@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-completed-pods
+  namespace: kube-system
+spec:
+  schedule: "0 */6 * * *"  # every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cleanup-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl:latest
+            command:
+              - /bin/sh
+              - -c
+              - |
+                # Delete all pods in Succeeded or Failed state
+                kubectl delete pods --field-selector=status.phase==Succeeded,status.phase==Failed --all-namespaces || true

@@ -16,3 +16,4 @@ resources:
   - Namespace.yaml
   - ExternalSecret.yaml
   - ingress.yaml
+  - cleanup
