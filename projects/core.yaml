@@ -39,7 +39,7 @@ spec:
           - path: apps/core/**/system/config.json
         repoURL: https://github.com/Myrenic/Orbit.git
         requeueAfterSeconds: 20
-        revision: "upgraded-helm-generic-chaty"
+        revision: "main"
         template:
           metadata: {}
           spec:
@@ -63,7 +63,7 @@ spec:
       source:
         path: "{{ srcPath }}"
         repoURL: "{{ srcRepoURL }}"
-        targetRevision: "upgraded-helm-generic-chaty"
+        targetRevision: "main"
       syncPolicy:
         automated:
           allowEmpty: true
