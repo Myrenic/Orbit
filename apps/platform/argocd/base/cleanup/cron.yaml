@@ -24,8 +24,6 @@ spec:
                   | while read ns pod; do
                       kubectl delete pod "$pod" -n "$ns"
                     done
-              - |
-                # Delete all empty ReplicaSet 
                 kubectl get rs --all-namespaces --no-headers -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,READY:.status.readyReplicas \
                   | awk '$3=="<none>" {print "kubectl delete rs -n "$1" "$2}' \
                   | bash
