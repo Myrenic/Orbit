@@ -15,14 +15,14 @@ spec:
         app: home-assistant-nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:alpine
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: nginx-config
-          mountPath: /etc/nginx/conf.d
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
       volumes:
-      - name: nginx-config
-        configMap:
-          name: home-assistant-nginx-config
+        - name: nginx-config
+          configMap:
+            name: home-assistant-nginx-config
