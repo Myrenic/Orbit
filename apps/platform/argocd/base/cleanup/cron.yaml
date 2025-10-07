@@ -1,0 +1,33 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-completed-pods
+  namespace: kube-system
+spec:
+  schedule: "0 */6 * * *"  # every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cleanup-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  kubectl get pods --all-namespaces -o json \
+                    | jq -r '.items[] | select(.status.containerStatuses[]?.state.terminated?.reason=="Completed") | "\(.metadata.namespace) \(.metadata.name)"' \
+                    | while read ns pod; do
+                        kubectl delete pod "$pod" -n "$ns"
+                      done
+                  kubectl get rs --all-namespaces --no-headers -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,READY:.status.readyReplicas \
+                    | awk '$3=="<none>" {print "kubectl delete rs -n "$1" "$2}' \
+                    | bash
+                  kubectl get jobs --all-namespaces --no-headers \
+                  -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.conditions[0].type \
+                  | awk '$3=="SuccessCriteriaMet" || $3=="Failed" {print "kubectl delete job -n "$1" "$2}' \
+                  | bash

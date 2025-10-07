@@ -1,7 +1,5 @@
 ---
-image:
-  repository: "ghcr.io/home-operations/sabnzbd"
-  tag: "4.5.3"
+image: "ghcr.io/home-operations/sabnzbd:4.5.3"
 
 ports:
   - name: main

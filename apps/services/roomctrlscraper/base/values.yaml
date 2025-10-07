@@ -1,8 +1,7 @@
 ---
-image:
-  repository: "ghcr.io/myrenic/roomctrlscraper"
-  tag: "latest"
-  
+image: "ghcr.io/myrenic/roomctrlscraper:latest"
+imagePullPolicy: Always
+
 secretEnvs:
   - envName: ROOMCTRL_EMAIL
     secretName: roomctrlscraper
