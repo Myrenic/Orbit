@@ -5,7 +5,8 @@ persistence:
   reclaimPolicy: Delete
   volumeBindingMode: Immediate
 defaultBackupStore:
-  backupTarget: "nfs://10.0.69.20:/mnt/nfs_disk/backup"
+  backupTarget: "s3://longhorn@nl-heerenveen/"
+  defaultBackupStore.backupTargetCredentialSecret: "longhorn-minio-credentials"
 
 preUpgradeChecker:
   jobEnabled: false
