@@ -83,9 +83,9 @@ End-user facing applications
         <td>Example and template application for the repository</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg"></td>
-        <td><a href="https://jellyfin.org/">Jellyfin</a></td>
-        <td>Open-source media system for streaming movies, TV shows, and music.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg"></td>
+        <td><a href="https://github.com/blakeblackshear/frigate">Frigate</a></td>
+        <td>NVR with real-time object detection for IP cameras</td>
     </tr>
     <tr>
         <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyseerr.svg"></td>

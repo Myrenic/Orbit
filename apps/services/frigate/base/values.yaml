@@ -1,0 +1,57 @@
+---
+image: "ghcr.io/blakeblackshear/frigate@sha256:cb6624b9075f76ece626139eedca7e728cab1456a5f8c351afbf877320826bc1"
+imagePullPolicy: IfNotPresent
+
+ports:
+  - name: main
+    containerPort: 5000
+
+resources:
+  limits:
+    gpu.intel.com/i915: 1
+
+ingress:
+  host: frigate.tuntelder.com
+  middlewares:
+    - name: crowdsec-mw
+      namespace: edge
+    - name: authentik
+      namespace: edge
+
+health:
+  enabled: true
+  startupProbeSeconds: 220
+
+devices:
+  - name: dri
+    path: /dev/dri
+
+pvcs:
+  - name: frigate-config
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/ssd_disk/config/frigate
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /config
+  - name: frigate-media
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/camera
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /media
+
+podSecurityContext:
+  runAsNonRoot: false     # allow root start
+  runAsUser: 0            # start as root
+  fsGroup: 1000           # ensure mounted volumes writable
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: true
+  capabilities:
+    add:
+      - SYS_ADMIN
+      - IPC_LOCK
