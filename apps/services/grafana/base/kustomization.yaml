@@ -8,7 +8,7 @@ helmCharts:
     releaseName: grafana
     namespace: monitoring
     repo: https://grafana.github.io/helm-charts
-    version: "10.0.0"  # adjust as needed
+    version: "10.1.0"  # adjust as needed
     valuesFile: values.yaml
 
 resources:
