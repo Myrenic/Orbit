@@ -34,6 +34,13 @@ pvcs:
     accessMode: ReadWriteMany
     size: 800Gi
     mountPath: /config
+  - name: frigate-media
+    type: nfs
+    server: 10.0.69.20
+    path: /mnt/nfs_disk/camera
+    accessMode: ReadWriteMany
+    size: 800Gi
+    mountPath: /media
 
 podSecurityContext:
   runAsNonRoot: false     # allow root start
