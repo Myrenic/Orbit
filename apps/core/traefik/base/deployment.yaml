@@ -59,7 +59,7 @@ spec:
             # - --accesslog.format=json
             # - --accesslog.fields.headers.defaultmode=keep
             - --accesslog=true
-            - --accesslog.format=json
+            - --accesslog.format=common
           ports:
             - containerPort: 80
               name: web
