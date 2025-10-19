@@ -55,16 +55,9 @@ agent:
   additionalAcquisition:
     - source: file
       filenames:
-        - '/var/logs/traefik/traefik.log'     ## Single file
+        - '/var/log/containers/traefik-*-*_edge_traefik-*.log'
       labels:
         type: traefik
-  extraVolumes:
-    - name: traefik-logs
-      persistentVolumeClaim:
-        claimName: traefik-logs-pvc
-  extraVolumeMounts:
-    - name: traefik-logs
-      mountPath: /var/logs/traefik/
   env: 
     - name: REGISTRATION_TOKEN
       valueFrom:
