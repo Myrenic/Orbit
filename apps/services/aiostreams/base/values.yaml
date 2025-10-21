@@ -1,5 +1,5 @@
 ---
-image: "ghcr.io/viren070/aiostreams:latest"
+image: "ghcr.io/viren070/aiostreams@sha256:ad0e0bf2d0aa72da30d09684a90a1784bee4f47a4ad8ba04e0cc9c6674971615"
 
 ports:
   - name: main
@@ -10,8 +10,8 @@ envs:
   - ADDON_ID: "aiostreams.tuntelder.com"
   - PORT: "3000"
   - BASE_URL: "https://aiostreams.tuntelder.com"
-  - SECRET_KEY: "f6c3e04206e20722432ca2541c8cf257def745f14074759141631366ac2af104"
-  - ADDON_PASSWORD: "d9feaf51df9357b8d6a05823"
+  - SECRET_KEY: "f6c3e04206e20722432ca2541c8cf257def745f14074759141631366ac2af104" # local only, not publicly availible
+  - ADDON_PASSWORD: "d9feaf51df9357b8d6a05823"                                     # local only, not publicly availible
   - DATABASE_URI: "sqlite://./data/db.sqlite"
   - BUILTIN_STREMTHRU_URL: "https://stremthru.13377001.xyz"
   - BUILTIN_SCRAPE_WITH_ALL_TITLES: "false"
@@ -131,6 +131,8 @@ ingress:
   host: aiostreams.tuntelder.com
   middlewares:
     - name: crowdsec-mw
+      namespace: edge
+    - name: local-only
       namespace: edge
 
 pvcs:
