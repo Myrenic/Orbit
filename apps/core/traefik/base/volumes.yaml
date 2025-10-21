@@ -13,17 +13,3 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: traefik-logs-pvc
-  annotations:
-    longhorn.io/volume-name: traefik-logs
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 1Gi

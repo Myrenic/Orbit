@@ -1,0 +1,11 @@
+{
+  "appName": "aiostreams",
+  "userGivenName": "aiostreams",
+  "destNamespace": "aiostreams",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/services/aiostreams/overlays/system",
+  "srcRepoURL": "https://github.com/Myrenic/Orbit.git",
+  "srcTargetRevision": "",
+  "labels": null,
+  "annotations": null
+}
