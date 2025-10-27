@@ -1,5 +1,5 @@
 ---
-image: "ghcr.io/home-operations/prowlarr:2.1.5.5213"
+image: "ghcr.io/home-operations/prowlarr:2.1.5.5216"
 
 ports:
   - name: main
