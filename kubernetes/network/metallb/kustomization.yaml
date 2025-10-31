@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - base/addresspool.yaml
   - base/ns.yaml
+
 helmCharts:
   - repo: https://metallb.github.io/metallb
     name: metallb

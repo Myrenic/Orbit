@@ -6,7 +6,7 @@ metadata:
   namespace: network
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.0.69.3
+  loadBalancerIP: 10.0.69.175
   externalTrafficPolicy: Local
   ports:
     - name: web
