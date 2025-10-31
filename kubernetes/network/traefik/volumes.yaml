@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: traefik-acme-pvc
-  namespace: edge
+  namespace: network
   annotations:
     longhorn.io/volume-name: traefik-acme
 spec:

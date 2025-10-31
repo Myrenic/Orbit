@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traefik
-  namespace: edge
+  namespace: network
 spec:
   replicas: 1
   selector:
