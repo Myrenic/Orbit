@@ -4,7 +4,7 @@ applicationsets:
     generators:
       - git:
           repoURL: https://github.com/myrenic/orbit.git
-          revision: main
+          revision: cleanup-root-dir
           directories:
             - path: kubernetes/**/*
     template:
@@ -14,7 +14,7 @@ applicationsets:
         project: default
         source:
           repoURL: https://github.com/myrenic/orbit.git
-          targetRevision: main
+          targetRevision: cleanup-root-dir
           path: '{{path}}'
           plugin:
             name: kustomize-helm
