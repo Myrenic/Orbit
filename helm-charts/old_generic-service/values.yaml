@@ -1,0 +1,104 @@
+---
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  annotations: {}
+
+podLabels: {}
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+hostNetwork: false
+
+ports: []
+# - name: ""
+#   containerPort: 0
+#   protocol: TCP
+
+service:
+  type: ClusterIP
+  externalTrafficPolicy: ""
+  loadBalancerIP: ""
+
+health:
+  enabled: true
+  startupProbeSeconds: 120
+  port: main
+  type: HTTP
+  path: /
+
+ingress:
+  host: ""
+  path: /
+  public: false
+  publicPath: /
+  port: main
+  annotations: {}
+  annotationsPublic: {}
+  annotationsPrivate: {}
+  # middlewares:
+  #   - name: ""
+  #     namespace: ""
+
+replicas: 1
+strategyType: Recreate
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+terminationGracePeriodSeconds: 30
+
+command: []
+args: []
+
+envs: []
+
+secretEnvs: []
+
+configMaps: []
+# - name: ""
+#   defaultMode: 0644
+#   mountPath: ""
+#   subPath: ""
+#   content: ""
+
+hostPaths: []
+# - name: ""
+#   hostPath: ""
+#   containerPath: ""
+#   readOnly: false
+#   type: "DirectoryOrCreate"
+
+emptyDirs: []
+
+# - name: ""
+#   containerPath: ""
+
+envsubst:
+  image:
+    repository: nixery.dev/shell/envsubst
+    tag: "latest"
+  files: []
+  # - src:
+  #   dest:

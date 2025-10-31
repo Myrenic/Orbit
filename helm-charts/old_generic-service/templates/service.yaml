@@ -1,9 +1,9 @@
+---
 {{- if .Values.ports -}}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "generic-service.name" . }}
-  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "generic-service.labels" . | nindent 4 }}
 spec:
@@ -13,9 +13,6 @@ spec:
   {{- end }}
   {{- with .Values.service.loadBalancerIP }}
   loadBalancerIP: {{ . }}
-  {{- end }}
-  {{- with .Values.service.loadBalancerClass }}
-  loadBalancerClass: {{ . }}
   {{- end }}
   ports:
   {{- range .Values.ports }}

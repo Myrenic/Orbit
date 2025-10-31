@@ -2,30 +2,20 @@
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-
-{{- define "extractLatest" -}}
-{{- $split := splitList ":" . -}}
-{{- $split := splitList "@" (index $split 0) -}}
-{{- index $split 0 | trunc 63 | quote -}}
-{{- end -}}
-
-
 {{- define "generic-service.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "generic-service.name" . }}
 app.kubernetes.io/instance: {{ printf "%s-%s" .Chart.Name .Release.Name }}
 {{- end }}
 
-
 {{- define "generic-service.labels" -}}
 {{ include "generic-service.selectorLabels" . }}
-app.kubernetes.io/version: {{ include "extractLatest" .Values.image.tag }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{- define "generic-service.httpRoutePort" -}}
-{{- $gatewayPortName := $.Values.gateway.port -}}
+{{- $ingressPortName := $.Values.ingress.port -}}
 {{- range $ports := $.Values.ports  }}
-{{- if eq $ports.name $gatewayPortName }}
+{{- if eq $ports.name $ingressPortName }}
 {{- $ports.containerPort -}}
 {{- end }}
 {{- end }}
@@ -73,15 +63,13 @@ tcpSocket:
     {{- end }}
 {{- end }}
 - name: TZ
-  value: Europe/Berlin
-{{- range $k, $v := .Values.secretEnvs }}
-{{- range $kk, $vv := $v }}
-- name: {{ $kk | quote }}
+  value: Europe/Amsterdam
+{{- range .Values.secretEnvs }}
+- name: {{ .envName }}
   valueFrom:
     secretKeyRef:
-      name: {{ include "generic-service.name" $ }}
-      key: {{ $kk | quote }}
-{{- end }}
+      name: {{ .secretName }}
+      key: {{ .secretKey }}
 {{- end }}
 {{- range $k, $v := .Values.envs }}
 {{- range $kk, $vv := $v }}

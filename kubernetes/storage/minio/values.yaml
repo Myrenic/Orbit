@@ -8,9 +8,6 @@ ports:
   - name: api
     containerPort: 9000
 
-gateway:
-  host: minio.wagner.gg
-
 args:
   - server
   - /data
