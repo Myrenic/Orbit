@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  namespace: edge
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.69.3
+  externalTrafficPolicy: Local
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+    - name: websecure
+      port: 443
+      targetPort: 443
+    - name: admin
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: traefik
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-ingressroute
+  namespace: edge
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.testlab.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: traefik
+          port: 8080
+
+  tls:
+    certResolver: letsencrypt
