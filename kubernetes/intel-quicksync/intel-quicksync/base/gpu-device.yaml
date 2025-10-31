@@ -1,0 +1,12 @@
+apiVersion: deviceplugin.intel.com/v1
+kind: GpuDevicePlugin
+metadata:
+  name: main
+spec:
+  image: docker.io/intel/intel-gpu-plugin:0.34.0
+  enableMonitoring: true
+  logLevel: 2
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  preferredAllocationPolicy: none
+  sharedDevNum: 32
