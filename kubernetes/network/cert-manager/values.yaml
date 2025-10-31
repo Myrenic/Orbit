@@ -1,6 +1,16 @@
 ---
-crds:
-  enabled: true
+installCRDs: true
+
+startupapicheck:
+  enabled: false
+
+# cannot use kube-system since kustomize overwrites kube-system namespace :/
+global:
+  leaderElection:
+    namespace: "network"
+
+enableCertificateOwnerRef: true
+
 prometheus:
   servicemonitor:
     enabled: false
