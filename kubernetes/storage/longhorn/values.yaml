@@ -1,0 +1,10 @@
+---
+persistence:
+  defaultClassReplicaCount: 2
+  allowVolumeExpansion: true
+  reclaimPolicy: Delete
+  volumeBindingMode: Immediate
+
+preUpgradeChecker:
+  jobEnabled: false
+  upgradeVersionCheck: true
