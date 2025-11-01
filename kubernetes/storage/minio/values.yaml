@@ -8,6 +8,10 @@ ports:
   - name: api
     containerPort: 9000
 
+ingress:
+  host: minio.testlab.tuntelder.com
+
+
 args:
   - server
   - /data

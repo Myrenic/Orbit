@@ -11,3 +11,6 @@ helmCharts:
     includeCRDs: true
     valuesFile: ./values.yaml
 
+
+resources:
+  - ./ingress.yaml
