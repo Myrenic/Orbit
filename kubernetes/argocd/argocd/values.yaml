@@ -2,7 +2,7 @@ configs:
   params:
     controller.diff.server.side: "true"
     # "Temporary" until BackendTLSPolicy is implemented https://github.com/cilium/cilium/issues/31352
-    # server.insecure: "true"
+    server.insecure: "true"
   cm:
     # This is default MINUS ENdpoints
     resource.exclusions: |
