@@ -5,6 +5,7 @@ metadata:
   name: hello-world-pod
   labels:
     app: hello-world
+  namespace: services
 spec:
   containers:
     - name: hello-world-container
