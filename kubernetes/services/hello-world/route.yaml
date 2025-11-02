@@ -13,9 +13,9 @@ spec:
       services:
         - name: hello-world-service
           port: 80
-      middlewares:
-        - name: authentik
-          namespace: network
+      # middlewares:
+      #   - name: authentik
+      #     namespace: network
           # - name: local-only
           #   namespace: edge
   tls:
