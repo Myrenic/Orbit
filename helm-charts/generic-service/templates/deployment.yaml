@@ -182,12 +182,12 @@ spec:
       - name: emptydir-{{ .name }}
         emptyDir: {}
       {{- end }}
-      {{- range .Values.hostPaths }}
-      - name: {{ .name }}
-        hostPath:
-          path: {{ .hostPath | quote }}
-          type: {{ .type | default "DirectoryOrCreate" }}
-      {{- end }}
+      # {{- range .Values.hostPaths }}
+      # - name: {{ .name }}
+      #   hostPath:
+      #     path: {{ .hostPath | quote }}
+      #     type: {{ .type | default "DirectoryOrCreate" }}
+      # {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
