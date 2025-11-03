@@ -1,0 +1,39 @@
+image:
+  repository: "ghcr.io/jellyfin/jellyfin"
+  tag: "10.11.2@sha256:749972be6e7d440a47531ee36c9e38ea7a6271c875f42e8a52851c39862b0773"
+
+ports:
+  - name: main
+    containerPort: 8096
+
+ingress:
+  host: jellyfin.testlab.tuntelder.com
+
+health:
+  path: /
+
+envs:
+  - JELLYFIN_PublishedServerUrl: https://jellyfin.wagner.gg
+
+resources:
+  limits:
+    gpu.intel.com/i915: "1"
+
+hostPaths:
+  - name: config
+    containerPath: /config
+    type: longhorn
+    size: 20Gi
+    accessMode: ReadWriteOnce
+  - name: cache
+    containerPath: /cache
+    type: longhorn
+    size: 20Gi
+    accessMode: ReadWriteOnce
+  - name: multimedia
+    containerPath: /library
+    type: longhorn
+    size: 20Gi
+    accessMode: ReadWriteOnce
+    readOnly: true
+
