@@ -13,7 +13,7 @@ health:
   path: /
 
 envs:
-  - JELLYFIN_PublishedServerUrl: https://jellyfin.wagner.gg
+  - JELLYFIN_PublishedServerUrl: https://jellyfin.testlab.tuntelder.com
 
 # resources:
 #   limits:
