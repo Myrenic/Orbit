@@ -21,7 +21,7 @@ secretEnvs:
   - MINIO_ROOT_PASSWORD: AgAUDu7IZLd4BT72Cfn5LBhYHW2bdDCE+oy258DU+YYWYQqHUjJEgNBnoDfr/0PvG6UypZP6J96yhGo/7cwkv5MZWjAWh4b9KljB1+0xrrpX1Qpr5o+2Ob3a5cayqgDWnUfG8Rno4Kbd+xi+1FAjD7cjq8lHcg6kQN0HqskjI6K8FwYLcGmxCXdkPhjzDdg3DPSjdsLDFQ7e/SisZLpoSAcP6z9Eiki0aLMBITTsaMLlLfueGdGichjDZtc4JO3WW5p+FNBUtFM/nUJZEmNPRo5AvfUlAmC8oLeCX7pK4iQOBgu354d89pmpxeHLja2y62lSo4egfFT6kShmuABohBq3F3Pgc/8hsTcPyMlIdBCA232ihynqreVzqbNeWmSUiX6tsbIvauIHvT+9Zk/Hrs+jeeximGC77+5vnGPaZjdTtuN4YzGgwiu6zIzMJh9NkKXgzodRcRaUT6fAwNlayYMTfGBGQ2AFX5LNoEOerTQrVkzgVwvzk5kZPySgsgKjF79XT8enDNMiuLq3AWUdDae840QTPbdTpff+vS3HmnB3f8MZgnVQtMQnxyOQFlrUvSHEnYEUS929iS8znhOKdXrw5X4p9ouPL/rEjp323rFlJBzBcY7Z05dz9MAP1gL+nlgLY+dSkQzpIu+6v2FQFR6oqxw0DcpITtxHwDL9MmM3ulyEY8keNEGRKz/xcywTudcfSBXfdJrRuZbbNOI=
 
 hostPaths:
-  - name: app-data
+  - name: data
     type: longhorn
     size: 20Gi
     accessMode: ReadWriteOnce
