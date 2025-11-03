@@ -188,6 +188,11 @@ spec:
       #     path: {{ .hostPath | quote }}
       #     type: {{ .type | default "DirectoryOrCreate" }}
       # {{- end }}
+      {{- range .Values.hostPaths }}
+      - name: {{ .name }}
+        persistentVolumeClaim:
+          claimName: {{ .name }}
+      {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
