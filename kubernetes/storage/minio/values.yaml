@@ -25,3 +25,4 @@ pvcs:
     type: longhorn
     size: 20Gi
     accessMode: ReadWriteOnce
+    mountPath: /data
