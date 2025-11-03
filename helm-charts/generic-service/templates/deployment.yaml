@@ -191,7 +191,7 @@ spec:
       {{- range .Values.hostPaths }}
       - name: {{ .name }}
         persistentVolumeClaim:
-          claimName: {{ .name }}-pvc
+          claimName: {{ .name }}
       {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
