@@ -1,4 +1,4 @@
-{{- range .Values.pvcs }}
+{{- range .Values.hostPaths }}
 {{- if eq .type "nfs" }}
 ---
 apiVersion: v1
