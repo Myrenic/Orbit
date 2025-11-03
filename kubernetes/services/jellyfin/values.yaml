@@ -15,9 +15,9 @@ health:
 envs:
   - JELLYFIN_PublishedServerUrl: https://jellyfin.wagner.gg
 
-resources:
-  limits:
-    gpu.intel.com/i915: "1"
+# resources:
+#   limits:
+#     gpu.intel.com/i915: "1"
 
 hostPaths:
   - name: config
