@@ -1,5 +1,7 @@
 ---
-image: "ghcr.io/myrenic/radarr@sha256:1514a66c4f9d383eb6e6304f2591b0dc034c7917626bc66d2b6a8ddc2f1f5d27"
+image:
+  repository: "ghcr.io/hotio/radarr"
+  tag: "release-5.28.0.10274@sha256:42ca21d9bab4df84af1898e7256256b85a04b207e72c620ac382ac4151d65dd0"
 
 ports:
   - name: main
@@ -7,7 +9,6 @@ ports:
 
 envs:
   - TZ: "Europe/Amsterdam"
-  - EXTERNAL_AUTH: "true"
 
 ingress:
   host: radarr.tuntelder.com

@@ -1,5 +1,7 @@
 ---
-image: "ghcr.io/myrenic/sonarr@sha256:94fcfd29db7a5ef98eb0aa54655565259a541c4e28dacba4b0baf4aaee09c93e"
+image:
+  repository: "ghcr.io/myrenic/sonarr"
+  tag: "5e35e49"
 
 ports:
   - name: main
