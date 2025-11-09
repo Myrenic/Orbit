@@ -132,8 +132,6 @@ ingress:
   middlewares:
     - name: crowdsec-mw
       namespace: edge
-    - name: local-only
-      namespace: edge
 
 pvcs:
   - name: aiostreams-config
