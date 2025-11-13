@@ -10,8 +10,6 @@ ingress:
   middlewares:
     - name: crowdsec-mw
       namespace: edge
-    - name: authentik
-      namespace: edge
 
 pvcs:
   - name: prowlarr-config
