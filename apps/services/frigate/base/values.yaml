@@ -1,5 +1,5 @@
 ---
-image: "ghcr.io/blakeblackshear/frigate@sha256:cb6624b9075f76ece626139eedca7e728cab1456a5f8c351afbf877320826bc1"
+image: "ghcr.io/blakeblackshear/frigate:stable"
 imagePullPolicy: IfNotPresent
 
 ports:
