@@ -25,7 +25,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: traefik-ingressroute
-  namespace: edge
+  namespace: network
 spec:
   entryPoints:
     - websecure
