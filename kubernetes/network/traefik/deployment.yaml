@@ -24,16 +24,6 @@ spec:
                 secretKeyRef:
                   name: cloudflare-api-token
                   key: api-token
-            # - name: ENROLL_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: crowdsec-api-token
-            #       key: ENROLL_KEY
-            # - name: TRAEFIK_BOUNCER_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: crowdsec-api-token
-            #       key: TRAEFIK_BOUNCER_KEY
           args:
             - --log.level=INFO
             - --log.format=json
@@ -51,15 +41,11 @@ spec:
             - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
-            # - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
-            # - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"\
             - --experimental.plugins.fail2ban.moduleName=github.com/charanpreetp/fail2ban
             - --experimental.plugins.fail2ban.version=v0.0.1
             - --accesslog=true
-            # - --accesslog.filepath=/var/log/traefik/traefik.log
             - --accesslog.filters.statuscodes=400-429
             - --accesslog.format=json
-            # - --accesslog.fields.headers.defaultmode=keep
           ports:
             - containerPort: 80
               name: web
@@ -79,18 +65,7 @@ spec:
               mountPath: /data
             - name: acme-storage
               mountPath: /etc/traefik
-            # - name: crowdsec-api-token
-            #   mountPath: /etc/crowdsec
-            #   readOnly: true
-            - name: traefik-logs
-              mountPath: /var/log/traefik
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
             claimName: traefik-acme-pvc
-        # - name: crowdsec-api-token
-        #   secret:
-        #     secretName: crowdsec-api-token
-        - name: traefik-logs
-          persistentVolumeClaim:
-            claimName: traefik-logs-pvc

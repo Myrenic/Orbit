@@ -35,7 +35,7 @@ server:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-      # traefik.ingress.kubernetes.io/router.middlewares: edge-crowdsec-mw@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: fail2ban
     hosts:
       - auth.testlab.tuntelder.com
     tls:
