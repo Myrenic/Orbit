@@ -8,7 +8,7 @@ metadata:
     longhorn.io/volume-name: traefik-acme
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: longhorn
   resources:
     requests:
