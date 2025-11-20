@@ -55,10 +55,10 @@ spec:
             # - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.0"\
             - --experimental.plugins.fail2ban.moduleName=github.com/charanpreetp/fail2ban
             - --experimental.plugins.fail2ban.version=v0.0.1
-            # - --accesslog=true
+            - --accesslog=true
             # - --accesslog.filepath=/var/log/traefik/traefik.log
-            # - --accesslog.filters.statuscodes=100-599
-            # - --accesslog.format=json
+            - --accesslog.filters.statuscodes=400-499
+            - --accesslog.format=json
             # - --accesslog.fields.headers.defaultmode=keep
           ports:
             - containerPort: 80
