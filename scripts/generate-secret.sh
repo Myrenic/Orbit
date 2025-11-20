@@ -16,7 +16,7 @@ fi
 echo "Password: $password"
 
 export SEALED_SECRETS_CONTROLLER_NAMESPACE="secrets"
-export SEALED_SECRETS_CONTROLLER_NAME="sealed-secrets"
+export SEALED_SECRETS_CONTROLLER_NAME=$(kubectl get services -n secrets -l app.kubernetes.io/name=sealed-secrets -o jsonpath='{.items[0].metadata.name}')
 export SEALED_SECRETS_SCOPE="cluster-wide"
 
 encryptedPassword=$(kubectl create secret generic script --dry-run=client --from-literal "script=$password" -o json | kubeseal -o json | jq -r '.spec.encryptedData.script')
