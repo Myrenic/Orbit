@@ -35,6 +35,7 @@ spec:
       services:
         - name: traefik
           port: 8080
-
+      middlewares:
+        - name: fail2ban
   tls:
     certResolver: letsencrypt
