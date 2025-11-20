@@ -57,7 +57,7 @@ spec:
             - --experimental.plugins.fail2ban.version=v0.0.1
             - --accesslog=true
             # - --accesslog.filepath=/var/log/traefik/traefik.log
-            - --accesslog.filters.statuscodes=400-499
+            - --accesslog.filters.statuscodes=400-429
             - --accesslog.format=json
             # - --accesslog.fields.headers.defaultmode=keep
           ports:

@@ -107,30 +107,32 @@ tasks:
 
   password-argocd:
     desc: Change 'argocd' default password
-    cmds:
       - |
-        nohup kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0 \
-          > /dev/null 2>&1 &
-      - |
-        # wait for port-forward to be ready
-        for i in $(seq 1 10); do
-          if curl -sS --fail http://localhost:8080/ >/dev/null 2>&1; then
-            break
-          fi
-          sleep 1
-        done
-      - |
-        argocd login localhost:8080 --insecure --username admin \
-          --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
-          jsonpath="{.data.password}" | base64 -d)
-      - |
-        argocd account update-password --insecure --account admin \
-          --current-password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
-          jsonpath="{.data.password}" | base64 -d) \
-          --new-password $(kubectl -n argocd get secret argocd-admin-password -o \
-          jsonpath="{.data.secretValue}" | base64 -d)
-      - |
-        pkill -f "kubectl port-forward"
+          echo (kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+    # cmds:
+    #   - |
+    #     nohup kubectl port-forward -n argocd svc/argocd-server 8080:80 --address 0.0.0.0 \
+    #       > /dev/null 2>&1 &
+    #   - |
+    #     # wait for port-forward to be ready
+    #     for i in $(seq 1 10); do
+    #       if curl -sS --fail http://localhost:8080/ >/dev/null 2>&1; then
+    #         break
+    #       fi
+    #       sleep 1
+    #     done
+    #   - |
+    #     argocd login localhost:8080 --insecure --username admin \
+    #       --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
+    #       jsonpath="{.data.password}" | base64 -d)
+    #   - |
+    #     argocd account update-password --insecure --account admin \
+    #       --current-password $(kubectl -n argocd get secret argocd-initial-admin-secret -o \
+    #       jsonpath="{.data.password}" | base64 -d) \
+    #       --new-password $(kubectl -n argocd get secret argocd-admin-password -o \
+    #       jsonpath="{.data.secretValue}" | base64 -d)
+    #   - |
+    #     pkill -f "kubectl port-forward"
 
   # ------------------------
   # Orchestration
