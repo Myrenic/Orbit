@@ -1,2 +1,2 @@
-apps/*/*/base/charts/
-minio.yaml
+kubernetes/*/*/charts/
+sealed-secret-backup.yaml
