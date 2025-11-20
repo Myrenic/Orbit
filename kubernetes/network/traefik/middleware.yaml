@@ -9,7 +9,7 @@ spec:
     fail2ban:
       numberFails: 5        # requests with 4xx before banning
       banTime: 1m           # ban duration
-      clientHeader: ClientAddr
+      # clientHeader: ""
       logLevel: DEBUG
 ---
 apiVersion: traefik.io/v1alpha1
