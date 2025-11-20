@@ -1,3 +1,4 @@
+---
 image:
   repository: "ghcr.io/syncthing/syncthing"
   tag: "2.0.10@sha256:3faeb52baa7de3fbe7007cecc6829a4bc71cc6ac62d3967459a8228979c38943"
@@ -21,4 +22,3 @@ ports:
 envs:
   - PUID: 5000
   - PGID: 5000
-

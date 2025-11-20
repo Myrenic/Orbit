@@ -8,10 +8,10 @@ rules:
   document-start: enable
   trailing-spaces: disable
   line-length:
-    max: 240
+    max: 9999 # disable line length
     level: warning
   comments-indentation: disable
   braces: disable
 
 ignore:
-  - charts/
+  - helm-charts/
