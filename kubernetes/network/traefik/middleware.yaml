@@ -2,26 +2,15 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: authentik
+  name: fail2ban
   namespace: network
 spec:
-  forwardAuth:
-    # This address should point to the cluster endpoint provided by the kubernetes service, not the Ingress.
-    address: http://ak-outpost-authentik-embedded-outpost.network.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
-    trustForwardHeader: true
-    authResponseHeaders:
-      - X-authentik-username
-      - X-authentik-groups
-      - X-authentik-entitlements
-      - X-authentik-email
-      - X-authentik-name
-      - X-authentik-uid
-      - X-authentik-jwt
-      - X-authentik-meta-jwks
-      - X-authentik-meta-outpost
-      - X-authentik-meta-provider
-      - X-authentik-meta-app
-      - X-authentik-meta-version
+  plugin:
+    fail2ban:
+      numberFails: 5        # requests with 4xx before banning
+      banTime: 1m           # ban duration
+      clientHeader: Cf-Connecting-IP
+      logLevel: DEBUG
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
