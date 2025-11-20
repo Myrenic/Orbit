@@ -1,3 +1,4 @@
+## ⚠️⚠️⚠️ Outdated doc, will be updated soon ⚠️⚠️⚠️
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/Myrenic/Orbit/refs/heads/main/docs/branding/logo-transparant-bg.png?raw=true" alt="Orbit Logo" width="240"/>
