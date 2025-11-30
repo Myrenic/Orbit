@@ -1,5 +1,5 @@
 ---
-pplicationsets:
+applicationsets:
   main:
     name: main
     generators:
