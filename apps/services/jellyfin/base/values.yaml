@@ -1,5 +1,5 @@
 ---
-image: "linuxserver/jellyfin:10.10.7"
+image: "linuxserver/jellyfin:10.11.4"
 imagePullPolicy: IfNotPresent
 
 ports:
