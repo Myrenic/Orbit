@@ -5,10 +5,15 @@ kind: Kustomization
 namespace: services
 
 helmGlobals:
-  chartHome: ../../../../charts
+  chartHome: ../../../helm-charts
 
 helmCharts:
-  - name: generic
+  - name: generic-service
     releaseName: aiostreams
     valuesFile: values.yaml
     namespace: services
+
+
+
+
+
