@@ -131,7 +131,7 @@ envs:
 
 ingress:
   host: aiostreams.tuntelder.com
-  
+  port: main
   # middlewares:
   #   - name: crowdsec-mw
   #     namespace: edge
