@@ -1,7 +1,7 @@
 ---
 image:
   repository: "ghcr.io/myrenic/roomctrlscraper"
-  tag: "latest@sha256:628521722119ed18e908ba5f083cb21c4cecb400b396ed8c9e904af5097db806"
+  tag: "latest@ sha256:06f6c563b896b2a70bc4422f9b781ee7aa62428b06ddd9c8093e8e22940b9397"
 
 imagePullPolicy: Always
 
