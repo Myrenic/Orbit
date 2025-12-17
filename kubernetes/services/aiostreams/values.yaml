@@ -7,8 +7,6 @@ ports:
   - name: main
     containerPort: 3000
 
-imagePullPolicy: Always
-
 envs:
   - ADDON_NAME: "AIOStreams"
   - ADDON_ID: "aiostreams.tuntelder.com"
