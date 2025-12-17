@@ -1,9 +1,13 @@
 ---
-image: "ghcr.io/viren070/aiostreams@sha256:ad0e0bf2d0aa72da30d09684a90a1784bee4f47a4ad8ba04e0cc9c6674971615"
+image:
+  repository: "ghcr.io/viren070/aiostreams"
+  tag: "latest"
 
 ports:
   - name: main
     containerPort: 3000
+
+imagePullPolicy: Always
 
 envs:
   - ADDON_NAME: "AIOStreams"
