@@ -4,7 +4,7 @@ image:
   tag: "latest"
 
 ports:
-  - name: http
+  - name: main
     containerPort: 3000
 
 envs:
@@ -131,7 +131,7 @@ envs:
 
 ingress:
   host: aiostreams.tuntelder.com
-
+  
   # middlewares:
   #   - name: crowdsec-mw
   #     namespace: edge
