@@ -6,7 +6,7 @@ metadata:
   namespace: network
 spec:
   addresses:
-    - 10.0.3.190-10.0.3.199
+    - 10.0.69.95-10.0.69.100
   autoAssign: false
 ---
 apiVersion: metallb.io/v1beta1
