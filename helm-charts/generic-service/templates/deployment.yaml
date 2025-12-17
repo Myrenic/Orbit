@@ -50,29 +50,6 @@ spec:
           value: "1"
     {{- if or .Values.hostPaths .Values.database.enabled .Values.envsubst.files }}
       initContainers:
-      {{- if .Values.hostPaths }}
-      - name: prepare-storage
-        image: "{{ .Values.helper.image.repository }}:{{ .Values.helper.image.tag }}"
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsUser: 0
-        command:
-        - /bin/sh
-        args:
-        - -c
-        - |
-          set -ex;
-          {{- range .Values.hostPaths }}
-          {{- if not (has .type (list "CharDevice")) }}
-          chmod 777 {{ .containerPath | quote }};
-          {{- end }}
-          {{- end }}
-        volumeMounts:
-        {{- range .Values.hostPaths }}
-        - name: {{ .name }}
-          mountPath: {{ .containerPath | quote }}
-        {{- end }}
-        {{- end }}
       {{- if .Values.database.enabled }}
       - name: wait-for-db
         image: "{{ .Values.wait4x.image.repository }}:{{ .Values.wait4x.image.tag }}"
