@@ -37,10 +37,10 @@ server:
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
       traefik.ingress.kubernetes.io/router.middlewares: fail2ban
     hosts:
-      - auth.testlab.tuntelder.com
+      - auth.tuntelder.com
     tls:
       - hosts:
-          - auth.testlab.tuntelder.com
+          - auth.tuntelder.com
 
   readinessProbe:
     httpGet:

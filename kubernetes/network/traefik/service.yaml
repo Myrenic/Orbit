@@ -30,7 +30,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`traefik.testlab.tuntelder.com`)
+    - match: Host(`traefik.tuntelder.com`)
       kind: Rule
       services:
         - name: traefik
