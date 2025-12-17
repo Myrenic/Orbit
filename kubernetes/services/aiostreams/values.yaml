@@ -143,14 +143,14 @@ hostPaths:
     containerPath: /app/data
 
 podSecurityContext:
-  runAsNonRoot: true
+  runAsNonRoot: false
   runAsUser: 1000
   seccompProfile:
     type: RuntimeDefault
 
 securityContext:
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
+  runAsNonRoot: false
+  allowPrivilegeEscalation: true
   capabilities:
     drop:
       - ALL
