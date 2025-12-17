@@ -135,12 +135,12 @@ ingress:
   #   - name: crowdsec-mw
   #     namespace: edge
 
-pvcs:
+hostPaths:
   - name: aiostreams-config
     type: longhorn
     accessMode: ReadWriteMany
     size: 10Gi
-    mountPath: /app/data
+    containerPath: /app/data
 
 podSecurityContext:
   runAsNonRoot: true
