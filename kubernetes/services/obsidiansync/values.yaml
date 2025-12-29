@@ -1,0 +1,38 @@
+---
+image:
+  repository: "couchdb"
+  tag: "latest@sha256:a2c8839c86304962ae60df41c9aa51907925b7ca022b69acfcd45663a89daa77"
+
+ports:
+  - name: main
+    containerPort: 5984
+
+imagePullPolicy: Always
+
+secretEnvs:
+  - COUCHDB_USER: AgCQaVZBVU4grJPHhWDJ0N0Spdl51W91yQxO7CZXQoBlp8f8H6yp61ay0eDZALPGy3UyRdvnkYaNn7Nv6JyDKNPQuk/wLqVRh12pdLySrjlVbMbAQdr5i+KpgVTIZj1vYuexu4NF/RxqSBTEnKDZgPtOtEgyG/5tBYPyvIHqHdEV1X/uzaZK5Q2a1+wDNjPX+uyU2ljHO3jLUTPKErdxyZ6SJJvtyflIfM0adExjixBv6tUPVUbc51igvoch4QiCqRLKYikkdAYeX/gqQjhABM8htE2UBdIDOb7BDVnRe/m+yAbqMjuuQvmFIxlJM5qH2UiiMSTPTRvYTAon/yyp/OyEdh7x1O0HFu23/M+tr2w1oMXi53nBPrDAKAkWfjBt2xPXojg+Ebpg0b7zWW8ReBLAA3Gloq9eD+7yJBVR+dhLzmK4pX1vnqUtMguZaJRPOtIOsjPe5E+fz1BAAhdwfw9ey7a9oYFiv8D9WlDpqTsI+cGjOK5V8g5OpNB1ipIkVGNBMjv9S+YPgVhOK470U9rRd9KUyAUR9NeJW4lXykGqpnKgcA27Dy4UUOE8XPE1Bxe7DHnt6N5V18INyb32CJW4mSqaGNkJlSNeVG27a9aHC8JrGqkkuYJd56IIydBCzRDm9Y3YgG4UIxtxFJgs3RQZYnK0VjchukmMCpQvl9AJ10iKFQRqdlYXxDx7EWmaY6G02rZXyZ767Oew
+  - COUCHDB_PASSWORD: AgDTZZ7q8eSZgOq+blE1yq5v9a5oiQFPXhzhkEmU/obzQy9L1r79nYwJWdE9zteqTOLZ7NQDpMLMi/HdJ2SYearE1IpFda32lYi3ePfrTsekAab4YOKkCNDa2r0iABx6Ux6nHsIkoLuHsAtZeym0OTe5Utn/gZv4U8tajOsOvqEk6eb8ijYMpcZrtOivKD//AZS8TTP72H66j8rFCWczyM3LuPe7R6VJHXeqxoQ8AiIyse+byNFjXM5nud5FdfPp9Sh4P91mXGcgKE94nHzsCp9RuZqQ3RZvn7mWVYRSEFbZsGzaYfZ2A1zpYzzVTnNAgkVZj3E+WzpMzFl5YSoT1mYb2u/qFcKmSDxPClzcj3E4QYxdwfEoEi4nt2T7O4DdYZsNtr1crKh//uHXNrsZTn3ocs3ZAzliJbjBYSlYoO5O0fmMio+2x4+s13axT1U/UdWstWqMZmHPukGmdEceSQQ3Fyq3C96ERnIPQmliThg0FD+MYrDTRkh3pYHzxyMOhI8GzfHXUTkFBK6amdBQx+nHWIisaOgALO3lKjXVzeFY51QJP4YT9Pi0WFS7dMKU8V1q+WqGXCZ7EAFA3I0hWi+S6C0yafJ2nmwNI5elDNaFHfdJbVJc8KHXxtpZwWqJpwm1JKoQCkfXKOroYyxAdP39feJIrwu5yUeYfCFxa3HtKdOx3XjVyLErziioiICQlj4wN69RI2NnAX3pIi+xPpFLnmulBw==
+
+ingress:
+  host: obsidian.tuntelder.com
+  port: main
+
+hostPaths:
+  - name: aiostreams-config
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 20Gi
+    containerPath: /opt/couchdb/data
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
