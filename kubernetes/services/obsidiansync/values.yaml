@@ -18,7 +18,7 @@ ingress:
   port: main
 
 hostPaths:
-  - name: aiostreams-config
+  - name: obsidian-data
     type: longhorn
     accessMode: ReadWriteMany
     size: 20Gi
