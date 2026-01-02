@@ -25,14 +25,14 @@ hostPaths:
     containerPath: /opt/couchdb/data
 
 podSecurityContext:
-  runAsNonRoot: true
+  runAsNonRoot: false
   runAsUser: 65534
   seccompProfile:
     type: RuntimeDefault
 
 securityContext:
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-      - ALL
+  runAsNonRoot: false
+  allowPrivilegeEscalation: true
+  # capabilities:
+  #   drop:
+  #     - ALL
