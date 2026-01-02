@@ -2,13 +2,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: services
-
-helmGlobals:
-  chartHome: ../../../helm-charts
-
-helmCharts:
-  - name: generic-service
-    releaseName: obsidiansync
-    valuesFile: values.yaml
-    namespace: services
+# Create the namespace first
+resources:
+  - configMap.yaml
+  - route.yaml
+  - service.yaml
+  - deployment.yaml
