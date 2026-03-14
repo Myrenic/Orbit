@@ -1,0 +1,16 @@
+---
+- name: Check if SSH port 22 is reachable from control node
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host | default(inventory_hostname) }}"
+    port: 22
+    timeout: 8
+    state: started
+  delegate_to: localhost
+  become: false
+  register: unifi_ssh_check
+  ignore_errors: true
+
+- name: Stop play when SSH is disabled
+  ansible.builtin.fail:
+    msg: "SSH is disabled. Please navigate to Unifi OS -> Console Settings -> Advanced -> SSH to enable it, set your password, and run this playbook again."
+  when: unifi_ssh_check is failed

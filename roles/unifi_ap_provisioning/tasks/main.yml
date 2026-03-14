@@ -1,0 +1,19 @@
+---
+- name: Ensure Unifi site directory exists for AP provisioning overrides
+  ansible.builtin.file:
+    path: /data/sites/default
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Stage AP telemetry disable config in config.properties
+  ansible.builtin.lineinfile:
+    path: /data/sites/default/config.properties
+    regexp: '^config\.system_cfg\.1='  # Match existing override line by exact key prefix.
+    line: config.system_cfg.1=system.analytics.anonymous=disabled
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+  # Manual step: trigger AP reprovision/config change in the Unifi UI so the U7 Lite pulls the updated file.

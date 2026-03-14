@@ -1,0 +1,9 @@
+---
+all:
+  children:
+    unifi_gateways:
+      hosts:
+        ucg_ultra:
+          ansible_host: 192.168.1.1
+          ansible_user: root
+          ansible_port: 22

@@ -1,0 +1,10 @@
+---
+- name: Harden Unifi telemetry settings
+  hosts: unifi_gateways
+  gather_facts: false
+  become: false
+
+  roles:
+    - unifi_preflight
+    - unifi_telemetry_block
+    - unifi_ap_provisioning
