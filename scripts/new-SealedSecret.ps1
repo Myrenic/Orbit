@@ -1,5 +1,7 @@
 param(
-    [string]$password
+    [string]$password,
+    [string]$namespace,
+    [string]$secretName
 )
 
 Begin {
@@ -18,12 +20,15 @@ Process {
     }
 
     # Create secret and seal it
-    $encryptedPassword = kubectl create secret generic script `
+    $encryptedPassword = kubectl create secret generic roomctrlscraper  `
+        --namespace services `
         --dry-run=client `
-        --from-literal "script=$password" `
+        --from-literal ROOMCTRL_EMAIL=$password `
         -o json |
-        kubeseal -o json |
-        jq -r '.spec.encryptedData.script'
+        kubeseal `
+        --scope cluster-wide `
+        -o json |
+        jq -r '.spec.encryptedData.ROOMCTRL_EMAIL'
 }
 
 End {
