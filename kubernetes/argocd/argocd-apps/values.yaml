@@ -15,7 +15,7 @@ applicationsets:
         project: default
         source:
           repoURL: https://github.com/myrenic/orbit.git
-          targetRevision: cleanup-root-dir
+          targetRevision: main
           path: '{{path}}'
           plugin:
             name: kustomize-helm
