@@ -5,14 +5,14 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - "*"
     paths:
-      - "infrastructure/*/*"
+      - "terraform/*/*"
 
 jobs:
   terraform-validate:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: [./infrastructure/helios, ./infrastructure/atlas]
+        dir: [./terraform/helios, ./terraform/atlas]
     steps:
       - uses: actions/checkout@v5
 

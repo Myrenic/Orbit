@@ -7,5 +7,5 @@ resource "proxmox_virtual_environment_download_file" "talos_nocloud_image" {
   file_name               = "talos-${var.talos.version}-nocloud-amd64.img"
   url                     = "https://factory.talos.dev/image/${var.talos.img_id}/${var.talos.version}/nocloud-amd64.raw.gz"
   decompression_algorithm = "gz"
-  overwrite               = true
+  overwrite               = false
 }
