@@ -1,4 +1,3 @@
-## ⚠️⚠️⚠️ Outdated doc, will be updated soon ⚠️⚠️⚠️
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/Myrenic/Orbit/refs/heads/main/docs/branding/logo-transparant-bg.png?raw=true" alt="Orbit Logo" width="240"/>
@@ -6,16 +5,16 @@
 #  Homelab - Orbit 
 
 [![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io/)
-[![Ansible](https://img.shields.io/badge/Ansible-%231A1918.svg?logo=ansible&logoColor=white)](https://www.ansible.com/)
 [![Talos](https://img.shields.io/badge/Talos-blue?logo=kubernetes&logoColor=white)](https://www.talos.dev/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-orange?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
+[![Sealed Secrets](https://img.shields.io/badge/Sealed%20Secrets-purple?logo=kubernetes&logoColor=white)](https://github.com/bitnami-labs/sealed-secrets)
 [![Renovate](https://img.shields.io/badge/Renovate-enabled-brightgreen?logo=renovatebot)](https://github.com/renovatebot/renovate)
 ![Commits](https://img.shields.io/badge/commits-lost--count-blueviolet)
 ![Status](https://img.shields.io/badge/status-stable-green)
 
 Repository for managing a [Kubernetes](https://kubernetes.io/) cluster through [GitOps](https://en.wikipedia.org/wiki/DevOps) workflows.
 
-Powered by [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment), [Ansible](https://www.ansible.com/), [Terraform](https://www.terraform.io/), [Talos](https://talos.dev), [Argo CD](https://argoproj.github.io/cd/), and [Task](https://taskfile.dev/).
+Powered by [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment), [Terraform](https://www.terraform.io/), [Talos](https://talos.dev), [Argo CD](https://argoproj.github.io/cd/), and [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets).
 Kept up to date with [Renovate](https://www.mend.io/renovate/).
 Includes a healthy dose of automation and the occasional 3-letter commit message.
 
@@ -27,43 +26,47 @@ Includes a healthy dose of automation and the occasional 3-letter commit message
 
 This repository hosts the IaC ([Infrastructure as Code](https://en.wikipedia.org/wiki/Infrastructure_as_code)) configuration for my homelab.
 
-The homelab runs on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment) hypervisor nodes, with VMs provisioned using [Terraform](https://www.terraform.io/) and [Ansible](https://www.ansible.com/).
+The homelab runs on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment) hypervisor nodes, with VMs provisioned using [Terraform](https://www.terraform.io/).
 
-Most services run on [Talos](https://www.talos.dev/), while a dedicated VM provides an [NFS](https://en.wikipedia.org/wiki/Network_File_System)-based file server for [Longhorn](https://longhorn.io/) backups and media storage.
+- **helios** — a [Talos](https://www.talos.dev/) Kubernetes cluster (control plane + workers)
+- **atlas** — an Ubuntu VM used as a file server for media storage and [Longhorn](https://longhorn.io/) backups
+
+All cluster workloads are managed via [GitOps](https://en.wikipedia.org/wiki/DevOps) with [Argo CD](https://argoproj.github.io/cd/) and an ApplicationSet that auto-syncs from this repository. Secrets are encrypted in-repo using [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets).
 
 ## 🚀 Getting Started
 
-1. **Set required environment variables**:
+1. **Create Terraform variables** in `terraform/helios` (and optionally `terraform/atlas`). Use the provided `.example` files as a reference.
+
+2. **Deploy the Talos cluster** using Terraform:
 
 ```bash
-export BW_ORGANIZATION_ID=...
-export BW_PROJECT_ID=...
-export BW_TOKEN=...
-export GIT_TOKEN=...
+cd terraform/helios
+terraform init
+terraform apply
 ```
 
-2. **Create Terraform variables** in both `infrastructure/helios` and `infrastructure/atlas` folders.
+3. **Bootstrap the cluster** (creates namespaces, restores sealed-secret keys, installs ArgoCD and ArgoCD-Apps):
 
-3. **Deploy the machines** using Terraform:
-
-```bash
-task build
+```powershell
+.\scripts\new-Cluster.ps1
 ```
 
-3. **Bootstrap the cluster** (installs CRDs, cert-manager, external-secrets, and ArgoCD):
+ArgoCD will automatically sync all remaining applications from the repository. Retrieve the initial admin password with:
 
-```bash
-task bootstrap
+```powershell
+.\scripts\get-ArgoPassword.ps1
 ```
 
-Then open [https://argocd.{{domain}}](https://argocd.{{domain}}) and log in using the admin password stored in Bitwarden.
+4. **Creating a new Sealed Secret**:
 
-99. **Full reset**:
+```powershell
+.\scripts\new-SealedSecret.ps1 -password <value> -namespace <ns> -secretName <name>
+```
 
-Redeploying the cluster is straightforward:
+5. **Backing up Sealed Secret keys**:
 
-```bash
-task reset-infra
+```powershell
+.\scripts\backup-SealedSecret.ps1
 ```
 
 ## Apps
@@ -84,39 +87,110 @@ End-user facing applications
         <td>Example and template application for the repository</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg"></td>
-        <td><a href="https://github.com/blakeblackshear/frigate">Frigate</a></td>
-        <td>NVR with real-time object detection for IP cameras</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg"></td>
+        <td><a href="https://www.home-assistant.io/">Home Assistant</a></td>
+        <td>Open-source home automation platform (proxied via nginx).</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyseerr.svg"></td>
-        <td><a href="https://github.com/Fallenbagel/jellyseerr">Jellyseerr</a></td>
-        <td>Media request management and discovery tool for Jellyfin.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/memos.svg"></td>
+        <td><a href="https://github.com/usememos/memos">Memos</a></td>
+        <td>Lightweight, self-hosted note-taking service.</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/prowlarr.svg"></td>
-        <td><a href="https://github.com/Prowlarr/Prowlarr">Prowlarr</a></td>
-        <td>Indexer manager for integrating with Sonarr, Radarr, and more.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/stremio.svg"></td>
+        <td><a href="https://github.com/viren070/aiostreams">AIOStreams</a></td>
+        <td>All-in-one Stremio addon aggregator and proxy.</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/radarr.svg"></td>
-        <td><a href="https://radarr.video/">Radarr</a></td>
-        <td>Movie collection manager for Usenet and BitTorrent users.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nexus.svg"></td>
+        <td><a href="https://www.sonatype.com/products/sonatype-nexus-repository">Nexus3</a></td>
+        <td>Universal artifact repository manager.</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://raw.githubusercontent.com/walkxcode/dashboard-icons/master/svg/sonarr.svg"></td>
-        <td><a href="https://sonarr.tv/">Sonarr</a></td>
-        <td>Smart PVR for TV shows, automating downloads and organization.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://raw.githubusercontent.com/walkxcode/dashboard-icons/master/svg/sabnzbd.svg"></td>
-        <td><a href="https://sabnzbd.org/">SABnzbd</a></td>
-        <td>Usenet binary newsreader for automated downloads.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/obsidian.svg"></td>
+        <td><a href="https://obsidian.md/">Obsidian Sync</a></td>
+        <td>Self-hosted sync backend for Obsidian (proxied via nginx).</td>
     </tr>
     <tr>
         <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
         <td><a href="https://github.com/Myrenic/RoomctrlScraper">RoomCtrlScraper</a></td>
         <td>Custom service to scrape and manage room control data.</td>
+    </tr>
+</table>
+
+### Network
+
+Ingress, DNS, and identity services
+
+<table>
+    <tr>
+        <th>Logo</th>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/authentik.svg"></td>
+        <td><a href="https://goauthentik.io/">authentik</a></td>
+        <td>Identity provider enabling single sign-on (SSO) and centralized user management.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/cert-manager.svg"></td>
+        <td><a href="https://cert-manager.io/">Cert Manager</a></td>
+        <td>Manages TLS certificates for secure communication within Kubernetes.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/metallb.svg"></td>
+        <td><a href="https://metallb.universe.tf/">MetalLB</a></td>
+        <td>Load-balancer implementation for bare metal Kubernetes clusters.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/traefik.svg"></td>
+        <td><a href="https://traefik.io/">Traefik</a></td>
+        <td>Cloud-native reverse proxy and ingress controller for Kubernetes.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/traefik.svg"></td>
+        <td>Traefik CRDs</td>
+        <td>Custom Resource Definitions required by Traefik.</td>
+    </tr>
+</table>
+
+### Storage
+
+Persistent storage services
+
+<table>
+    <tr>
+        <th>Logo</th>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/longhorn.svg"></td>
+        <td><a href="https://longhorn.io/">Longhorn</a></td>
+        <td>Cloud-native distributed block storage for Kubernetes.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/syncthing.svg"></td>
+        <td><a href="https://syncthing.net/">Syncthing</a></td>
+        <td>Continuous file synchronization between devices.</td>
+    </tr>
+</table>
+
+### Secrets
+
+Secret management
+
+<table>
+    <tr>
+        <th>Logo</th>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bitnami.svg"></td>
+        <td><a href="https://github.com/bitnami-labs/sealed-secrets">Sealed Secrets</a></td>
+        <td>Encrypts Kubernetes secrets for safe storage in Git.</td>
     </tr>
 </table>
 
@@ -131,16 +205,6 @@ Foundation components for running and deploying applications in my cluster
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/cert-manager.svg"></td>
-        <td><a href="https://cert-manager.io/">Cert Manager</a></td>
-        <td>Manages TLS certificates for secure communication within Kubernetes.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://external-secrets.io/latest/pictures/eso-round-logo.svg"></td>
-        <td><a href="https://external-secrets.io/latest/">External Secrets</a></td>
-        <td>Syncs secrets from external stores into Kubernetes resources.</td>
-    </tr>
-    <tr>
         <td><img width="32" src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png"></td>
         <td><a href="https://argo-cd.readthedocs.io/en/stable/">Argo CD</a></td>
         <td>GitOps tool for continuous delivery and Kubernetes application management.</td>
@@ -151,61 +215,9 @@ Foundation components for running and deploying applications in my cluster
         <td>Automates dependency and container image updates via pull requests.</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
-        <td>CRDs</td>
-        <td>Custom Resource Definitions required by various operators and apps.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/38107502?s=48&v=4"></td>
-        <td>Defaults</td>
-        <td>Cluster-wide default namespaces and ArgoCD projects.</td>
-    </tr>
-</table>
-
-### Core
-
-Essential infrastructure services powering the cluster
-
-<table>
-    <tr>
-        <th>Logo</th>
-        <th>Name</th>
-        <th>Description</th>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/authentik.svg"></td>
-        <td><a href="https://goauthentik.io/">authentik</a></td>
-        <td>Identity provider enabling single sign-on (SSO) and centralized user management.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/crowdsec.svg"></td>
-        <td><a href="https://www.crowdsec.net/">crowdsec</a></td>
-        <td>Collaborative, open-source intrusion prevention and detection system.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://artifacthub.io/static/media/placeholder_pkg_helm.png"></td>
-        <td><a href="https://github.com/kubernetes-csi/csi-driver-nfs">csi-driver-nfs</a></td>
-        <td>Kubernetes CSI driver for NFS persistent volumes.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/longhorn.svg"></td>
-        <td><a href="https://longhorn.io/">longhorn</a></td>
-        <td>Cloud-native distributed block storage for Kubernetes.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/metallb.svg"></td>
-        <td><a href="https://metallb.universe.tf/">metallb</a></td>
-        <td>Load-balancer implementation for bare metal Kubernetes clusters.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/33608853?s=48&v=4"></td>
-        <td><a href="https://github.com/emberstack/kubernetes-reflector">reflector</a></td>
-        <td>Mirrors Kubernetes secrets and configmaps across namespaces.</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/traefik.svg"></td>
-        <td><a href="https://traefik.io/">traefik</a></td>
-        <td>Cloud-native reverse proxy and ingress controller for Kubernetes.</td>
+        <td><img width="32" src="https://avatars.githubusercontent.com/u/17888862?s=48&v=4"></td>
+        <td><a href="https://github.com/intel/intel-device-plugins-for-kubernetes">Intel QuickSync</a></td>
+        <td>Intel GPU device plugin enabling hardware-accelerated video transcoding in Kubernetes.</td>
     </tr>
 </table>
 
