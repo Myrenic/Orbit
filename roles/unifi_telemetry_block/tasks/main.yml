@@ -3,47 +3,47 @@
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/unifi-core/config/settings.yaml
     regexp: '^(\s*anonymous_device_id\s*:\s*).*$'  # Capture key + separator and replace only value.
-    line: '\100000000-0000-0000-0000-000000000000'
+    line: '\g<1>00000000-0000-0000-0000-000000000000'
     backrefs: true
 
 - name: Set anonymous_network_application_id to zero UUID
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/unifi-core/config/settings.yaml
     regexp: '^(\s*anonymous_network_application_id\s*:\s*).*$'  # Match this YAML key regardless of spacing.
-    line: '\100000000-0000-0000-0000-000000000000'
+    line: '\g<1>00000000-0000-0000-0000-000000000000'
     backrefs: true
 
 - name: Set sendDiagnostics to none
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/unifi-core/config/settings.yaml
     regexp: '^(\s*sendDiagnostics\s*:\s*).*$'  # Replace any current value (e.g. anonymous/true/false) with none.
-    line: '\1none'
+    line: '\g<1>none'
     backrefs: true
 
 - name: Set unifi.anonymous_controller_id to zero UUID
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/udapi-config/unifi
     regexp: '^(\s*unifi\.anonymous_controller_id\s*=\s*).*$'  # Preserve key and equals sign, swap only the value.
-    line: '\100000000-0000-0000-0000-000000000000'
+    line: '\g<1>00000000-0000-0000-0000-000000000000'
     backrefs: true
 
 - name: Set unifi.reporterid to zero UUID
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/udapi-config/unifi
     regexp: '^(\s*unifi\.reporterid\s*=\s*).*$'  # Dot is escaped so regex targets the exact property key.
-    line: '\100000000-0000-0000-0000-000000000000'
+    line: '\g<1>00000000-0000-0000-0000-000000000000'
     backrefs: true
 
 - name: Set system.analytics.status to disabled
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/udapi-config/unifi
     regexp: '^(\s*system\.analytics\.status\s*=\s*).*$'  # Match property key with flexible whitespace around '='.
-    line: '\1disabled'
+    line: '\g<1>disabled'
     backrefs: true
 
 - name: Set reporter-uuid to zero UUID
   ansible.builtin.lineinfile:
     path: /mnt/.rwfs/data/data/unifi/data/system.properties
     regexp: '^(\s*reporter-uuid\s*=\s*).*$'  # Replace only reporter-uuid value and keep existing key formatting.
-    line: '\100000000-0000-0000-0000-000000000000'
+    line: '\g<1>00000000-0000-0000-0000-000000000000'
     backrefs: true
