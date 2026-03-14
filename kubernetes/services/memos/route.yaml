@@ -1,0 +1,18 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: memos
+  namespace: services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`memos.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: memos-nginx
+          port: 80
+
+  tls:
+    certResolver: letsencrypt

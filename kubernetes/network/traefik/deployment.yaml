@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-sa
+      containers:
+        - name: traefik
+          image: traefik:v3.5.2
+          env:
+            - name: CLOUDFLARE_DNS_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-api-token
+                  key: api-token
+          args:
+            - --log.level=INFO
+            - --log.format=json
+            - --api.dashboard=true
+            - --api.insecure=true
+            - --entrypoints.web.address=:80
+            - --entrypoints.web.http.redirections.entrypoint.to=websecure
+            - --entrypoints.web.http.redirections.entrypoint.scheme=https
+            - --entrypoints.websecure.address=:443
+            - --providers.kubernetesingress.ingressclass=traefik
+            - --providers.kubernetesingress.ingressendpoint.hostname=testlab.tuntelder.com
+            - --providers.kubernetescrd
+            - --providers.kubernetescrd.allowCrossNamespace=true
+            - --certificatesresolvers.letsencrypt.acme.email=38107502+Myrenic@users.noreply.github.com
+            - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
+            - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
+            - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
+            - --experimental.plugins.fail2ban.moduleName=github.com/charanpreetp/fail2ban
+            - --experimental.plugins.fail2ban.version=v0.0.1
+            - --accesslog=true
+            - --accesslog.filters.statuscodes=400-429
+            - --accesslog.format=json
+          ports:
+            - containerPort: 80
+              name: web
+            - containerPort: 443
+              name: websecure
+            - containerPort: 8080
+              name: admin
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: acme-storage
+              mountPath: /data
+            - name: acme-storage
+              mountPath: /etc/traefik
+      volumes:
+        - name: acme-storage
+          persistentVolumeClaim:
+            claimName: traefik-acme-pvc

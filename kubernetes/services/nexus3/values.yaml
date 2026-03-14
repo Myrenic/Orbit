@@ -1,0 +1,32 @@
+---
+image:
+  repository: "sonatype/nexus3"
+  tag: "latest"
+
+ports:
+  - name: main
+    containerPort: 8081
+
+ingress:
+  host: nexus.tuntelder.com
+  port: main
+
+hostPaths:
+  - name: nexus-data
+    type: longhorn
+    accessMode: ReadWriteMany
+    size: 10Gi
+    containerPath: /nexus-data
+
+podSecurityContext:
+  runAsNonRoot: false
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: false
+  allowPrivilegeEscalation: true
+  capabilities:
+    drop:
+      - ALL

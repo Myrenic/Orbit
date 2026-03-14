@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-ingress-traefik
+  namespace: storage
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.tuntelder.com`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+  tls:
+    certResolver: letsencrypt
