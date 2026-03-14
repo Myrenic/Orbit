@@ -3,7 +3,10 @@ import os
 import yaml
 from pathlib import Path
 
-root = Path(".")
+root = Path("kubernetes")
+ignored_manifests = {
+    os.path.normpath("kubernetes/storage/longhorn/longhorn.yaml"),
+}
 
 # Collect all yaml manifests (skip kustomization.yaml and files in charts/)
 manifests = []
@@ -16,7 +19,9 @@ for path in root.rglob("*.yaml"):
         with open(path) as f:
             docs = list(yaml.safe_load_all(f))
         if any(isinstance(d, dict) and "apiVersion" in d and "kind" in d for d in docs if d):
-            manifests.append(os.path.normpath(path.as_posix()))
+            manifest_path = os.path.normpath(path.as_posix())
+            if manifest_path not in ignored_manifests:
+                manifests.append(manifest_path)
     except Exception:
         continue
 

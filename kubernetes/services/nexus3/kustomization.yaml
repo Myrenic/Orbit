@@ -12,7 +12,3 @@ helmCharts:
     releaseName: nexus3
     valuesFile: values.yaml
     namespace: services
-
-
-
-

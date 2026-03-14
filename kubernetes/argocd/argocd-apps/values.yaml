@@ -5,7 +5,7 @@ applicationsets:
     generators:
       - git:
           repoURL: https://github.com/myrenic/orbit.git
-          revision: cleanup-root-dir
+          revision: main
           directories:
             - path: kubernetes/**/*
     template:
