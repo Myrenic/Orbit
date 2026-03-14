@@ -12,8 +12,3 @@ helmCharts:
     releaseName: aiostreams
     valuesFile: values.yaml
     namespace: services
-
-
-
-
-
