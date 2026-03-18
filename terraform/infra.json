@@ -1,0 +1,47 @@
+{
+	"hosts": {
+		"control01": {
+			"name": "control01",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:oFkq3oJW0y5Okg==,iv:5AmNCkYx6lXleikPu1yRzymDiAJUiMybBzqdZ6epQG8=,tag:o6siNCtYR0rXgnJ8Xt3jWw==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:/cOwK3jfitqb,iv:1O4e/Eqqjj3AG5YjumxT9Gv2iaEnEd6Ae6ZUlRFQWBE=,tag:BUQJQYmG5Kwg/Naw++7dYw==,type:str]",
+			"cidr": "/24",
+			"node_name": "node1",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
+		}
+	},
+	"proxmox": {
+		"url": "ENC[AES256_GCM,data:MNJHNpkZSoUxUfToDqQ8vXF0gtLwt8Zz,iv:NJAFea9HbFJqnx6t/90gFtNP6i+Xtvys61x97sC36oQ=,tag:6UnK3Tf9gOkpPjvzSJ/HtA==,type:str]",
+		"download_node_name": "node1",
+		"download_datastore_id": "local",
+		"host_description": "Managed by OpenTofu",
+		"host_tags": [
+			"tofu"
+		],
+		"username": "ENC[AES256_GCM,data:VEI3n4sksyg=,iv:lM8QjOndgnwfzyerjs3z6wvYg/PT9LhV/pmKEwuD//8=,tag:0Ar+IT5cnQXxIl4FSrYhsg==,type:str]",
+		"password": "ENC[AES256_GCM,data:38/5K/KXthi9/eSA,iv:qitg45tjr/6Frqd6aHXIZxTDZIgv/GcxCTTEO6atWo8=,tag:siDXpI8UmGpPdwwhtXsV6Q==,type:str]"
+	},
+	"talos": {
+		"cluster_name": "helios",
+		"version": "v1.12.5",
+		"control_plane_identifier": "control",
+		"worker_identifier": "worker",
+		"img_id": "1aa40873826abb48bc6f6ffbe2c80ab33347a02b6779827977e194e0cfa063d3"
+	},
+	"sops": {
+		"age": [
+			{
+				"recipient": "age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v",
+				"enc": "-----BEGIN AGE ENCRYPTED FILE-----\nYWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJVk5ZcEZDZ1FFOTRNdElC\nbzhGZzR0SHp1ZnRHY2JiZCsvMGhBeUJGQ0I4CkhxMDBBMGxRdGdoV09oVXBWSnMr\nYjZESS9UTXFUTUE1SWovdjJ3czJGZFEKLS0tIFk0VnNZeUl5UVEyRjBYdUxaSjM4\nTzV6MFVxM0xxbGU4TXdQcGxKNUZIYlkKunQmIsDw1VcGcy5byjQyDQXx2O7ev0Hb\nQZRlECCVZv2yXopbckKBo4gV51b5WwcxGjIDFcdOH2JPXeB+Atw7Hg==\n-----END AGE ENCRYPTED FILE-----\n"
+			}
+		],
+		"lastmodified": "2026-03-18T10:56:32Z",
+		"mac": "ENC[AES256_GCM,data:fMPtoXcGdiRLbB4+c9rhSiTmCKvI+OzQjoP9Pievw9tl1TRXPmg3+n/Tg8kcQcRl1vNRZbBQkC93TBpuBIAvQFPx0yJuFnYkuEbk81vbBW+DebzBVqVLbIFc6p5zTQ800JWw/jgFZfBV1Tj5mnwGnggvcGMwzUD3G0O5kDcqcdM=,iv:36PD1mF1KMYAUXDiVv57vQadhl8+LF9LHzt4gKb95zI=,tag:pdzvYXGSDU1IZkA1q2CLbg==,type:str]",
+		"encrypted_regex": "^(password|username|ip_addr|gateway|url)$",
+		"version": "3.11.0"
+	}
+}
