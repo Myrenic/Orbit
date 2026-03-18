@@ -1,3 +1,8 @@
+locals {
+  config_patches = [for f in sort(fileset("${path.root}/../talos/patches", "*.yaml")) :
+    file("${path.root}/../talos/patches/${f}")]
+}
+
 resource "talos_machine_secrets" "machine_secrets" {}
 
 data "talos_client_configuration" "talosconfig" {
@@ -12,6 +17,7 @@ data "talos_machine_configuration" "machineconfig_cp" {
   cluster_endpoint = "https://${each.key}:6443"
   machine_type     = "controlplane"
   machine_secrets  = talos_machine_secrets.machine_secrets.machine_secrets
+  config_patches   = local.config_patches
 }
 
 resource "talos_machine_configuration_apply" "cp_config_apply" {
@@ -28,6 +34,7 @@ data "talos_machine_configuration" "machineconfig_worker" {
   cluster_endpoint = "https://${var.control_plane_ips[0]}:6443"
   machine_type     = "worker"
   machine_secrets  = talos_machine_secrets.machine_secrets.machine_secrets
+  config_patches   = local.config_patches
 }
 
 resource "talos_machine_configuration_apply" "worker_config_apply" {
