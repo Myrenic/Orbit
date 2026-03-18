@@ -70,15 +70,18 @@ process {
 
             "yaml" {
                 Write-Host "Applying yaml: $($item.Value)..." -ForegroundColor Cyan
-                kubectl apply -f $item.Value
+		kubectl apply -f $item.Value --server-side --force-conflicts
             }
 
-            "chart" {
+	    "chart" {
                 Write-Host "Applying chart: $($item.Value)..." -ForegroundColor Cyan
-                kustomize build $item.Value --enable-helm |
-                    kubectl apply -f -
-            }
-
+                kustomize build $item.Value --enable-helm | kubectl apply -f - --server-side
+                
+                if ($item.Value -match "argocd$") {
+                    Write-Host "Waiting for ArgoCD CRDs to settle..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 15 
+                }
+	     }
             default {
                 Write-Warning "Unknown item type: $($item.Type)"
             }

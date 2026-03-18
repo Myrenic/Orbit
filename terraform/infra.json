@@ -12,6 +12,32 @@
 			"vlan_id": 69,
 			"datastore_id": "nvme",
 			"disk_size": 50
+		},
+		"worker01": {
+			"name": "worker01",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:rfaGBrcjim03lQ==,iv:LL9Ll0IRSIUGL7UP+AGbpfBCss5pZa6f8Dl5qmdMelw=,tag:nSS3v17Xb/XhTx33nRz0iQ==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:ikYgagZWH9U9,iv:mIMzl9PcU2HkU1+LGQSQN78hv7ng7bH5TmIbdaeCk98=,tag:BB3n5hKGAAwgB+Dmu7stnA==,type:str]",
+			"cidr": "/24",
+			"node_name": "node1",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
+		},
+		"worker02": {
+			"name": "worker02",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:/TQ+UFeCKLXmew==,iv:8Jx9mIsw0/ii0WBeRMe1ePUGdk/LxvY//c4d55gdMlI=,tag:suMISYopbkoongYLvXmkIA==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:+10uYAvXp9KV,iv:oEzBHWgUhq9y1EjANS7zaIHlMl8nEYBZ9bVhrGW3ykA=,tag:B31PPgVivItdGr+NX+eAEQ==,type:str]",
+			"cidr": "/24",
+			"node_name": "node1",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
 		}
 	},
 	"proxmox": {
@@ -39,8 +65,8 @@
 				"enc": "-----BEGIN AGE ENCRYPTED FILE-----\nYWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJVk5ZcEZDZ1FFOTRNdElC\nbzhGZzR0SHp1ZnRHY2JiZCsvMGhBeUJGQ0I4CkhxMDBBMGxRdGdoV09oVXBWSnMr\nYjZESS9UTXFUTUE1SWovdjJ3czJGZFEKLS0tIFk0VnNZeUl5UVEyRjBYdUxaSjM4\nTzV6MFVxM0xxbGU4TXdQcGxKNUZIYlkKunQmIsDw1VcGcy5byjQyDQXx2O7ev0Hb\nQZRlECCVZv2yXopbckKBo4gV51b5WwcxGjIDFcdOH2JPXeB+Atw7Hg==\n-----END AGE ENCRYPTED FILE-----\n"
 			}
 		],
-		"lastmodified": "2026-03-18T10:56:32Z",
-		"mac": "ENC[AES256_GCM,data:fMPtoXcGdiRLbB4+c9rhSiTmCKvI+OzQjoP9Pievw9tl1TRXPmg3+n/Tg8kcQcRl1vNRZbBQkC93TBpuBIAvQFPx0yJuFnYkuEbk81vbBW+DebzBVqVLbIFc6p5zTQ800JWw/jgFZfBV1Tj5mnwGnggvcGMwzUD3G0O5kDcqcdM=,iv:36PD1mF1KMYAUXDiVv57vQadhl8+LF9LHzt4gKb95zI=,tag:pdzvYXGSDU1IZkA1q2CLbg==,type:str]",
+		"lastmodified": "2026-03-18T12:20:19Z",
+		"mac": "ENC[AES256_GCM,data:dJiiBec445wSH5AKQE5anvqcwAun9W+8H7p2te9Cw0YqX/wJ4z22h2NyYK79UgFShx7577GRz0gd7ALgPR84RfgSKPleXcASHMZc3U1WdAmRm+/a2cA4ttsZj7LRK5sF6Wue992WP+Qk6oGcU456RSpS5P5qcRs6Qwb9LcPPH70=,iv:tKjV+P4k1KPgzyOO0ih92tWqUUd3ynnjPSTLyik4NB8=,tag:avEBE+yQOiqzsBjQQ4ctbA==,type:str]",
 		"encrypted_regex": "^(password|username|ip_addr|gateway|url)$",
 		"version": "3.11.0"
 	}
