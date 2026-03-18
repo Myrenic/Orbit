@@ -1,7 +1,7 @@
-echo "Importing config files from terraform..."
+echo "Importing config files from tofu..."
 
-terraform output -raw kubeconfig > ~/.kube/config
-terraform output -raw talosconfig > ~/.talos/config
+sops exec-file --filename infra.json ../infra.json 'tofu output -var-file={} -raw kubeconfig' > ~/.kube/config
+sops exec-file --filename infra.json ../infra.json 'tofu output -var-file={} -raw talosconfig' > ~/.talos/config
 
 export KUBECONFIG=~/.kube/config
 export TALOSCONFIG=~/.talos/config

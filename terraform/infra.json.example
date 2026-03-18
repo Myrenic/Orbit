@@ -1,0 +1,44 @@
+{
+  "hosts": {
+    "control01": {
+      "name": "control01",
+      "cores": 4,
+      "memory": 8096,
+      "ip_addr": "x.x.x.x",
+      "gateway": "x.x.x.x",
+      "cidr": "/24",
+      "node_name": "node1",
+      "network_bridge": "vmbr0",
+      "vlan_id": 69,
+      "datastore_id": "nvme",
+      "disk_size": 50
+    },
+    "worker01": {
+      "name": "worker01",
+      "cores": 4,
+      "memory": 8096,
+      "ip_addr": "x.x.x.x",
+      "gateway": "x.x.x.x",
+      "cidr": "/24",
+      "node_name": "node1",
+      "network_bridge": "vmbr0",
+      "vlan_id": 69,
+      "datastore_id": "nvme",
+      "disk_size": 50
+    }
+  },
+  "proxmox": {
+    "url": "https://x.x.x.x:8006/",
+    "download_node_name": "node1",
+    "download_datastore_id": "local",
+    "host_description": "Managed by OpenTofu",
+    "host_tags": ["tofu"]
+  },
+  "talos": {
+    "cluster_name": "helios",
+    "version": "v1.x.x",
+    "control_plane_identifier": "control",
+    "worker_identifier": "worker",
+    "img_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+}

@@ -1,2 +1,5 @@
 kubernetes/*/*/charts/
 sealed-secret-backup.yaml
+terraform/**/*.bak
+terraform/**/.terraform/
+terraform/**/terraform.tfstate*

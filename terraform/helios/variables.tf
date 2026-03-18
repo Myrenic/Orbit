@@ -21,6 +21,8 @@ variable "proxmox" {
     download_datastore_id = string
     host_description      = string
     host_tags             = list(string)
+    username              = string
+    password              = string
   })
 }
 
