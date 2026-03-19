@@ -1,15 +1,16 @@
 module "image" {
-  source  = "./modules/image"
-  proxmox = var.proxmox
-  talos   = var.talos
+  source     = "./modules/image"
+  proxmox    = var.proxmox
+  talos      = var.talos
+  node_names = toset([for host in var.hosts : host.node_name])
 }
 
 module "vm" {
-  source = "./modules/vm"
-  hosts  = var.hosts
-  proxmox = var.proxmox
-  image_id = module.image.image_id
-  talos = var.talos
+  source    = "./modules/vm"
+  hosts     = var.hosts
+  proxmox   = var.proxmox
+  image_ids = module.image.image_ids
+  talos     = var.talos
 }
 
 module "talos" {

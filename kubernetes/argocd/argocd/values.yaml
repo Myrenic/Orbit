@@ -5,7 +5,7 @@ configs:
     # "Temporary" until BackendTLSPolicy is implemented https://github.com/cilium/cilium/issues/31352
     server.insecure: "true"
   cm:
-    # This is default MINUS ENdpoints
+    # This is default MINUS Endpoints
     resource.exclusions: |
       ### Network resources created by the Kubernetes control plane and excluded to reduce the number of watched events and UI clutter
       - apiGroups:
@@ -110,4 +110,4 @@ repoServer:
         name: argocd-cmp-cm
 
 global:
-  domain: argocd.wagner.gg
+  domain: argocd.tuntelder.com

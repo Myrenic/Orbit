@@ -17,7 +17,6 @@ variable "hosts" {
 variable "proxmox" {
   type = object({
     url                   = string
-    download_node_name    = string
     download_datastore_id = string
     host_description      = string
     host_tags             = list(string)

@@ -17,7 +17,6 @@ variable "hosts" {
 variable "proxmox" {
   type = object({
     url                   = string
-    download_node_name    = string
     download_datastore_id = string
     host_description      = string
     host_tags             = list(string)
@@ -26,8 +25,9 @@ variable "proxmox" {
   })
 }
 
-variable "image_id" {
-  type = string
+variable "image_ids" {
+  type        = map(string)
+  description = "Map of Proxmox node name to Talos image ID."
 }
 
 variable "talos" {
