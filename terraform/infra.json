@@ -1,39 +1,78 @@
 {
 	"hosts": {
-		"control01": {
-			"name": "control01",
+		"control10": {
+			"name": "control10",
 			"cores": 4,
 			"memory": 8096,
-			"ip_addr": "ENC[AES256_GCM,data:oFkq3oJW0y5Okg==,iv:5AmNCkYx6lXleikPu1yRzymDiAJUiMybBzqdZ6epQG8=,tag:o6siNCtYR0rXgnJ8Xt3jWw==,type:str]",
-			"gateway": "ENC[AES256_GCM,data:/cOwK3jfitqb,iv:1O4e/Eqqjj3AG5YjumxT9Gv2iaEnEd6Ae6ZUlRFQWBE=,tag:BUQJQYmG5Kwg/Naw++7dYw==,type:str]",
+			"ip_addr": "ENC[AES256_GCM,data:rkA3odl2C+nAxQ==,iv:ZQw+0G5Ovm2QO801+NwR9a3CWTjf03Jasn+LOhAujC0=,tag:VIsskaD3pdehijxE5QDEpQ==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:uf6cahUzYPAE,iv:SwnbkA984ziWTWktsYYSTUuAVDN8xocKlkr1CYsRlWM=,tag:Bd5uQI6mjd5lg/3AU+hDIQ==,type:str]",
 			"cidr": "/24",
-			"node_name": "node1",
+			"node_name": "node10",
 			"network_bridge": "vmbr0",
 			"vlan_id": 69,
 			"datastore_id": "nvme",
 			"disk_size": 50
 		},
-		"worker01": {
-			"name": "worker01",
+		"worker10": {
+			"name": "worker10",
 			"cores": 4,
 			"memory": 8096,
-			"ip_addr": "ENC[AES256_GCM,data:rfaGBrcjim03lQ==,iv:LL9Ll0IRSIUGL7UP+AGbpfBCss5pZa6f8Dl5qmdMelw=,tag:nSS3v17Xb/XhTx33nRz0iQ==,type:str]",
-			"gateway": "ENC[AES256_GCM,data:ikYgagZWH9U9,iv:mIMzl9PcU2HkU1+LGQSQN78hv7ng7bH5TmIbdaeCk98=,tag:BB3n5hKGAAwgB+Dmu7stnA==,type:str]",
+			"ip_addr": "ENC[AES256_GCM,data:1d2cnUrvGAT0Tw==,iv:7xj9NHyPsvWaf2DIl7VI3UkqX5SVkXblTzE+GgVrmXM=,tag:E/5Y9BOEo7CNs8B5sT5BJg==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:PtIxZhKlgNS1,iv:Nng3+ig2hMIFNcDlwiNlG6tzUBvPGyAZCpFATT/9d5o=,tag:orBIy4jsU2FY1H2J2VYL7g==,type:str]",
 			"cidr": "/24",
-			"node_name": "node1",
+			"node_name": "node10",
 			"network_bridge": "vmbr0",
 			"vlan_id": 69,
 			"datastore_id": "nvme",
 			"disk_size": 50
 		},
-		"worker02": {
-			"name": "worker02",
+		"control11": {
+			"name": "control11",
 			"cores": 4,
 			"memory": 8096,
-			"ip_addr": "ENC[AES256_GCM,data:/TQ+UFeCKLXmew==,iv:8Jx9mIsw0/ii0WBeRMe1ePUGdk/LxvY//c4d55gdMlI=,tag:suMISYopbkoongYLvXmkIA==,type:str]",
-			"gateway": "ENC[AES256_GCM,data:+10uYAvXp9KV,iv:oEzBHWgUhq9y1EjANS7zaIHlMl8nEYBZ9bVhrGW3ykA=,tag:B31PPgVivItdGr+NX+eAEQ==,type:str]",
+			"ip_addr": "ENC[AES256_GCM,data:YjMT8ysjD1V9PA==,iv:W2NyTvNEm2VwH5LcKJ7E/bk2tmaqW7fYOqJTyxEpAmw=,tag:PVGOCWZSC3tR3El83p4gyw==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:vxkbAcYnAziQ,iv:ovilavU41RAmPylldutHwfDDU4Kk1F4/6KqBycQhTMk=,tag:FvogCmfD0UbyVuJZy0+TEg==,type:str]",
 			"cidr": "/24",
-			"node_name": "node1",
+			"node_name": "node11",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
+		},
+		"worker11": {
+			"name": "worker11",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:SC617cD3f3Lk8w==,iv:gYkYnkyA/38zFejVpuhU2WvkXQiy778cvJL6f4xMXGo=,tag:gboh/dzliCmjSs4GlDg2rQ==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:beVkbmui2WD4,iv:zWO/kQQO152z9/qeqvF6pj80zhbMKlX5Tn0FKYFdLOA=,tag:/FWwu4J3naFU69fPtxDQbw==,type:str]",
+			"cidr": "/24",
+			"node_name": "node11",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
+		},
+		"control12": {
+			"name": "control12",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:i8/N7a0mqjc49g==,iv:tm2w2jfpatDw0P6Lp/6kLIyWe/56ku/UTnFSQTBQtvA=,tag:Xfd4iWXfWBlUpDJFf1mVBw==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:4E77zDaF6nwD,iv:oSSyBfmbtHZy1SGGBzHFfkJMfCT1jRrwY23ClSTRGrk=,tag:3LNktWqr7jvbHiYSYIw10w==,type:str]",
+			"cidr": "/24",
+			"node_name": "node12",
+			"network_bridge": "vmbr0",
+			"vlan_id": 69,
+			"datastore_id": "nvme",
+			"disk_size": 50
+		},
+		"worker12": {
+			"name": "worker12",
+			"cores": 4,
+			"memory": 8096,
+			"ip_addr": "ENC[AES256_GCM,data:TOyoHlDnFwojSA==,iv:7HpkFFVec3K0/FSb2OMg64QHl9U+pyFamJmfbnltAqg=,tag:4d+E8+gpsdbwoM/mPatFDA==,type:str]",
+			"gateway": "ENC[AES256_GCM,data:t6rOa26AnEbR,iv:iROVZJ90EUpq0j+ey6mNPHXo+fLzxhNAmJXTUbXnPPk=,tag:RRwDeb7B5k82N4G5L36ujg==,type:str]",
+			"cidr": "/24",
+			"node_name": "node12",
 			"network_bridge": "vmbr0",
 			"vlan_id": 69,
 			"datastore_id": "nvme",
@@ -41,12 +80,11 @@
 		}
 	},
 	"proxmox": {
-		"url": "ENC[AES256_GCM,data:MNJHNpkZSoUxUfToDqQ8vXF0gtLwt8Zz,iv:NJAFea9HbFJqnx6t/90gFtNP6i+Xtvys61x97sC36oQ=,tag:6UnK3Tf9gOkpPjvzSJ/HtA==,type:str]",
-		"download_node_name": "node1",
+		"url": "ENC[AES256_GCM,data:b8C2W5VFuw4ln8NFOEnXl+S1Fo8/zg==,iv:ercTD6ziaA+7zPeFN2QQyRIc16fObJAwlunAUn/t4kU=,tag:iYq1h5i24DCu3k5Z1ws/Dg==,type:str]",
 		"download_datastore_id": "local",
 		"host_description": "Managed by OpenTofu",
 		"host_tags": [
-			"tofu"
+			"IaC"
 		],
 		"username": "ENC[AES256_GCM,data:VEI3n4sksyg=,iv:lM8QjOndgnwfzyerjs3z6wvYg/PT9LhV/pmKEwuD//8=,tag:0Ar+IT5cnQXxIl4FSrYhsg==,type:str]",
 		"password": "ENC[AES256_GCM,data:38/5K/KXthi9/eSA,iv:qitg45tjr/6Frqd6aHXIZxTDZIgv/GcxCTTEO6atWo8=,tag:siDXpI8UmGpPdwwhtXsV6Q==,type:str]"
@@ -65,8 +103,8 @@
 				"enc": "-----BEGIN AGE ENCRYPTED FILE-----\nYWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJVk5ZcEZDZ1FFOTRNdElC\nbzhGZzR0SHp1ZnRHY2JiZCsvMGhBeUJGQ0I4CkhxMDBBMGxRdGdoV09oVXBWSnMr\nYjZESS9UTXFUTUE1SWovdjJ3czJGZFEKLS0tIFk0VnNZeUl5UVEyRjBYdUxaSjM4\nTzV6MFVxM0xxbGU4TXdQcGxKNUZIYlkKunQmIsDw1VcGcy5byjQyDQXx2O7ev0Hb\nQZRlECCVZv2yXopbckKBo4gV51b5WwcxGjIDFcdOH2JPXeB+Atw7Hg==\n-----END AGE ENCRYPTED FILE-----\n"
 			}
 		],
-		"lastmodified": "2026-03-18T12:20:19Z",
-		"mac": "ENC[AES256_GCM,data:dJiiBec445wSH5AKQE5anvqcwAun9W+8H7p2te9Cw0YqX/wJ4z22h2NyYK79UgFShx7577GRz0gd7ALgPR84RfgSKPleXcASHMZc3U1WdAmRm+/a2cA4ttsZj7LRK5sF6Wue992WP+Qk6oGcU456RSpS5P5qcRs6Qwb9LcPPH70=,iv:tKjV+P4k1KPgzyOO0ih92tWqUUd3ynnjPSTLyik4NB8=,tag:avEBE+yQOiqzsBjQQ4ctbA==,type:str]",
+		"lastmodified": "2026-03-19T14:21:41Z",
+		"mac": "ENC[AES256_GCM,data:xoBqkT7mdpw/+x5TK8nlQuB87UoiA18rEUhsnDIWj1CdR/lFDijJ8TBop/kMITvAxjzD1kwxPx5qY+9LKdBUbGT95AoMIYT3lQJ6tIfILM4CPsYlVAUNVVbsVTuB2L9RITshwnNJFrHPYVPvWFnrBmJxH89IuBebSkqYH6JnjgE=,iv:CKAVGf1RuzDDaHa3QRWwyWVtTlDfWCJjBpXDvh5lnLM=,tag:YN6+sZin2CnLBOsClBTYmg==,type:str]",
 		"encrypted_regex": "^(password|username|ip_addr|gateway|url)$",
 		"version": "3.11.0"
 	}
