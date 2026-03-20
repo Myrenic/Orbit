@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: network
+
+resources:
+  - secret.yaml
+
+helmCharts:
+  - name: netbird
+    repo: https://netbird.github.io/helm-charts
+    releaseName: netbird
+    namespace: network
+    version: 0.3.0
+    valuesFile: values.yaml

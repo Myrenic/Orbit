@@ -1,3 +1,4 @@
+---
 creation_rules:
   - path_regex: terraform/infra\.json$
     key_groups:
