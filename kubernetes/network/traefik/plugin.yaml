@@ -154,6 +154,15 @@ data:
     		ip, ip, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
     }
 
+    // logExtendBanEvent emits a structured extend event. Including banned_ip allows
+    // Promtail's GeoIP pipeline to enrich it so the Geomap shows active bans in
+    // real time, not just at the moment of the initial ban.
+    func (f *fail2Ban) logExtendBanEvent(ip string, hits uint) {
+    	fmt.Fprintf(os.Stdout,
+    		"{\"prefix\":\"Fail-2-Ban\",\"level\":\"INFO\",\"event\":\"ban_extend\",\"banned_ip\":%q,\"hits\":%d,\"msg\":\"extending ban for %s (total hits: %d)\",\"time\":%q}\n",
+    		ip, hits, ip, hits, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+    }
+
     // ServeHTTP is the middleware entry point.
     func (f *fail2Ban) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
     	clientIP, err := f.extractClient(req)
@@ -211,7 +220,7 @@ data:
     			delete(f.bannedClients, ip)
     			return false
     		}
-    		f.logf(lvlInfo, "extending ban for %s (total hits: %d)", ip, c.failCounter+1)
+    		f.logExtendBanEvent(ip, c.failCounter+1)
     		c.failCounter++
     		c.lastViewed = time.Now()
     		return true

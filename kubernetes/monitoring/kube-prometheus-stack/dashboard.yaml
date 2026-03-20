@@ -151,7 +151,7 @@ data:
           "targets": [{
             "refId": "A",
             "datasource": { "type": "loki", "uid": "loki" },
-            "expr": "sum by (DownstreamStatus) (rate({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | DownstreamStatus != \"\" | __error__=\"\" [$__rate_interval]))",
+            "expr": "sum by (DownstreamStatus) (rate({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | DownstreamStatus != \"\" | __error__=\"\" [$__interval]))",
             "legendFormat": "HTTP {{DownstreamStatus}}"
           }]
         },
@@ -265,7 +265,7 @@ data:
           "targets": [{
             "refId": "A",
             "datasource": { "type": "loki", "uid": "loki" },
-            "expr": "sum by (geoip_country_iso_code, geoip_country_name, banned_ip) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | event=\"ban\" | banned_ip != \"\" [$__range]))",
+            "expr": "sum by (geoip_country_iso_code, geoip_country_name, banned_ip) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | event=~\"ban|ban_extend\" | banned_ip != \"\" [$__range]))",
             "queryType": "instant", "instant": true,
             "legendFormat": "{{banned_ip}} ({{geoip_country_name}})"
           }],
