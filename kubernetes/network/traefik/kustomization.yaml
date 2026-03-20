@@ -10,3 +10,4 @@ resources:
   - service.yaml
   - secrets.yaml
   - middleware.yaml
+  - plugin.yaml
