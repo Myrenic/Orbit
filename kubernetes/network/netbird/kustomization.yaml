@@ -1,16 +1,13 @@
----
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: network
-
 resources:
-  - secret.yaml
+  - netbird-agent-setup-key.yml
 
 helmCharts:
-  - name: netbird
-    repo: https://netbirdio.github.io/helms
+  - name: app-template
+    repo: https://bjw-s-labs.github.io/helm-charts
     releaseName: netbird
-    namespace: network
-    version: 1.9.0
+    namespace: netbird
+    version: 4.2.0
     valuesFile: values.yaml

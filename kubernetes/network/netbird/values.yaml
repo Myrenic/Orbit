@@ -1,114 +1,39 @@
----
-management:
-  enabled: true
+controllers:
+  main:
+    type: daemonset
 
-  podCommand:
-    args:
-      - --port=80
-      - --log-file=console
-      - --log-level=info
-      - --disable-anonymous-metrics=false
-      - --single-account-mode-domain=netbird.selfhosted
-      - --dns-domain=netbird.selfhosted
+    containers:
+      main:
+        image:
+          repository: docker.io/netbirdio/netbird
+          tag: 0.61.2
+          pullPolicy: IfNotPresent
+        env:
+          - name: NB_HOSTNAME
+            value: "orbit-nodes"
+          - name: NB_LOG_LEVEL
+            value: "warn"
+          - name: NB_SETUP_KEY
+            valueFrom:
+              secretKeyRef:
+                name: netbird-agent-setup-key
+                key: setupKey
 
-  configmap: |-
-    {
-      "Stuns": [
-        {
-          "Proto": "udp",
-          "URI": "stun:netbird.tuntelder.com:3478",
-          "Username": "",
-          "Password": null
-        }
-      ],
-      "TURNConfig": {
-        "Turns": [
-          {
-            "Proto": "udp",
-            "URI": "turn:netbird.tuntelder.com:3478",
-            "Username": "",
-            "Password": ""
-          }
-        ],
-        "CredentialsTTL": "12h",
-        "Secret": "secret",
-        "TimeBasedCredentials": false
-      },
-      "Signal": {
-        "Proto": "https",
-        "URI": "netbird.tuntelder.com:10000",
-        "Username": "",
-        "Password": null
-      },
-      "HttpConfig": null,
-      "IdpManagerConfig": null,
-      "DeviceAuthorizationFlow": null,
-      "PKCEAuthorizationFlow": null,
-      "DataStoreEncryptionKey": ""
-    }
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+              - SYS_RESOURCE
+              - SYS_ADMIN
 
-  ingress:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: traefik
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    hosts:
-      - host: netbird.tuntelder.com
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-
-  # Mount TURN credentials from the netbird-turn-secret SealedSecret
-envRaw:
-  - name: TURN_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: netbird-turn-secret
-        key: TURN_USERNAME
-  - name: TURN_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: netbird-turn-secret
-        key: TURN_PASSWORD
-
-signal:
-  enabled: true
-
-  ingress:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: traefik
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    hosts:
-      - host: netbird.tuntelder.com
-        paths:
-          - path: /signalexchange.SignalExchange
-            pathType: ImplementationSpecific
-
-relay:
-  enabled: true
-  logLevel: info
-
-  env:
-    NB_EXPOSED_ADDRESS: "netbird.tuntelder.com:33080"
-
-  service:
-    type: LoadBalancer
-    annotations: {}
-
-dashboard:
-  enabled: true
-
-  ingress:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: traefik
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    hosts:
-      - host: netbird-dashboard.tuntelder.com
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+service:
+  main:
+    enabled: false
+    controller: main
