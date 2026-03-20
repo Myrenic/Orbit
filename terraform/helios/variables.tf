@@ -32,5 +32,7 @@ variable "talos" {
     control_plane_identifier = string
     worker_identifier        = string
     img_id                   = string
+    vip                      = string
+    vip_interface            = optional(string, "eth0")
   })
 }

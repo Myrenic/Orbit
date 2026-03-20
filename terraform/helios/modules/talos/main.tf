@@ -1,6 +1,21 @@
 locals {
   config_patches = [for f in sort(fileset("${path.root}/../talos/patches", "*.yaml")) :
     file("${path.root}/../talos/patches/${f}")]
+
+  vip_patch = yamlencode({
+    machine = {
+      network = {
+        interfaces = [{
+          interface = var.talos.vip_interface
+          vip = {
+            ip = var.talos.vip
+          }
+        }]
+      }
+    }
+  })
+
+  controlplane_patches = concat(local.config_patches, [local.vip_patch])
 }
 
 resource "talos_machine_secrets" "machine_secrets" {}
@@ -8,16 +23,16 @@ resource "talos_machine_secrets" "machine_secrets" {}
 data "talos_client_configuration" "talosconfig" {
   cluster_name         = var.talos.cluster_name
   client_configuration = talos_machine_secrets.machine_secrets.client_configuration
-  endpoints            = var.control_plane_ips
+  endpoints            = [var.talos.vip]
 }
 
 data "talos_machine_configuration" "machineconfig_cp" {
   for_each         = { for ip in var.control_plane_ips : ip => ip }
   cluster_name     = var.talos.cluster_name
-  cluster_endpoint = "https://${each.key}:6443"
+  cluster_endpoint = "https://${var.talos.vip}:6443"
   machine_type     = "controlplane"
   machine_secrets  = talos_machine_secrets.machine_secrets.machine_secrets
-  config_patches   = local.config_patches
+  config_patches   = local.controlplane_patches
 }
 
 resource "talos_machine_configuration_apply" "cp_config_apply" {
@@ -31,7 +46,7 @@ resource "talos_machine_configuration_apply" "cp_config_apply" {
 data "talos_machine_configuration" "machineconfig_worker" {
   for_each         = { for ip in var.worker_ips : ip => ip }
   cluster_name     = var.talos.cluster_name
-  cluster_endpoint = "https://${var.control_plane_ips[0]}:6443"
+  cluster_endpoint = "https://${var.talos.vip}:6443"
   machine_type     = "worker"
   machine_secrets  = talos_machine_secrets.machine_secrets.machine_secrets
   config_patches   = local.config_patches

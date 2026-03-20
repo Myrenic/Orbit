@@ -39,6 +39,8 @@
     "version": "v1.x.x",
     "control_plane_identifier": "control",
     "worker_identifier": "worker",
-    "img_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "img_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "vip": "x.x.x.x",
+    "vip_interface": "eth0"
   }
 }
