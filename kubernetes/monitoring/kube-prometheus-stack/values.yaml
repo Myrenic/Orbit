@@ -1,6 +1,18 @@
 ---
 # Grafana
 grafana:
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
+      isDefault: false
+      jsonData:
+        maxLines: 5000
+        timeout: 60
+
+
   fullnameOverride: grafana
   enabled: true
   adminPassword: "admin"  # TODO: rotate this - consider using a SealedSecret
