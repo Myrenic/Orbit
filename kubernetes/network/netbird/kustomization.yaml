@@ -9,8 +9,8 @@ resources:
 
 helmCharts:
   - name: netbird
-    repo: https://netbird.github.io/helm-charts
+    repo: https://netbirdio.github.io/helms
     releaseName: netbird
     namespace: network
-    version: 0.3.0
+    version: 1.9.0
     valuesFile: values.yaml

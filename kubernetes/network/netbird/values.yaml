@@ -1,7 +1,51 @@
 ---
 management:
   enabled: true
-  dnsDomain: netbird.selfhosted
+
+  podCommand:
+    args:
+      - --port=80
+      - --log-file=console
+      - --log-level=info
+      - --disable-anonymous-metrics=false
+      - --single-account-mode-domain=netbird.selfhosted
+      - --dns-domain=netbird.selfhosted
+
+  configmap: |-
+    {
+      "Stuns": [
+        {
+          "Proto": "udp",
+          "URI": "stun:netbird.tuntelder.com:3478",
+          "Username": "",
+          "Password": null
+        }
+      ],
+      "TURNConfig": {
+        "Turns": [
+          {
+            "Proto": "udp",
+            "URI": "turn:netbird.tuntelder.com:3478",
+            "Username": "",
+            "Password": ""
+          }
+        ],
+        "CredentialsTTL": "12h",
+        "Secret": "secret",
+        "TimeBasedCredentials": false
+      },
+      "Signal": {
+        "Proto": "https",
+        "URI": "netbird.tuntelder.com:10000",
+        "Username": "",
+        "Password": null
+      },
+      "HttpConfig": null,
+      "IdpManagerConfig": null,
+      "DeviceAuthorizationFlow": null,
+      "PKCEAuthorizationFlow": null,
+      "DataStoreEncryptionKey": ""
+    }
 
   ingress:
     enabled: true
@@ -9,26 +53,14 @@ management:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    host: netbird.tuntelder.com
-
-  config:
-    # Standard STUN port (UDP 3478) used for NAT traversal
-    stun:
-      - urls:
-          - stun:netbird.tuntelder.com:3478
-    turn:
-      - urls:
-          - turn:netbird.tuntelder.com:3478
-        # TURN credentials are sourced from the netbird-turn-secret Kubernetes Secret
-        username: ""
-        password: ""
-    signal:
-      host: netbird.tuntelder.com
-      port: 10000
-      protocol: https
+    hosts:
+      - host: netbird.tuntelder.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
 
   # Mount TURN credentials from the netbird-turn-secret SealedSecret
-  extraEnvFrom:
+  envRaw:
     - secretRef:
         name: netbird-turn-secret
 
@@ -41,18 +73,19 @@ signal:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    host: netbird.tuntelder.com
+    hosts:
+      - host: netbird.tuntelder.com
+        paths:
+          - path: /signalexchange.SignalExchange
+            pathType: ImplementationSpecific
 
 relay:
   enabled: true
+  logLevel: info
 
   service:
     type: LoadBalancer
     annotations: {}
-
-  config:
-    listenAddress: ":33080"
-    logLevel: info
 
 dashboard:
   enabled: true
@@ -63,4 +96,8 @@ dashboard:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
-    host: netbird-dashboard.tuntelder.com
+    hosts:
+      - host: netbird-dashboard.tuntelder.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
