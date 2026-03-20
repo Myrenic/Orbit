@@ -1,13 +1,17 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-  - secret.yaml
+namespace: network
+
+helmGlobals:
+  chartHome: ../../../helm-charts
 
 helmCharts:
-  - name: app-template
-    repo: https://bjw-s-labs.github.io/helm-charts
+  - name: generic-service
     releaseName: netbird
-    namespace: network
-    version: 4.2.0
     valuesFile: values.yaml
+    namespace: network
+
+resources:
+  - secret.yaml

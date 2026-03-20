@@ -1,39 +1,32 @@
-controllers:
-  main:
-    type: daemonset
+---
+workloadType: DaemonSet
 
-    containers:
-      main:
-        image:
-          repository: docker.io/netbirdio/netbird
-          tag: 0.61.2
-          pullPolicy: IfNotPresent
-        env:
-          - name: NB_HOSTNAME
-            value: "orbit-nodes"
-          - name: NB_LOG_LEVEL
-            value: "warn"
-          - name: NB_SETUP_KEY
-            valueFrom:
-              secretKeyRef:
-                name: netbird-agent-setup-key
-                key: setupKey
+image:
+  repository: docker.io/netbirdio/netbird
+  tag: "0.61.2"
+  pullPolicy: IfNotPresent
 
-        securityContext:
-          capabilities:
-            add:
-              - NET_ADMIN
-              - SYS_RESOURCE
-              - SYS_ADMIN
+envs:
+  - NB_HOSTNAME: "orbit-nodes"
+  - NB_LOG_LEVEL: "warn"
 
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-service:
-  main:
-    enabled: false
-    controller: main
+secretEnvs:
+  - NB_SETUP_KEY: ""
+
+securityContext:
+  capabilities:
+    add:
+      - NET_ADMIN
+      - SYS_RESOURCE
+      - SYS_ADMIN
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+health:
+  enabled: false
