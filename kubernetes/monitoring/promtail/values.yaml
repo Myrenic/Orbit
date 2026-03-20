@@ -6,13 +6,6 @@ config:
   snippets:
     pipelineStages:
       - cri: {}
-      # GeoIP enrichment — DISABLED until MaxMind is configured.
-      # Steps to enable:
-      #   1. Sign up free at https://www.maxmind.com/en/geolite2/signup
-      #   2. Generate a license key
-      #   3. Fill in promtail/geoip-secret.yaml and seal it with kubeseal
-      #   4. Uncomment the match block below and re-push
-      #
       - match:
           selector: '{app="traefik", namespace="network", container="traefik"}'
           stages:
@@ -33,8 +26,7 @@ tolerations:
   - effect: NoExecute
     operator: Exists
 
-# Init container and volume for GeoIP — uncomment together with the pipeline stage above.
-# initContainers:
+initContainers:
   - name: download-geoip-db
     image: busybox:latest
     command:
@@ -54,9 +46,11 @@ tolerations:
     volumeMounts:
       - name: geoip-db
         mountPath: /geoip
+
 extraVolumes:
   - name: geoip-db
     emptyDir: {}
+
 extraVolumeMounts:
   - name: geoip-db
     mountPath: /geoip
