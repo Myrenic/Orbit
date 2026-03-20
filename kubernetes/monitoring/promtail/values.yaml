@@ -26,7 +26,7 @@ tolerations:
   - effect: NoExecute
     operator: Exists
 
-initContainers:
+initContainer:
   - name: download-geoip-db
     image: busybox:latest
     command:
