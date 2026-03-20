@@ -1,0 +1,87 @@
+---
+# Grafana
+grafana:
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
+      isDefault: false
+      jsonData:
+        maxLines: 5000
+        timeout: 60
+
+
+  fullnameOverride: grafana
+  enabled: true
+  admin:
+    existingSecret: grafana-admin-secret
+    passwordKey: admin-password
+
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+  ingress:
+    enabled: false  # Using Traefik IngressRoute (ingress.yaml)
+
+  grafana.ini:
+    server:
+      root_url: "https://grafana.tuntelder.com"
+
+  defaultDashboardsEnabled: true
+  defaultDashboardsTimezone: browser
+
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+
+# Prometheus
+prometheus:
+  prometheusSpec:
+    retention: 30d
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 50Gi
+
+    # Discover ServiceMonitors/PodMonitors across all namespaces
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+# AlertManager
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+
+# Node exporter — collects host-level metrics from each node
+nodeExporter:
+  enabled: true
+
+# kube-state-metrics — exposes Kubernetes object metrics (pods, deployments, etc.)
+kubeStateMetrics:
+  enabled: true

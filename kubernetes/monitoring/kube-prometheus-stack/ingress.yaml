@@ -1,0 +1,20 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.tuntelder.com`)
+      kind: Rule
+      middlewares:
+        - name: local-only
+          namespace: network
+      services:
+        - name: grafana
+          port: 80
+  tls:
+    certResolver: letsencrypt

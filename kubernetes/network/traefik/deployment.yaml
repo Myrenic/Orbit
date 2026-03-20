@@ -33,6 +33,7 @@ spec:
             - --entrypoints.web.http.redirections.entrypoint.to=websecure
             - --entrypoints.web.http.redirections.entrypoint.scheme=https
             - --entrypoints.websecure.address=:443
+            - --entrypoints.websecure.http.middlewares=network-fail2ban@kubernetescrd
             - --providers.kubernetesingress.ingressclass=traefik
             - --providers.kubernetesingress.ingressendpoint.hostname=testlab.tuntelder.com
             - --providers.kubernetescrd
@@ -41,8 +42,7 @@ spec:
             - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
             - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0
-            - --experimental.plugins.fail2ban.moduleName=github.com/charanpreetp/fail2ban
-            - --experimental.plugins.fail2ban.version=v0.0.1
+            - --experimental.localPlugins.fail2ban.moduleName=github.com/myrenic/fail2ban
             - --accesslog=true
             - --accesslog.filters.statuscodes=400-429
             - --accesslog.format=json
@@ -65,7 +65,12 @@ spec:
               mountPath: /data
             - name: acme-storage
               mountPath: /etc/traefik
+            - name: plugin-fail2ban
+              mountPath: /plugins-local/src/github.com/myrenic/fail2ban
       volumes:
         - name: acme-storage
           persistentVolumeClaim:
             claimName: traefik-acme-pvc
+        - name: plugin-fail2ban
+          configMap:
+            name: traefik-plugin-fail2ban
