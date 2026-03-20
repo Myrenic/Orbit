@@ -15,7 +15,9 @@ grafana:
 
   fullnameOverride: grafana
   enabled: true
-  adminPassword: "admin"  # TODO: rotate this - consider using a SealedSecret
+  admin:
+    existingSecret: grafana-admin-secret
+    passwordKey: admin-password
 
   persistence:
     enabled: true

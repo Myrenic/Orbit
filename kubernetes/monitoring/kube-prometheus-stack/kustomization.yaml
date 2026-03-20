@@ -16,3 +16,4 @@ helmCharts:
 resources:
   - ingress.yaml
   - dashboard.yaml
+  - grafana-admin-secret-sealed.yaml
