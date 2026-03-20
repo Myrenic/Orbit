@@ -91,6 +91,9 @@ relay:
   enabled: true
   logLevel: info
 
+  env:
+    NB_EXPOSED_ADDRESS: "netbird.tuntelder.com:33080"
+
   service:
     type: LoadBalancer
     annotations: {}
