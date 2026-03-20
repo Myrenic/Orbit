@@ -12,6 +12,3 @@ helmCharts:
     releaseName: netbird
     valuesFile: values.yaml
     namespace: network
-
-resources:
-  - secret.yaml
