@@ -139,6 +139,21 @@ data:
     	)
     }
 
+    // logBanEvent emits a structured ban event with dedicated fields so Loki can
+    // filter by event="ban" and extract banned_ip for geo-enrichment.
+    func (f *fail2Ban) logBanEvent(ip string, failures uint) {
+    	fmt.Fprintf(os.Stdout,
+    		"{\"prefix\":\"Fail-2-Ban\",\"level\":\"INFO\",\"event\":\"ban\",\"banned_ip\":%q,\"failures\":%d,\"msg\":\"banned %s after %d failures\",\"time\":%q}\n",
+    		ip, failures, ip, failures, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+    }
+
+    // logUnbanEvent emits a structured unban event.
+    func (f *fail2Ban) logUnbanEvent(ip string) {
+    	fmt.Fprintf(os.Stdout,
+    		"{\"prefix\":\"Fail-2-Ban\",\"level\":\"INFO\",\"event\":\"unban\",\"banned_ip\":%q,\"msg\":\"un-banned %s (ban expired)\",\"time\":%q}\n",
+    		ip, ip, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
+    }
+
     // ServeHTTP is the middleware entry point.
     func (f *fail2Ban) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
     	clientIP, err := f.extractClient(req)
@@ -192,7 +207,7 @@ data:
     	}
     	if c.failCounter >= f.maxFails {
     		if c.hasBanExpired(time.Now(), f.banTime) {
-    			f.logf(lvlInfo, "un-banned %s (ban expired)", ip)
+    			f.logUnbanEvent(ip)
     			delete(f.bannedClients, ip)
     			return false
     		}
@@ -215,7 +230,7 @@ data:
     	e.failCounter++
     	e.lastViewed = time.Now()
     	if e.failCounter >= f.maxFails {
-    		f.logf(lvlInfo, "banned %s after %d failures", ip, e.failCounter)
+    		f.logBanEvent(ip, e.failCounter)
     	}
     }
 

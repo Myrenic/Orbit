@@ -11,3 +11,6 @@ helmCharts:
     namespace: monitoring
     version: 6.16.6
     valuesFile: values.yaml
+
+resources:
+  - geoip-secret.yaml
