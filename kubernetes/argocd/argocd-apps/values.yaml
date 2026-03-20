@@ -5,7 +5,7 @@ applicationsets:
     generators:
       - git:
           repoURL: https://github.com/myrenic/orbit.git
-          revision: main
+          revision: monitoring
           directories:
             - path: kubernetes/**/*
     template:
@@ -15,7 +15,7 @@ applicationsets:
         project: default
         source:
           repoURL: https://github.com/myrenic/orbit.git
-          targetRevision: main
+          targetRevision: monitoring
           path: '{{path}}'
           plugin:
             name: kustomize-helm
