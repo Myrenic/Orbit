@@ -16,9 +16,21 @@ config:
                 db: /geoip/GeoLite2-City.mmdb
                 source: banned_ip
                 db_type: city
-            - labels:
-                country_iso_code:
-                country_name:
+            # Drop all geoip labels except country_iso_code and country_name.
+            # The geoip stage promotes ~11 labels; Loki's default limit is 15
+            # and the Traefik stream already has 8 base labels.
+            - labeldrop:
+                - geoip_city_name
+                - geoip_continent_name
+                - geoip_continent_code
+                - geoip_postal_code
+                - geoip_timezone
+                - geoip_location_latitude
+                - geoip_location_longitude
+                - geoip_subdivision_name
+                - geoip_subdivision_code
+                - geoip_asn_number
+                - geoip_asn_organization
 
 tolerations:
   - effect: NoSchedule

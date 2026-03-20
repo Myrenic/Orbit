@@ -243,7 +243,7 @@ data:
               },
               "location": {
                 "gazetteer": "public/gazetteer/countries.json",
-                "lookup": "country_iso_code",
+                "lookup": "geoip_country_iso_code",
                 "mode": "lookup"
               },
               "name": "Banned IPs",
@@ -265,15 +265,15 @@ data:
           "targets": [{
             "refId": "A",
             "datasource": { "type": "loki", "uid": "loki" },
-            "expr": "sum by (country_iso_code, country_name, banned_ip) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | event=\"ban\" | banned_ip != \"\" [$__range]))",
+            "expr": "sum by (geoip_country_iso_code, geoip_country_name, banned_ip) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | event=\"ban\" | banned_ip != \"\" [$__range]))",
             "queryType": "instant", "instant": true,
-            "legendFormat": "{{banned_ip}} ({{country_name}})"
+            "legendFormat": "{{banned_ip}} ({{geoip_country_name}})"
           }],
           "transformations": [
             { "id": "labelsToFields", "options": { "mode": "columns" } },
             { "id": "organize", "options": {
               "excludeByName": { "Time": true },
-              "renameByName": { "country_iso_code": "country_iso_code", "country_name": "Country", "banned_ip": "IP", "Value": "Times Banned" }
+              "renameByName": { "geoip_country_iso_code": "geoip_country_iso_code", "geoip_country_name": "Country", "banned_ip": "IP", "Value": "Times Banned" }
             }}
           ]
         },
