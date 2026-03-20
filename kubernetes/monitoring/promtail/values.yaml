@@ -6,57 +6,59 @@ config:
   snippets:
     pipelineStages:
       - cri: {}
-      # For Traefik ban events: extract banned_ip from JSON and enrich with country via GeoIP
-      - match:
-          selector: '{app="traefik", namespace="network", container="traefik"}'
-          stages:
-            - json:
-                expressions:
-                  banned_ip: banned_ip
-            - geoip:
-                db: /geoip/GeoLite2-City.mmdb
-                source: banned_ip
-                db_type: city
-            - labels:
-                country_iso_code:
-                country_name:
-
-# Init container downloads the MaxMind GeoLite2-City database on every pod start.
-# Requires a free MaxMind account — sign up at https://www.maxmind.com/en/geolite2/signup
-# and store your license key in the geoip-secret Secret.
-initContainers:
-  - name: download-geoip-db
-    image: busybox:latest
-    command:
-      - sh
-      - -c
-      - |
-        echo "Downloading MaxMind GeoLite2-City database..." && \
-        wget -q -O /tmp/geoip.tar.gz \
-          "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" && \
-        tar -xzf /tmp/geoip.tar.gz -C /tmp && \
-        find /tmp -name "GeoLite2-City.mmdb" -exec cp {} /geoip/GeoLite2-City.mmdb \; && \
-        echo "GeoIP database ready: $(ls -lh /geoip/)"
-    env:
-      - name: MAXMIND_LICENSE_KEY
-        valueFrom:
-          secretKeyRef:
-            name: geoip-secret
-            key: license-key
-    volumeMounts:
-      - name: geoip-db
-        mountPath: /geoip
-
-extraVolumes:
-  - name: geoip-db
-    emptyDir: {}
-
-extraVolumeMounts:
-  - name: geoip-db
-    mountPath: /geoip
+      # GeoIP enrichment — DISABLED until MaxMind is configured.
+      # Steps to enable:
+      #   1. Sign up free at https://www.maxmind.com/en/geolite2/signup
+      #   2. Generate a license key
+      #   3. Fill in promtail/geoip-secret.yaml and seal it with kubeseal
+      #   4. Uncomment the match block below and re-push
+      #
+      # - match:
+      #     selector: '{app="traefik", namespace="network", container="traefik"}'
+      #     stages:
+      #       - json:
+      #           expressions:
+      #             banned_ip: banned_ip
+      #       - geoip:
+      #           db: /geoip/GeoLite2-City.mmdb
+      #           source: banned_ip
+      #           db_type: city
+      #       - labels:
+      #           country_iso_code:
+      #           country_name:
 
 tolerations:
   - effect: NoSchedule
     operator: Exists
   - effect: NoExecute
     operator: Exists
+
+# Init container and volume for GeoIP — uncomment together with the pipeline stage above.
+# initContainers:
+#   - name: download-geoip-db
+#     image: busybox:latest
+#     command:
+#       - sh
+#       - -c
+#       - |
+#         wget -q -O /tmp/geoip.tar.gz \
+#           "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" && \
+#         tar -xzf /tmp/geoip.tar.gz -C /tmp && \
+#         find /tmp -name "GeoLite2-City.mmdb" -exec cp {} /geoip/GeoLite2-City.mmdb \;
+#     env:
+#       - name: MAXMIND_LICENSE_KEY
+#         valueFrom:
+#           secretKeyRef:
+#             name: geoip-secret
+#             key: license-key
+#     volumeMounts:
+#       - name: geoip-db
+#         mountPath: /geoip
+#
+# extraVolumes:
+#   - name: geoip-db
+#     emptyDir: {}
+#
+# extraVolumeMounts:
+#   - name: geoip-db
+#     mountPath: /geoip
