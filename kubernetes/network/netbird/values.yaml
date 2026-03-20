@@ -60,9 +60,17 @@ management:
             pathType: ImplementationSpecific
 
   # Mount TURN credentials from the netbird-turn-secret SealedSecret
-  envRaw:
-    - secretRef:
+envRaw:
+  - name: TURN_USERNAME
+    valueFrom:
+      secretKeyRef:
         name: netbird-turn-secret
+        key: TURN_USERNAME
+  - name: TURN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: netbird-turn-secret
+        key: TURN_PASSWORD
 
 signal:
   enabled: true
