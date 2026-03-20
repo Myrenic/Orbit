@@ -132,9 +132,6 @@ envs:
 ingress:
   host: aiostreams.tuntelder.com
   port: main
-  middlewares:
-    - name: fail2ban
-      namespace: network
 
 hostPaths:
   - name: aiostreams-config

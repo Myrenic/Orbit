@@ -144,7 +144,8 @@ data:
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-            "textMode": "auto"
+            "textMode": "auto",
+            "noValue": "0"
           },
           "fieldConfig": {
             "defaults": {
@@ -160,7 +161,7 @@ data:
             {
               "refId": "A",
               "datasource": { "type": "loki", "uid": "loki" },
-              "expr": "count(sum by (ClientHost) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | ClientHost != \"\" | __error__=\"\" [$ban_window])) >= $ban_threshold) or vector(0)",
+              "expr": "count(sum by (ClientHost) (count_over_time({app=\"traefik\", namespace=\"network\", container=\"traefik\"} | json | ClientHost != \"\" | __error__=\"\" [$ban_window])) >= $ban_threshold)",
               "queryType": "instant",
               "instant": true,
               "legendFormat": ""
