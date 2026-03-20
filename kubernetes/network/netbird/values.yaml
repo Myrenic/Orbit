@@ -1,0 +1,66 @@
+---
+management:
+  enabled: true
+  dnsDomain: netbird.selfhosted
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    host: netbird.tuntelder.com
+
+  config:
+    # Standard STUN port (UDP 3478) used for NAT traversal
+    stun:
+      - urls:
+          - stun:netbird.tuntelder.com:3478
+    turn:
+      - urls:
+          - turn:netbird.tuntelder.com:3478
+        # TURN credentials are sourced from the netbird-turn-secret Kubernetes Secret
+        username: ""
+        password: ""
+    signal:
+      host: netbird.tuntelder.com
+      port: 10000
+      protocol: https
+
+  # Mount TURN credentials from the netbird-turn-secret SealedSecret
+  extraEnvFrom:
+    - secretRef:
+        name: netbird-turn-secret
+
+signal:
+  enabled: true
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    host: netbird.tuntelder.com
+
+relay:
+  enabled: true
+
+  service:
+    type: LoadBalancer
+    annotations: {}
+
+  config:
+    listenAddress: ":33080"
+    logLevel: info
+
+dashboard:
+  enabled: true
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    host: netbird-dashboard.tuntelder.com
