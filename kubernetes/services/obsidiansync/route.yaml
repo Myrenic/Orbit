@@ -13,6 +13,9 @@ spec:
       services:
         - name: obsidian-nginx
           port: 80
+      middlewares:
+        - name: fail2ban
+          namespace: network
 
   tls:
     certResolver: letsencrypt

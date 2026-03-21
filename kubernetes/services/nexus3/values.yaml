@@ -10,6 +10,9 @@ ports:
 ingress:
   host: nexus.tuntelder.com
   port: main
+  middlewares:
+    - name: fail2ban
+      namespace: network
 
 hostPaths:
   - name: nexus-data
