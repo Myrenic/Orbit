@@ -10,11 +10,11 @@ spec:
   routes:
     - match: Host(`longhorn.tuntelder.com`)
       kind: Rule
+      middlewares:
+        - name: local-only
+          namespace: network
       services:
         - name: longhorn-frontend
-          middlewares:
-            - name: local-only
-              namespace: network
           port: 80
   tls:
     certResolver: letsencrypt
