@@ -1,6 +1,9 @@
 
 [CmdletBinding()]
-param()
+param(
+    [switch]$RestoreVelero,
+    [string]$VeleroSchedule = "daily"
+)
 
 
 
@@ -9,6 +12,8 @@ begin {
         Write-Error "This script must be run from the repository root."
         exit 1
     }
+
+    $SCRIPT_DIR = $PSScriptRoot
 
     # helper functions
     function Wait-ForDeploymentReady {
@@ -91,4 +96,17 @@ process {
 
 end {
     Write-Host "All resources processed successfully." -ForegroundColor Green
+
+    if ($RestoreVelero) {
+        Write-Host "Waiting for Velero to become ready..." -ForegroundColor Yellow
+        Wait-ForDeploymentReady -Name "velero" -Namespace "velero" -TimeoutSeconds 600
+
+        $restoreScript = Join-Path $SCRIPT_DIR "restore-Velero.ps1"
+        if (-not (Test-Path $restoreScript)) {
+            Write-Error "Velero restore script not found at $restoreScript"
+            exit 1
+        }
+
+        & $restoreScript -ScheduleName $VeleroSchedule -Wait
+    }
 }

@@ -69,6 +69,14 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 .\scripts\backup-SealedSecret.ps1
 ```
 
+6. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace that includes your Azure subscription ID, then update `kubernetes/velero/velero/values.yaml` with your Azure storage account and resource group).
+
+7. **Restore Velero backups during onboarding (optional)**:
+
+```powershell
+.\scripts\new-Cluster.ps1 -RestoreVelero -VeleroSchedule daily
+```
+
 ## Apps
 
 ### Services
@@ -169,6 +177,11 @@ Persistent storage services
         <td><img width="32" src="https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/longhorn.svg"></td>
         <td><a href="https://longhorn.io/">Longhorn</a></td>
         <td>Cloud-native distributed block storage for Kubernetes.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/velero.svg"></td>
+        <td><a href="https://velero.io/">Velero</a></td>
+        <td>Scheduled backups with retention and Azure off-site storage.</td>
     </tr>
     <tr>
         <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/syncthing.svg"></td>
