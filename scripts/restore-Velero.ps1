@@ -2,6 +2,7 @@
 param(
     [string]$BackupName,
     [string]$ScheduleName = "daily",
+    [string]$RestoreName,
     [switch]$Wait
 )
 
@@ -12,6 +13,8 @@ Begin {
     }
 
     $script:RestoreSucceeded = $false
+    $script:RestoreName = $null
+    $script:RestoreStatus = $null
 }
 
 Process {
@@ -45,7 +48,13 @@ Process {
         $BackupName = $selectedBackup.metadata.name
     }
 
-    $restoreArgs = @("restore", "create", "--from-backup", $BackupName)
+    if (-not $RestoreName) {
+        $RestoreName = "onboarding-restore-{0}" -f (Get-Date -Format "yyyyMMddHHmmss")
+    }
+
+    $script:RestoreName = $RestoreName
+
+    $restoreArgs = @("restore", "create", $RestoreName, "--from-backup", $BackupName)
     if ($Wait) {
         $restoreArgs += "--wait"
     }
@@ -58,10 +67,19 @@ Process {
     }
 
     $script:RestoreSucceeded = $true
+
+    $restoreDetails = velero restore get $RestoreName -o json | ConvertFrom-Json
+    if ($LASTEXITCODE -eq 0 -and $restoreDetails) {
+        $script:RestoreStatus = $restoreDetails.status.phase
+    }
 }
 
 End {
     if ($script:RestoreSucceeded) {
-        Write-Host "Restore initiated from backup '$BackupName'." -ForegroundColor Green
+        if ($script:RestoreStatus) {
+            Write-Host "Restore '$script:RestoreName' initiated from backup '$BackupName' (phase: $script:RestoreStatus)." -ForegroundColor Green
+        } else {
+            Write-Host "Restore '$script:RestoreName' initiated from backup '$BackupName'." -ForegroundColor Green
+        }
     }
 }

@@ -23,7 +23,6 @@ configuration:
       config:
         resourceGroup: velero-backups
         storageAccount: velero
-        subscriptionId: "00000000-0000-0000-0000-000000000000"
   defaultBackupStorageLocation: default
   defaultBackupTTL: 720h0m0s
   defaultVolumesToFsBackup: true
