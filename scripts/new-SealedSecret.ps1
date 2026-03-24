@@ -1,14 +1,22 @@
 param(
     [string]$password,
+    [Parameter(Mandatory = $true)]
     [string]$namespace,
-    [string]$secretName
+    [Parameter(Mandatory = $true)]
+    [string]$secretName,
+    [Parameter(Mandatory = $true)]
+    [string]$key,
+    [ValidateSet("strict", "namespace-wide", "cluster-wide")]
+    [string]$scope = "strict",
+    [string]$controllerNamespace = "secrets",
+    [string]$controllerName = "sealed-secrets"
 )
 
 Begin {
     # Environment-like variables
-    $env:SEALED_SECRETS_CONTROLLER_NAMESPACE = "secrets"
-    $env:SEALED_SECRETS_CONTROLLER_NAME = "sealed-secrets"
-    $env:SEALED_SECRETS_SCOPE = "cluster-wide"
+    $env:SEALED_SECRETS_CONTROLLER_NAMESPACE = $controllerNamespace
+    $env:SEALED_SECRETS_CONTROLLER_NAME = $controllerName
+    $env:SEALED_SECRETS_SCOPE = $scope
 }
 
 Process {
@@ -20,15 +28,19 @@ Process {
     }
 
     # Create secret and seal it
-    $encryptedPassword = kubectl create secret generic roomctrlscraper  `
-        --namespace services `
+    $encryptedSecret = kubectl create secret generic $secretName `
+        --namespace $namespace `
         --dry-run=client `
-        --from-literal ROOMCTRL_EMAIL=$password `
+        --from-literal "$key=$password" `
         -o json |
         kubeseal `
-        --scope cluster-wide `
-        -o json |
-        jq -r '.spec.encryptedData.ROOMCTRL_EMAIL'
+        --scope $scope `
+        -o json | ConvertFrom-Json
+
+    $encryptedPassword = $encryptedSecret.spec.encryptedData.$key
+    if (-not $encryptedPassword) {
+        throw "Failed to find encrypted value for key '$key'."
+    }
 }
 
 End {
