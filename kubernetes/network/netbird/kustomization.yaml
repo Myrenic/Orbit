@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: network
 
+resources:
+  - ./secret.yaml
+
 helmGlobals:
   chartHome: ../../../helm-charts
 
