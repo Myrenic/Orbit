@@ -57,13 +57,22 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 .\scripts\get-ArgoPassword.ps1
 ```
 
-4. **Creating a new Sealed Secret**:
+4. **Creating a sealed value for a specific secret key**:
 
 ```powershell
-.\scripts\new-SealedSecret.ps1 -password <value> -namespace <ns> -secretName <name>
+.\scripts\new-SealedSecret.ps1 -password <value> -namespace <ns> -secretName <name> -key <secretKey>
 ```
 
-5. **Backing up Sealed Secret keys**:
+5. **Edit a SealedSecret file using your default editor (sops-like flow)**:
+
+```powershell
+.\scripts\edit-SealedSecret.ps1 -FilePath <path-to-sealed-secret.yaml>
+```
+
+This decrypts the file to a temporary manifest, opens it in `$VISUAL`/`$EDITOR` (falls back to `vi`), and reseals it back to the original file when the editor exits.
+The script automatically preserves secret name, namespace, and scope (`strict`, `namespace-wide`, `cluster-wide`) from the existing manifest.
+
+6. **Backing up Sealed Secret keys**:
 
 ```powershell
 .\scripts\backup-SealedSecret.ps1
