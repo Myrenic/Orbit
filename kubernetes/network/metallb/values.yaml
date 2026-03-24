@@ -1,4 +1,0 @@
----
-speaker:
-  ignoreExcludeLB: true
-  # loadBalancerClass: metallb

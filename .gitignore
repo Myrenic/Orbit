@@ -3,3 +3,8 @@ sealed-secret-backup.yaml
 terraform/**/*.bak
 terraform/**/.terraform/
 terraform/**/terraform.tfstate*
+
+# Age private keys - NEVER commit these
+*.agekey
+age.key
+age-key.txt

@@ -20,6 +20,12 @@ jobs:
           | xargs curl -L -o kustomize.tar.gz && \
           tar -xzf kustomize.tar.gz && \
           sudo mv kustomize /usr/local/bin/
-      - name: Build & Validate
+      - name: Build & Validate Apps
         run: |
-          kustomize build kubernetes/argocd/argocd-apps --load-restrictor LoadRestrictionsNone --enable-helm
+          kustomize build kubernetes/apps --load-restrictor LoadRestrictionsNone --enable-helm
+      - name: Build & Validate Infrastructure Controllers
+        run: |
+          kustomize build kubernetes/infrastructure/controllers --load-restrictor LoadRestrictionsNone --enable-helm
+      - name: Build & Validate Infrastructure Configs
+        run: |
+          kustomize build kubernetes/infrastructure/configs --load-restrictor LoadRestrictionsNone --enable-helm

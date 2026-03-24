@@ -4,16 +4,19 @@ import yaml
 from pathlib import Path
 
 root = Path("kubernetes")
-ignored_manifests = {
-    os.path.normpath("kubernetes/storage/longhorn/longhorn.yaml"),
-}
+ignored_manifests = set()
 
-# Collect all yaml manifests (skip kustomization.yaml and files in charts/)
+# Directories managed by Flux bootstrap (not referenced in kustomization.yaml)
+ignored_dirs = {"clusters"}
+
+# Collect all yaml manifests (skip kustomization.yaml, charts/, and cluster configs)
 manifests = []
 for path in root.rglob("*.yaml"):
     if path.name == "kustomization.yaml":
         continue
     if "charts" in path.parts:  # skip Helm chart files
+        continue
+    if any(d in path.parts for d in ignored_dirs):
         continue
     try:
         with open(path) as f:
@@ -33,8 +36,9 @@ for path in root.rglob("kustomization.yaml"):
         for key in ("resources", "bases", "patchesStrategicMerge", "patches"):
             if key in data:
                 for r in data[key]:
-                    ref_path = os.path.normpath((path.parent / r).as_posix())
-                    references.add(ref_path)
+                    if isinstance(r, str):
+                        ref_path = os.path.normpath((path.parent / r).as_posix())
+                        references.add(ref_path)
 
 # Check if each manifest is covered
 missing = [m for m in manifests if m not in references]

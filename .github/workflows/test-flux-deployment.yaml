@@ -1,0 +1,185 @@
+---
+name: Test Flux Deployment
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: ["*"]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test-deployment:
+    name: Deploy to minikube & verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@latest
+        with:
+          minikube-version: latest
+          kubernetes-version: stable
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Install SOPS & age
+        run: |
+          # Install SOPS
+          curl -fsSL -o /tmp/sops \
+            https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+          chmod +x /tmp/sops
+          sudo mv /tmp/sops /usr/local/bin/sops
+
+          # Install age
+          curl -fsSL -o /tmp/age.tar.gz \
+            https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz
+          tar xzf /tmp/age.tar.gz -C /tmp
+          sudo mv /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
+
+          sops --version
+          age --version
+
+      - name: Install Flux on cluster
+        run: flux install --components-extra=image-reflector-controller,image-automation-controller
+
+      - name: Generate test age key & re-encrypt secrets
+        run: |
+          # Generate a test age key pair
+          age-keygen -o /tmp/age.key 2>/tmp/age.txt
+          TEST_AGE_PUB=$(grep "public key" /tmp/age.key | cut -d: -f2 | tr -d ' ')
+          echo "Test age public key: $TEST_AGE_PUB"
+
+          # Re-encrypt all .enc.yaml files with the test key
+          find kubernetes/ -name '*.enc.yaml' | while read -r f; do
+            echo "Re-encrypting: $f"
+            # Decrypt the file (needs the original key — skip if we can't decrypt)
+            # For CI: create fresh encrypted secrets from scratch
+            PLAIN_FILE="/tmp/$(basename "$f" .enc.yaml).plain.yaml"
+
+            # Generate a fresh hello-world secret
+            cat > "$PLAIN_FILE" << YAML
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: hello-world-secret
+            namespace: hello-world
+          type: Opaque
+          stringData:
+            greeting: Hello from Orbit! Managed with Flux + SOPS
+          YAML
+
+            sops --config /dev/null --encrypt \
+              --age "$TEST_AGE_PUB" \
+              --encrypted-regex '^(data|stringData)$' \
+              --input-type yaml --output-type yaml \
+              "$PLAIN_FILE" > "$f"
+          done
+
+          # Create the SOPS age secret for Flux decryption
+          kubectl create secret generic sops-age \
+            --namespace=flux-system \
+            --from-file=age.agekey=/tmp/age.key
+
+      - name: Apply Flux Kustomizations
+        run: |
+          # Create a GitRepository source pointing to local files
+          # For CI testing, we apply manifests directly via kustomize
+          # and create Flux Kustomization resources
+
+          # First, apply infrastructure
+          kubectl apply -k kubernetes/infrastructure/controllers/
+          kubectl apply -k kubernetes/infrastructure/configs/
+
+          # Apply apps via kustomize (Flux would normally do this via GitRepository)
+          kubectl apply -k kubernetes/apps/
+
+          # Wait for namespace creation
+          kubectl wait --for=jsonpath='{.status.phase}'=Active \
+            namespace/hello-world --timeout=30s
+
+      - name: Wait for hello-world deployment
+        run: |
+          echo "Waiting for hello-world deployment to be ready..."
+          kubectl wait deployment/hello-world \
+            --namespace=hello-world \
+            --for=condition=Available \
+            --timeout=120s
+
+          echo ""
+          echo "=== Pod Status ==="
+          kubectl get pods -n hello-world -o wide
+
+          echo ""
+          echo "=== Deployment Status ==="
+          kubectl get deployment -n hello-world
+
+          echo ""
+          echo "=== Secret Status ==="
+          kubectl get secrets -n hello-world
+
+      - name: Test hello-world is reachable
+        run: |
+          # Port-forward in background
+          kubectl port-forward -n hello-world svc/hello-world 8080:80 &
+          PF_PID=$!
+          sleep 5
+
+          # Test HTTP response
+          echo "Testing hello-world service..."
+          HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" http://localhost:8080/)
+
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response body:"
+          cat /tmp/response.txt
+
+          # Cleanup
+          kill $PF_PID 2>/dev/null || true
+
+          # Assert success
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "FAIL: Expected HTTP 200, got $HTTP_CODE"
+            exit 1
+          fi
+
+          echo ""
+          echo "SUCCESS: hello-world is reachable and responding correctly!"
+
+      - name: Verify Flux system health
+        run: |
+          echo "=== Flux System Pods ==="
+          kubectl get pods -n flux-system
+
+          echo ""
+          echo "=== All Namespaces ==="
+          kubectl get namespaces
+
+          echo ""
+          echo "=== Flux Components ==="
+          flux check
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          echo "=== Flux System Pods ==="
+          kubectl get pods -n flux-system -o wide 2>/dev/null || true
+
+          echo ""
+          echo "=== Hello-World Namespace ==="
+          kubectl get all -n hello-world 2>/dev/null || true
+
+          echo ""
+          echo "=== Pod Logs ==="
+          kubectl logs -n hello-world -l app=hello-world --tail=50 2>/dev/null || true
+
+          echo ""
+          echo "=== Events ==="
+          kubectl get events -n hello-world --sort-by='.lastTimestamp' 2>/dev/null || true
+
+          echo ""
+          echo "=== Describe Deployment ==="
+          kubectl describe deployment -n hello-world hello-world 2>/dev/null || true
