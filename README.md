@@ -69,7 +69,7 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 .\scripts\backup-SealedSecret.ps1
 ```
 
-6. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace and update `kubernetes/velero/velero/values.yaml` with your Azure storage details).
+6. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace and update `kubernetes/velero/velero/values.yaml` with your Azure storage account, resource group, and subscription ID).
 
 7. **Restore Velero backups during onboarding (optional)**:
 
