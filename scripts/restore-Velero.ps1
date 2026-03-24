@@ -10,6 +10,8 @@ Begin {
         Write-Error "Velero CLI not found. Install velero before running this script."
         exit 1
     }
+
+    $script:RestoreSucceeded = $false
 }
 
 Process {
@@ -49,8 +51,17 @@ Process {
     }
 
     velero @restoreArgs
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Velero restore failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    }
+
+    $script:RestoreSucceeded = $true
 }
 
 End {
-    Write-Host "Restore initiated from backup '$BackupName'." -ForegroundColor Green
+    if ($script:RestoreSucceeded) {
+        Write-Host "Restore initiated from backup '$BackupName'." -ForegroundColor Green
+    }
 }

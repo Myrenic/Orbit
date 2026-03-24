@@ -13,7 +13,7 @@ begin {
         exit 1
     }
 
-    $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $SCRIPT_DIR = $PSScriptRoot
 
     # helper functions
     function Wait-ForDeploymentReady {
