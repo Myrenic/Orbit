@@ -13,6 +13,8 @@ jobs:
     name: Deploy to minikube & verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -54,26 +56,22 @@ jobs:
           TEST_AGE_PUB=$(grep "public key" /tmp/age.key | cut -d: -f2 | tr -d ' ')
           echo "Test age public key: $TEST_AGE_PUB"
 
-          # Re-create encrypted secrets with the test key, then decrypt in-place
-          # so kustomize can apply them as plain Kubernetes secrets
+          # Replace SOPS-encrypted secrets with plain equivalents for CI
+          # In production, Flux handles SOPS decryption natively
           find kubernetes/ -name '*.enc.yaml' | while read -r f; do
             echo "Processing: $f"
-
-            # Extract metadata from the encrypted file
-            NS=$(grep -A2 'metadata:' "$f" | grep 'namespace:' | awk '{print $2}')
-            NAME=$(grep -A2 'metadata:' "$f" | grep 'name:' | head -1 | awk '{print $2}')
-
-            # Create a fresh plain secret matching the original
-            cat > "$f" << YAML
+            DIR=$(dirname "$f")
+            APP=$(basename "$DIR")
+            cat > "$f" <<EOF
           apiVersion: v1
           kind: Secret
           metadata:
-            name: ${NAME:-hello-world-secret}
-            namespace: ${NS:-hello-world}
+            name: ${APP}-secret
+            namespace: ${APP}
           type: Opaque
           stringData:
             greeting: Hello from Orbit! Managed with Flux + SOPS
-          YAML
+          EOF
           done
 
           # Create the SOPS age secret for Flux (demonstrates the pattern)
@@ -122,7 +120,15 @@ jobs:
           # Port-forward in background
           kubectl port-forward -n hello-world svc/hello-world 8080:80 &
           PF_PID=$!
-          sleep 5
+
+          # Wait for port-forward to be ready (retry loop)
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Port-forward ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
 
           # Test HTTP response
           echo "Testing hello-world service..."
