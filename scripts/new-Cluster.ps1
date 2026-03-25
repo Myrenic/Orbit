@@ -2,7 +2,9 @@
 [CmdletBinding()]
 param(
     [switch]$RestoreVelero,
-    [string]$VeleroSchedule = "daily"
+    [string]$VeleroSchedule = "daily",
+    [Parameter(Mandatory=$true)]
+    [string]$SopsAgeKeyFile
 )
 
 
@@ -10,6 +12,11 @@ param(
 begin {
     if (-not (Test-Path ".git")) {
         Write-Error "This script must be run from the repository root."
+        exit 1
+    }
+
+    if (-not (Test-Path $SopsAgeKeyFile)) {
+        Write-Error "SOPS Age key file not found at $SopsAgeKeyFile"
         exit 1
     }
 
@@ -43,10 +50,9 @@ begin {
 
     # Input list, in order of execution
     $rawItems = @(
-        "namespace:secrets",
         "namespace:argocd",
 
-        "yaml:sealed-secret-backup.yaml",
+        "sops-age-key:$SopsAgeKeyFile",
 
         "chart:kubernetes/argocd/argocd",
         "chart:kubernetes/argocd/argocd-apps"
@@ -73,9 +79,13 @@ process {
                     kubectl apply -f -
             }
 
-            "yaml" {
-                Write-Host "Applying yaml: $($item.Value)..." -ForegroundColor Cyan
-		kubectl apply -f $item.Value --server-side --force-conflicts
+            "sops-age-key" {
+                Write-Host "Creating SOPS Age key secret in argocd namespace..." -ForegroundColor Cyan
+                kubectl create secret generic sops-age-key `
+                    --namespace argocd `
+                    --from-file=keys.txt=$($item.Value) `
+                    --dry-run=client -o yaml |
+                    kubectl apply -f - --server-side
             }
 
 	    "chart" {

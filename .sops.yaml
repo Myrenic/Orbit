@@ -5,3 +5,15 @@ creation_rules:
       - age:
           - age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
     encrypted_regex: ^(password|username|ip_addr|gateway|url)$
+
+  - path_regex: kubernetes/.*secret.*\.yaml$
+    key_groups:
+      - age:
+          - age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
+    encrypted_regex: ^(data|stringData)$
+
+  - path_regex: kubernetes/.*/values\.yaml$
+    key_groups:
+      - age:
+          - age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
+    encrypted_regex: ^(secretEnvs|rootPassword|userPassword|clientSecret)$

@@ -74,14 +74,46 @@ configs:
               collectionType: string
         generate:
           command: ["bash", "-c"]
-          args: ["kustomize edit set namespace -- \"$PARAM_NAMESPACE\" && kustomize build --enable-helm --helm-command '/home/argocd/cmp-server/config/command.sh'"]
+          args:
+            - |
+              # Decrypt SOPS-encrypted files before kustomize build
+              for f in $(find . -type f \( -name '*.yaml' -o -name '*.yml' \)); do
+                if grep -q 'sops:' "$f" && grep -q 'mac: ENC' "$f"; then
+                  sops --decrypt --in-place "$f"
+                fi
+              done
+              kustomize edit set namespace -- "$PARAM_NAMESPACE"
+              kustomize build --enable-helm --helm-command '/home/argocd/cmp-server/config/command.sh'
 
 repoServer:
+  initContainers:
+    - name: install-sops
+      image: alpine:latest
+      command: ["sh", "-c"]
+      args:
+        - |
+          wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+          chmod +x /custom-tools/sops
+      volumeMounts:
+        - name: custom-tools
+          mountPath: /custom-tools
+  env:
+    - name: SOPS_AGE_KEY_FILE
+      value: /home/argocd/.config/sops/age/keys.txt
+  volumeMounts:
+    - name: custom-tools
+      mountPath: /usr/local/bin/sops
+      subPath: sops
+    - name: sops-age-key
+      mountPath: /home/argocd/.config/sops/age
   extraContainers:
     - name: cmp-kustomize-helm
       command: ["/var/run/argocd/argocd-cmp-server"]
       image: |-
         {{ default .Values.global.image.repository .Values.repoServer.image.repository }}:{{ default (include "argo-cd.defaultTag" .) .Values.repoServer.image.tag }}
+      env:
+        - name: SOPS_AGE_KEY_FILE
+          value: /home/argocd/.config/sops/age/keys.txt
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:
@@ -100,6 +132,11 @@ repoServer:
         - name: argocd-kustomize-helm-workaround
           mountPath: /home/argocd/cmp-server/config/command.sh
           subPath: command.sh
+        - name: custom-tools
+          mountPath: /usr/local/bin/sops
+          subPath: sops
+        - name: sops-age-key
+          mountPath: /home/argocd/.config/sops/age
   volumes:
     - name: argocd-kustomize-helm-workaround
       configMap:
@@ -108,6 +145,11 @@ repoServer:
     - name: argocd-cmp-cm
       configMap:
         name: argocd-cmp-cm
+    - name: custom-tools
+      emptyDir: {}
+    - name: sops-age-key
+      secret:
+        secretName: sops-age-key
 
 global:
   domain: argocd.tuntelder.com

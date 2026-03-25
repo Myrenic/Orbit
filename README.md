@@ -7,14 +7,14 @@
 [![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![Talos](https://img.shields.io/badge/Talos-blue?logo=kubernetes&logoColor=white)](https://www.talos.dev/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-orange?logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
-[![Sealed Secrets](https://img.shields.io/badge/Sealed%20Secrets-purple?logo=kubernetes&logoColor=white)](https://github.com/bitnami-labs/sealed-secrets)
+[![SOPS](https://img.shields.io/badge/SOPS-purple?logo=mozilla&logoColor=white)](https://github.com/getsops/sops)
 [![Renovate](https://img.shields.io/badge/Renovate-enabled-brightgreen?logo=renovatebot)](https://github.com/renovatebot/renovate)
 ![Commits](https://img.shields.io/badge/commits-lost--count-blueviolet)
 ![Status](https://img.shields.io/badge/status-stable-green)
 
 Repository for managing a [Kubernetes](https://kubernetes.io/) cluster through [GitOps](https://en.wikipedia.org/wiki/DevOps) workflows.
 
-Powered by [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment), [Terraform](https://www.terraform.io/), [Talos](https://talos.dev), [Argo CD](https://argoproj.github.io/cd/), and [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets).
+Powered by [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment), [Terraform](https://www.terraform.io/), [Talos](https://talos.dev), [Argo CD](https://argoproj.github.io/cd/), and [SOPS](https://github.com/getsops/sops).
 Kept up to date with [Renovate](https://www.mend.io/renovate/).
 Includes a healthy dose of automation and the occasional 3-letter commit message.
 
@@ -31,7 +31,7 @@ The homelab runs on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-envi
 - **helios** — a [Talos](https://www.talos.dev/) Kubernetes cluster (control plane + workers)
 - **atlas** — an Ubuntu VM used as a file server for media storage and [Longhorn](https://longhorn.io/) backups
 
-All cluster workloads are managed via [GitOps](https://en.wikipedia.org/wiki/DevOps) with [Argo CD](https://argoproj.github.io/cd/) and an ApplicationSet that auto-syncs from this repository. Secrets are encrypted in-repo using [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets).
+All cluster workloads are managed via [GitOps](https://en.wikipedia.org/wiki/DevOps) with [Argo CD](https://argoproj.github.io/cd/) and an ApplicationSet that auto-syncs from this repository. Secrets are encrypted in-repo using [SOPS](https://github.com/getsops/sops) with [Age](https://github.com/FiloSottile/age) encryption.
 
 ## 🚀 Getting Started
 
@@ -45,10 +45,10 @@ terraform init
 terraform apply
 ```
 
-3. **Bootstrap the cluster** (creates namespaces, restores sealed-secret keys, installs ArgoCD and ArgoCD-Apps):
+3. **Bootstrap the cluster** (creates namespaces, configures SOPS Age key, installs ArgoCD and ArgoCD-Apps):
 
 ```powershell
-.\scripts\new-Cluster.ps1
+.\scripts\new-Cluster.ps1 -SopsAgeKeyFile <path-to-age-keys.txt>
 ```
 
 ArgoCD will automatically sync all remaining applications from the repository. Retrieve the initial admin password with:
@@ -57,33 +57,27 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 .\scripts\get-ArgoPassword.ps1
 ```
 
-4. **Creating a sealed value for a specific secret key**:
+4. **Encrypting a secret file with SOPS**:
 
-```powershell
-.\scripts\new-SealedSecret.ps1 -password <value> -namespace <ns> -secretName <name> -key <secretKey>
+```bash
+# Encrypt a Kubernetes secret manifest (encrypts the data/stringData fields)
+sops --encrypt --in-place kubernetes/<tier>/<app>/secret.yaml
+
+# Encrypt secret values in a Helm values file (encrypts secretEnvs, rootPassword, etc.)
+sops --encrypt --in-place kubernetes/<tier>/<app>/values.yaml
+
+# Edit an already-encrypted file
+sops kubernetes/<tier>/<app>/secret.yaml
 ```
 
-5. **Edit a SealedSecret file using your default editor (sops-like flow)**:
+SOPS encryption rules are configured in `.sops.yaml` at the repository root.
 
-```powershell
-.\scripts\edit-SealedSecret.ps1 -FilePath <path-to-sealed-secret.yaml>
-```
-
-This decrypts the file to a temporary manifest, opens it in `$VISUAL`/`$EDITOR` (falls back to `vi`), and reseals it back to the original file when the editor exits.
-The script automatically preserves secret name, namespace, and scope (`strict`, `namespace-wide`, `cluster-wide`) from the existing manifest.
-
-6. **Backing up Sealed Secret keys**:
-
-```powershell
-.\scripts\backup-SealedSecret.ps1
-```
-
-6. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace that includes your Azure subscription ID, then update `kubernetes/velero/velero/values.yaml` with your Azure storage account and resource group).
+5. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace that includes your Azure subscription ID, then update `kubernetes/velero/velero/values.yaml` with your Azure storage account and resource group).
 
 7. **Restore Velero backups during onboarding (optional)**:
 
 ```powershell
-.\scripts\new-Cluster.ps1 -RestoreVelero -VeleroSchedule daily
+.\scripts\new-Cluster.ps1 -SopsAgeKeyFile <path-to-age-keys.txt> -RestoreVelero -VeleroSchedule daily
 ```
 
 ## Apps
@@ -210,9 +204,9 @@ Secret management
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bitnami.svg"></td>
-        <td><a href="https://github.com/bitnami-labs/sealed-secrets">Sealed Secrets</a></td>
-        <td>Encrypts Kubernetes secrets for safe storage in Git.</td>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/mozilla.svg"></td>
+        <td><a href="https://github.com/getsops/sops">SOPS</a></td>
+        <td>Encrypts Kubernetes secrets for safe storage in Git using Age encryption.</td>
     </tr>
 </table>
 

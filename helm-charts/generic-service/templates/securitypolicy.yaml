@@ -21,20 +21,14 @@ spec:
     clientSecret:
       name: {{ include "generic-service.name" . }}-securitypolicy
 ---
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
+apiVersion: v1
+kind: Secret
 metadata:
   name: {{ include "generic-service.name" . }}-securitypolicy
   namespace: {{ .Release.Namespace }}
-  annotations:
-    sealedsecrets.bitnami.com/cluster-wide: "true"
   labels:
     {{- include "generic-service.labels" . | nindent 4 }}
-spec:
-  encryptedData:
-    client-secret: {{ .Values.oidc.clientSecret }}
-  template:
-    metadata:
-      annotations:
-        sealedsecrets.bitnami.com/cluster-wide: "true"
+type: Opaque
+stringData:
+  client-secret: {{ .Values.oidc.clientSecret }}
 {{- end }}
