@@ -6,7 +6,7 @@ creation_rules:
           - age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
     encrypted_regex: ^(password|username|ip_addr|gateway|url)$
 
-  - path_regex: kubernetes/.*secret.*\.yaml$
+  - path_regex: kubernetes/.*secrets?\.yaml$
     key_groups:
       - age:
           - age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v

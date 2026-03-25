@@ -79,7 +79,10 @@ configs:
               # Decrypt SOPS-encrypted files before kustomize build
               for f in $(find . -type f \( -name '*.yaml' -o -name '*.yml' \)); do
                 if grep -q 'sops:' "$f" && grep -q 'mac: ENC' "$f"; then
-                  sops --decrypt --in-place "$f"
+                  if ! sops --decrypt --in-place "$f"; then
+                    echo "ERROR: Failed to decrypt SOPS file: $f" >&2
+                    exit 1
+                  fi
                 fi
               done
               kustomize edit set namespace -- "$PARAM_NAMESPACE"
@@ -93,6 +96,7 @@ repoServer:
       args:
         - |
           wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+          echo "5488e32bc471de7982ad895dd054bbab3ab91c417a118426134551e9626e4e85  /custom-tools/sops" | sha256sum -c -
           chmod +x /custom-tools/sops
       volumeMounts:
         - name: custom-tools

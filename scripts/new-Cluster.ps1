@@ -16,7 +16,7 @@ begin {
     }
 
     if (-not (Test-Path $SopsAgeKeyFile)) {
-        Write-Error "SOPS Age key file not found at $SopsAgeKeyFile"
+        Write-Error "SOPS Age key file not found at $SopsAgeKeyFile. Generate one using: age-keygen -o keys.txt"
         exit 1
     }
 
