@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: treafik
 
 resources:
+  - namespace.yaml
   - roles.yaml
   - volumes.yaml
   - deployment.yaml
