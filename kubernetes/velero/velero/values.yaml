@@ -21,8 +21,8 @@ configuration:
         name: velero-credentials
         key: cloud
       config:
-        resourceGroup: velero-backups
-        storageAccount: velero
+        resourceGroup: Velero_Backups
+        storageAccount: velero76b1f66a064d
   defaultBackupStorageLocation: default
   defaultBackupTTL: 720h0m0s
   defaultVolumesToFsBackup: true
