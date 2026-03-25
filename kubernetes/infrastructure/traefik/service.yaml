@@ -20,20 +20,3 @@ spec:
       targetPort: 8080
   selector:
     app: traefik
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: traefik-ingressroute
-  namespace: traefik
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`traefik.tuntelder.com`)
-      kind: Rule
-      services:
-        - name: traefik
-          port: 8080
-  tls:
-    certResolver: letsencrypt
