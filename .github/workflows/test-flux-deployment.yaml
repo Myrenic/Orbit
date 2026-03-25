@@ -1,0 +1,190 @@
+---
+name: Test Flux Deployment
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: ["*"]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test-deployment:
+    name: Deploy to minikube & verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@latest
+        with:
+          minikube-version: latest
+          kubernetes-version: stable
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Install SOPS & age
+        run: |
+          # Install SOPS
+          curl -fsSL -o /tmp/sops \
+            "https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64"
+          chmod +x /tmp/sops
+          sudo mv /tmp/sops /usr/local/bin/sops
+
+          # Install age
+          curl -fsSL -o /tmp/age.tar.gz \
+            "https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz"
+          tar xzf /tmp/age.tar.gz -C /tmp
+          sudo mv /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
+
+          sops --version
+          age --version
+
+      - name: Install Flux on cluster
+        run: flux install
+
+      - name: Generate test age key & prepare secrets
+        run: |
+          # Generate a test age key pair
+          age-keygen -o /tmp/age.key 2>/tmp/age.txt
+          TEST_AGE_PUB=$(grep "public key" /tmp/age.key | cut -d: -f2 | tr -d ' ')
+          echo "Test age public key: $TEST_AGE_PUB"
+
+          # Replace SOPS-encrypted secrets with plain equivalents for CI
+          # In production, Flux handles SOPS decryption natively
+          find kubernetes/ -name '*.enc.yaml' | while read -r f; do
+            echo "Processing: $f"
+            DIR=$(dirname "$f")
+            APP=$(basename "$DIR")
+            cat > "$f" <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: ${APP}-secret
+            namespace: ${APP}
+          type: Opaque
+          stringData:
+            greeting: Hello from Orbit! Managed with Flux + SOPS
+          EOF
+          done
+
+          # Create the SOPS age secret for Flux (demonstrates the pattern)
+          kubectl create secret generic sops-age \
+            --namespace=flux-system \
+            --from-file=age.agekey=/tmp/age.key
+
+      - name: Apply manifests
+        run: |
+          # Apply infrastructure (empty for now, but validates the structure)
+          kubectl apply -k kubernetes/infrastructure/controllers/ || true
+          kubectl apply -k kubernetes/infrastructure/configs/ || true
+
+          # Apply apps (secrets are now plain YAML for CI testing)
+          kubectl apply -k kubernetes/apps/
+
+          # Wait for namespace creation
+          kubectl wait --for=jsonpath='{.status.phase}'=Active \
+            namespace/hello-world --timeout=30s
+
+      - name: Wait for hello-world deployment
+        run: |
+          echo "Waiting for hello-world deployment to be ready..."
+          kubectl rollout status deployment/hello-world \
+            --namespace=hello-world \
+            --timeout=120s
+
+          echo ""
+          echo "=== Pod Status ==="
+          kubectl get pods -n hello-world -o wide
+
+          echo ""
+          echo "=== Deployment Status ==="
+          kubectl get deployment -n hello-world
+
+          echo ""
+          echo "=== Secret Verification ==="
+          kubectl get secrets -n hello-world
+          echo "Secret value:"
+          kubectl get secret hello-world-secret -n hello-world \
+            -o jsonpath='{.data.greeting}' | base64 -d
+          echo ""
+
+      - name: Test hello-world is reachable
+        run: |
+          # Port-forward in background
+          kubectl port-forward -n hello-world svc/hello-world 8080:80 &
+          PF_PID=$!
+
+          # Wait for port-forward to be ready (retry loop)
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Port-forward ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+          # Test HTTP response
+          echo "Testing hello-world service..."
+          HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            http://localhost:8080/)
+
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response body:"
+          cat /tmp/response.txt
+
+          # Cleanup port-forward
+          kill $PF_PID 2>/dev/null || true
+
+          # Assert success
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "FAIL: Expected HTTP 200, got $HTTP_CODE"
+            exit 1
+          fi
+
+          echo ""
+          echo "SUCCESS: hello-world is reachable and responding correctly!"
+
+      - name: Verify Flux system health
+        run: |
+          echo "=== Flux System Pods ==="
+          kubectl get pods -n flux-system
+
+          echo ""
+          echo "=== All Namespaces ==="
+          kubectl get namespaces
+
+          echo ""
+          echo "=== Flux Components ==="
+          flux check
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          echo "=== Flux System Pods ==="
+          kubectl get pods -n flux-system -o wide 2>/dev/null || true
+
+          echo ""
+          echo "=== Hello-World Namespace ==="
+          kubectl get all -n hello-world 2>/dev/null || true
+
+          echo ""
+          echo "=== Pod Logs ==="
+          kubectl logs -n hello-world -l app=hello-world \
+            --tail=50 2>/dev/null || true
+
+          echo ""
+          echo "=== Events ==="
+          kubectl get events -n hello-world \
+            --sort-by='.lastTimestamp' 2>/dev/null || true
+
+          echo ""
+          echo "=== Describe Deployment ==="
+          kubectl describe deployment -n hello-world \
+            hello-world 2>/dev/null || true

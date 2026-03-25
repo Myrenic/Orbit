@@ -15,4 +15,4 @@ rules:
 
 ignore:
   - helm-charts/
-  - kubernetes/storage/longhorn/longhorn.yaml
+  - "*.enc.yaml"
