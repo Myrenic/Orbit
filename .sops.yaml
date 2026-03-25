@@ -3,7 +3,7 @@ creation_rules:
   # Kubernetes secrets (encrypted with SOPS + age)
   - path_regex: kubernetes/.*\.enc\.yaml$
     encrypted_regex: ^(data|stringData)$
-    age: age12t0md7g4f79yldwj2qwllkzfkhh9zs6n4grzg47wl20hk2gf7grsz4lmvt
+    age: age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
 
   # Terraform infrastructure secrets
   - path_regex: terraform/infra\.json$
