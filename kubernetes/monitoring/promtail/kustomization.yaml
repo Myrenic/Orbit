@@ -13,4 +13,4 @@ helmCharts:
     valuesFile: values.yaml
 
 resources:
-  - geoip-secret-sealed.yaml
+  - geoip-secret.sops.yaml

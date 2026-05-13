@@ -1,0 +1,44 @@
+---
+fullnameOverride: oauth2-proxy
+
+replicaCount: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+service:
+  portNumber: 80
+
+config:
+  existingSecret: oauth2-proxy-secret
+
+extraArgs:
+  provider: oidc
+  oidc-email-claim: preferred_username
+  redirect-url: https://auth.${SECRET_DOMAIN_0}/oauth2/callback
+  cookie-domain: .${SECRET_DOMAIN_0}
+  whitelist-domain: .${SECRET_DOMAIN_0}
+  set-xauthrequest: "true"
+  reverse-proxy: "true"
+  email-domain: "*"
+  cookie-secure: "true"
+  custom-templates-dir: /templates
+  scope: openid email profile
+
+extraEnv:
+  - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+    valueFrom:
+      secretKeyRef:
+        name: oauth2-proxy-secret
+        key: oidc-issuer-url
+
+extraVolumes:
+  - name: custom-templates
+    configMap:
+      name: oauth2-proxy-templates
+
+extraVolumeMounts:
+  - name: custom-templates
+    mountPath: /templates
+    readOnly: true

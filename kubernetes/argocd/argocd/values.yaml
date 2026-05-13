@@ -74,14 +74,74 @@ configs:
               collectionType: string
         generate:
           command: ["bash", "-c"]
-          args: ["kustomize edit set namespace -- \"$PARAM_NAMESPACE\" && kustomize build --enable-helm --helm-command '/home/argocd/cmp-server/config/command.sh'"]
+          args:
+            - |
+              set -euo pipefail
+
+              repo_root="$(git rev-parse --show-toplevel)"
+              app_dir="$(pwd)"
+              temp_dir="$(mktemp -d)"
+              trap 'rm -rf "${temp_dir}"' EXIT
+
+              cp -R "${app_dir}/." "${temp_dir}/"
+              cd "${temp_dir}"
+
+              common_file="${repo_root}/kubernetes/common/cluster-secrets.sops.yaml"
+              if [ -f "${common_file}" ]; then
+                while IFS= read -r -d '' key && IFS= read -r -d '' value; do
+                  export "${key}=${value}"
+                done < <(
+                  sops -d --output-type json "${common_file}" |
+                    jq -j '.stringData // {} | to_entries[] | .key, "\u0000", .value, "\u0000"'
+                )
+              fi
+
+              find "${temp_dir}" -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
+                while IFS= read -r -d '' file; do
+                  tmp="${file}.dec"
+                  sops -d "${file}" > "${tmp}"
+                  mv "${tmp}" "${file}"
+                done
+
+              find "${temp_dir}" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
+                while IFS= read -r -d '' file; do
+                  tmp="${file}.subst"
+                  envsubst < "${file}" > "${tmp}"
+                  mv "${tmp}" "${file}"
+                done
+
+              kustomize edit set namespace -- "${PARAM_NAMESPACE}"
+              kustomize build --enable-helm --helm-command '/home/argocd/cmp-server/config/command.sh'
 
 repoServer:
+  initContainers:
+    - name: install-sops-tools
+      image: alpine:3.22
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-ec"]
+      args:
+        - |
+          apk add --no-cache curl tar jq gettext-envsubst
+          curl -fsSL -o /gitops-tools/sops "https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64"
+          curl -fsSL -o /tmp/age.tar.gz "https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz"
+          tar -xzf /tmp/age.tar.gz -C /tmp
+          install -m 0755 /tmp/age/age /gitops-tools/age
+          install -m 0755 /usr/bin/jq /gitops-tools/jq
+          install -m 0755 /usr/bin/envsubst /gitops-tools/envsubst
+          chmod 0755 /gitops-tools/sops
+      volumeMounts:
+        - name: gitops-tools
+          mountPath: /gitops-tools
   extraContainers:
     - name: cmp-kustomize-helm
       command: ["/var/run/argocd/argocd-cmp-server"]
       image: |-
         {{ default .Values.global.image.repository .Values.repoServer.image.repository }}:{{ default (include "argo-cd.defaultTag" .) .Values.repoServer.image.tag }}
+      env:
+        - name: PATH
+          value: /gitops-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        - name: SOPS_AGE_KEY_FILE
+          value: /helm-secrets-age/keys.txt
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:
@@ -100,6 +160,13 @@ repoServer:
         - name: argocd-kustomize-helm-workaround
           mountPath: /home/argocd/cmp-server/config/command.sh
           subPath: command.sh
+        - name: cmp-tmp
+          mountPath: /tmp
+        - name: gitops-tools
+          mountPath: /gitops-tools
+        - name: sops-age-key
+          mountPath: /helm-secrets-age
+          readOnly: true
   volumes:
     - name: argocd-kustomize-helm-workaround
       configMap:
@@ -108,6 +175,13 @@ repoServer:
     - name: argocd-cmp-cm
       configMap:
         name: argocd-cmp-cm
+    - name: gitops-tools
+      emptyDir: {}
+    - name: cmp-tmp
+      emptyDir: {}
+    - name: sops-age-key
+      secret:
+        secretName: argocd-sops-age-key
 
 global:
-  domain: argocd.tuntelder.com
+  domain: argocd.${SECRET_DOMAIN_0}

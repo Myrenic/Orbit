@@ -8,10 +8,10 @@ ports:
     containerPort: 8081
 
 ingress:
-  host: nexus.tuntelder.com
+  host: nexus.${SECRET_DOMAIN_0}
   port: main
   middlewares:
-    - name: fail2ban
+    - name: oauth2-proxy-auth
       namespace: network
 
 hostPaths:

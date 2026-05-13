@@ -1,5 +1,9 @@
 ---
 creation_rules:
+  - encrypted_regex: '^(data|stringData)$'
+    path_regex: 'kubernetes/.*\.sops\.ya?ml$'
+    age: >-
+      age10qpu76yk6rvyaunmsadkej3l0pwuk4mn4uhxnem4cyl9zjrucgmsndh72v
   - path_regex: terraform/infra\.json$
     key_groups:
       - age:

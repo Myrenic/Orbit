@@ -31,7 +31,7 @@ grafana:
 
   grafana.ini:
     server:
-      root_url: "https://grafana.tuntelder.com"
+      root_url: "https://grafana.${SECRET_DOMAIN_0}"
 
   defaultDashboardsEnabled: true
   defaultDashboardsTimezone: browser

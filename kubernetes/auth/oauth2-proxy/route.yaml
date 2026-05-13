@@ -2,19 +2,16 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: grafana
-  namespace: monitoring
+  name: oauth2-proxy
+  namespace: auth
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`grafana.${SECRET_DOMAIN_0}`)
+    - match: Host(`auth.${SECRET_DOMAIN_0}`)
       kind: Rule
-      middlewares:
-        - name: oauth2-proxy-auth
-          namespace: network
       services:
-        - name: grafana
+        - name: oauth2-proxy
           port: 80
   tls:
     certResolver: letsencrypt

@@ -8,11 +8,11 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`longhorn.tuntelder.com`)
+    - match: Host(`longhorn.${SECRET_DOMAIN_0}`)
       kind: Rule
-      # middlewares:
-      #   - name: local-only
-      #     namespace: network
+      middlewares:
+        - name: oauth2-proxy-auth
+          namespace: network
       services:
         - name: longhorn-frontend
           port: 80

@@ -8,17 +8,13 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`hello.tuntelder.com`)
+    - match: Host(`hello.${SECRET_DOMAIN_0}`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy-auth
+          namespace: network
       services:
         - name: hello-world-service
           port: 80
-      middlewares:
-        - name: fail2ban
-          namespace: network
-      # - name: authentik
-      #   namespace: network
-      # - name: local-only
-      #   namespace: edge
   tls:
     certResolver: letsencrypt

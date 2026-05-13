@@ -10,8 +10,10 @@ envs:
   - NB_HOSTNAME: "orbit-nodes"
   - NB_LOG_LEVEL: "warn"
 
-#secretEnvs:
-#  - NB_SETUP_KEY: "AgAVbbntiQgrPgTL3WjNOKRdPNZDZU8gh8F3stm+xznXWo4DESjpMbU6y5I2NhlZhgOgDJiKoh88c//5XraskTxwjmni/XbfgmqWm0uoi3nHkEcGvoTykPU6i3CEAvWTr4uAqP1JDxqCRwZ0VhIVUCNR7EQfaze/KPUQrsXhoFziihZ8AXZfCeytEslBbuTzGMgQq8/4wM42WE8O0l9UnSPe1WRnBWfVfXf870T7M/7K5tS7HHQHI7lHIdhBH/k0Qv5QHQzpFzTy/kEYu8g9TvKBZ9wjptB964lg/Z3Vx2utQBNeYJrfjxGY+be40uurX1rsVUgUloEFBDZeZhJg6mjdfmIKnNFV2PHSslwdlbCzi7UsUyEmqe129n/7+uUo7eX3Yg+d0wExKEB3N+LjMtmidfj9oRY+pQd63mzmbQfvfxDakFhSRyHejMK9dwwMxNN9T6hPlMqSJVecLB3+s+pno22rB9gLCEXaCu2bGaE3MR4b1JbeM2UsfyBqDiHZj+e3TzIMbtUujsFWDvl0M6nveIy6UpaN6J0aZn0RYk67HveDgfsXnFyYXd1EODWuRYyBxwI9KNKWlzIh/bUK+tQO14vp2dZFCwZ26u89vqKM5VNgJhUeZh7CbDfQlldAMqTMUztQmrZS7o9WMaCN2uEGSJgqkCYhMo+pdAqmKCS8IR46qT1+MSomkOktd1G0qjyviCZiBjYq5Xs4imyA2D6KJBUEgRExySR4+dlC7q0gQMtHfTI="
+existingSecretEnvs:
+  NB_SETUP_KEY:
+    secretName: netbird
+    key: NB_SETUP_KEY
 
 securityContext:
   capabilities:

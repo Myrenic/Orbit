@@ -8,14 +8,14 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`obsidian.tuntelder.com`)
+    - match: Host(`obsidian.${SECRET_DOMAIN_0}`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy-auth
+          namespace: network
       services:
         - name: obsidian-nginx
           port: 80
-      middlewares:
-        - name: fail2ban
-          namespace: network
 
   tls:
     certResolver: letsencrypt

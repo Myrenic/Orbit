@@ -8,7 +8,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`home.tuntelder.com`)
+    - match: Host(`home.${SECRET_DOMAIN_0}`)
       kind: Rule
       services:
         - name: home-assistant-nginx

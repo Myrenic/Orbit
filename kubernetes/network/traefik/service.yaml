@@ -15,9 +15,6 @@ spec:
     - name: websecure
       port: 443
       targetPort: 443
-    - name: admin
-      port: 8080
-      targetPort: 8080
   selector:
     app: traefik
 ---
@@ -30,10 +27,13 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`traefik.tuntelder.com`)
+    - match: Host(`traefik.${SECRET_DOMAIN_0}`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy-auth
+          namespace: network
       services:
-        - name: traefik
-          port: 8080
+        - kind: TraefikService
+          name: api@internal
   tls:
     certResolver: letsencrypt

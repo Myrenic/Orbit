@@ -5,7 +5,7 @@ kind: Kustomization
 namespace: network
 
 resources:
-  - ./secret.yaml
+  - ./secret.sops.yaml
 
 helmGlobals:
   chartHome: ../../../helm-charts

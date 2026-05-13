@@ -8,8 +8,11 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`argocd.tuntelder.com`)
+    - match: Host(`argocd.${SECRET_DOMAIN_0}`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy-auth
+          namespace: network
       services:
         - name: argocd-server
           port: 80
