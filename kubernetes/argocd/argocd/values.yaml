@@ -92,7 +92,14 @@ configs:
                   export "${key}=${value}"
                 done < <(
                   sops -d --output-type json "${common_file}" |
-                    jq -j '.stringData // {} | to_entries[] | .key, "\u0000", .value, "\u0000"'
+                    perl -MJSON::PP -0e '
+                      my $json = do { local $/; <> };
+                      my $doc = JSON::PP->new->decode($json);
+                      my $data = $doc->{stringData} // {};
+                      for my $key (keys %{$data}) {
+                        print $key, "\0", $data->{$key}, "\0";
+                      }
+                    '
                 )
               fi
 
@@ -106,7 +113,7 @@ configs:
               find "${temp_dir}" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.subst"
-                  envsubst < "${file}" > "${tmp}"
+                  perl -0pe 's/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/exists $ENV{$1} ? $ENV{$1} : $&/ge' "${file}" > "${tmp}"
                   mv "${tmp}" "${file}"
                 done
 
@@ -121,13 +128,11 @@ repoServer:
       command: ["sh", "-ec"]
       args:
         - |
-          apk add --no-cache curl tar jq gettext-envsubst
+          apk add --no-cache curl tar
           curl -fsSL -o /gitops-tools/sops "https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64"
           curl -fsSL -o /tmp/age.tar.gz "https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz"
           tar -xzf /tmp/age.tar.gz -C /tmp
           install -m 0755 /tmp/age/age /gitops-tools/age
-          install -m 0755 /usr/bin/jq /gitops-tools/jq
-          install -m 0755 /usr/bin/envsubst /gitops-tools/envsubst
           chmod 0755 /gitops-tools/sops
       volumeMounts:
         - name: gitops-tools
