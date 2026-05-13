@@ -81,6 +81,7 @@ configs:
               repo_root="$(git rev-parse --show-toplevel)"
               app_dir="$(pwd)"
               temp_dir="$(mktemp -d)"
+              namespace="${PARAM_NAMESPACE}"
               trap 'rm -rf "${temp_dir}"' EXIT
 
               cp -R "${repo_root}/." "${temp_dir}/"
@@ -112,6 +113,8 @@ configs:
                   mv "${tmp}" "${file}"
                 done
 
+              unset PARAM_NAMESPACE
+
               find "${temp_dir}/kubernetes" -path '*/charts/*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.subst"
@@ -119,7 +122,7 @@ configs:
                   mv "${tmp}" "${file}"
                 done
 
-              kustomize edit set namespace -- "${PARAM_NAMESPACE}"
+              kustomize edit set namespace -- "${namespace}"
               kustomize build --enable-helm --helm-command '/home/argocd/cmp-server/config/command.sh'
 
 repoServer:
