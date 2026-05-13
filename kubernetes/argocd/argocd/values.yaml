@@ -106,7 +106,8 @@ configs:
               find "${temp_dir}" -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.dec"
-                  sops -d "${file}" > "${tmp}"
+                  sops -d "${file}" |
+                    perl -0pe 's/\n?^sops:\n(?:^[[:space:]].*\n?)*\z/\n/ms' > "${tmp}"
                   mv "${tmp}" "${file}"
                 done
 
