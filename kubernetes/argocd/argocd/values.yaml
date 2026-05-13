@@ -83,10 +83,11 @@ configs:
               temp_dir="$(mktemp -d)"
               trap 'rm -rf "${temp_dir}"' EXIT
 
-              cp -R "${app_dir}/." "${temp_dir}/"
-              cd "${temp_dir}"
+              cp -R "${repo_root}/." "${temp_dir}/"
+              app_path="${temp_dir}/${app_dir#${repo_root}/}"
+              cd "${app_path}"
 
-              common_file="${repo_root}/kubernetes/common/cluster-secrets.sops.yaml"
+              common_file="${temp_dir}/kubernetes/common/cluster-secrets.sops.yaml"
               if [ -f "${common_file}" ]; then
                 while IFS= read -r -d '' key && IFS= read -r -d '' value; do
                   export "${key}=${value}"
@@ -103,7 +104,7 @@ configs:
                 )
               fi
 
-              find "${temp_dir}" -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
+              find "${temp_dir}" -path '*/charts/*' -prune -o -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.dec"
                   sops -d "${file}" |
@@ -111,7 +112,7 @@ configs:
                   mv "${tmp}" "${file}"
                 done
 
-              find "${temp_dir}" -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
+              find "${temp_dir}" -path '*/charts/*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.subst"
                   perl -0pe 's/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/exists $ENV{$1} ? $ENV{$1} : $&/ge' "${file}" > "${tmp}"
