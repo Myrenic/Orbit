@@ -104,7 +104,7 @@ configs:
                 )
               fi
 
-              find "${temp_dir}" -path '*/charts/*' -prune -o -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
+              find "${temp_dir}/kubernetes" -path '*/charts/*' -prune -o -type f \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.dec"
                   sops -d "${file}" |
@@ -112,7 +112,7 @@ configs:
                   mv "${tmp}" "${file}"
                 done
 
-              find "${temp_dir}" -path '*/charts/*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
+              find "${temp_dir}/kubernetes" -path '*/charts/*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 |
                 while IFS= read -r -d '' file; do
                   tmp="${file}.subst"
                   perl -0pe 's/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/exists $ENV{$1} ? $ENV{$1} : $&/ge' "${file}" > "${tmp}"
