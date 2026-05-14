@@ -3,8 +3,8 @@
 :root {
   --background: #08111f;
   --foreground: #ebf2ff;
-  --panel: rgba(11, 18, 32, 0.8);
-  --panel-border: rgba(148, 163, 184, 0.18);
+  --panel: rgba(8, 15, 29, 0.78);
+  --panel-border: rgba(148, 163, 184, 0.16);
   --muted: #93a5c3;
 }
 
@@ -19,6 +19,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  min-height: 100%;
+}
+
 html {
   background:
     radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 30%),
@@ -27,10 +32,41 @@ html {
 }
 
 body {
-  background: var(--background);
+  position: relative;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.1), transparent 22%),
+    radial-gradient(circle at 82% 16%, rgba(168, 85, 247, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.96) 0%, rgba(2, 6, 23, 1) 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 82%);
+  opacity: 0.25;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  left: 50%;
+  top: -12rem;
+  width: 60rem;
+  height: 28rem;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.14), transparent 65%);
+  filter: blur(36px);
 }
 
 a {
@@ -38,21 +74,63 @@ a {
   text-decoration: none;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 ::selection {
   background: rgba(56, 189, 248, 0.35);
 }
 
 .panel {
-  background: var(--panel);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 15, 29, 0.78) 100%),
+    var(--panel);
   border: 1px solid var(--panel-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 28px 48px rgba(3, 7, 18, 0.35);
-  backdrop-filter: blur(18px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 28px 90px rgba(2, 6, 23, 0.42);
+  backdrop-filter: blur(22px);
+}
+
+.panel-grid {
+  background-image:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(167, 139, 250, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(8, 15, 29, 0.78) 100%);
 }
 
 .muted {
   color: var(--muted);
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.empty-state {
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.52) 0%, rgba(8, 15, 29, 0.42) 100%);
 }
 
 .status-dot {
@@ -60,4 +138,5 @@ a {
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 9999px;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.72);
 }

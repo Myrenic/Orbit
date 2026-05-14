@@ -1,4 +1,8 @@
-import { getKubeClients, getLonghornNamespace } from "@/lib/kube";
+import {
+  getKubeClients,
+  getLonghornNamespace,
+  isKubernetesErrorStatus,
+} from "@/lib/kube";
 
 export type LonghornObject = {
   apiVersion?: string;
@@ -44,8 +48,7 @@ export async function getLonghornObject(plural: string, name: string) {
       name,
     })) as LonghornObject;
   } catch (error) {
-    const statusCode = (error as { statusCode?: number }).statusCode;
-    if (statusCode === 404) {
+    if (isKubernetesErrorStatus(error, 404)) {
       return undefined;
     }
     throw error;
@@ -88,8 +91,7 @@ export async function deleteLonghornObject(plural: string, name: string) {
       body: {},
     });
   } catch (error) {
-    const statusCode = (error as { statusCode?: number }).statusCode;
-    if (statusCode !== 404) {
+    if (!isKubernetesErrorStatus(error, 404)) {
       throw error;
     }
   }

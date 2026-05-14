@@ -41,3 +41,32 @@ export function getExcludedNamespaces() {
       .filter(Boolean),
   );
 }
+
+function getNumericErrorCode(value: unknown) {
+  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
+}
+
+export function getKubernetesErrorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  const value = error as {
+    body?: { code?: unknown };
+    code?: unknown;
+    response?: { status?: unknown; statusCode?: unknown };
+    statusCode?: unknown;
+  };
+
+  return (
+    getNumericErrorCode(value.code) ??
+    getNumericErrorCode(value.statusCode) ??
+    getNumericErrorCode(value.response?.status) ??
+    getNumericErrorCode(value.response?.statusCode) ??
+    getNumericErrorCode(value.body?.code)
+  );
+}
+
+export function isKubernetesErrorStatus(error: unknown, status: number) {
+  return getKubernetesErrorStatus(error) === status;
+}

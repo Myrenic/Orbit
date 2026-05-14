@@ -8,7 +8,7 @@ import type {
 } from "@kubernetes/client-node";
 import { Cron } from "croner";
 
-import { getKubeClients } from "@/lib/kube";
+import { getKubeClients, isKubernetesErrorStatus } from "@/lib/kube";
 import {
   createLonghornObject,
   deleteLonghornObject,
@@ -19,7 +19,10 @@ import {
   waitForLonghornObject,
 } from "@/lib/longhorn";
 import { getClusterSnapshot, invalidateClusterSnapshot } from "@/lib/cluster";
-import { getCloneRestoreValidationError } from "@/lib/restore";
+import {
+  getCloneRestoreValidationError,
+  resolveRestoreTargetNamespace,
+} from "@/lib/restore";
 import {
   AppInventoryItem,
   BackupMode,
@@ -358,8 +361,7 @@ async function ensureNamespace(namespace: string) {
   try {
     await core.readNamespace({ name: namespace });
   } catch (error) {
-    const statusCode = (error as { statusCode?: number }).statusCode;
-    if (statusCode !== 404) {
+    if (!isKubernetesErrorStatus(error, 404)) {
       throw error;
     }
 
@@ -373,7 +375,13 @@ async function ensureNamespace(namespace: string) {
         },
       },
     };
-    await core.createNamespace({ body });
+    try {
+      await core.createNamespace({ body });
+    } catch (createError) {
+      if (!isKubernetesErrorStatus(createError, 409)) {
+        throw createError;
+      }
+    }
   }
 }
 
@@ -861,8 +869,7 @@ async function maybeCloneStatefulSetService(
       serviceName,
     };
   } catch (error) {
-    const statusCode = (error as { statusCode?: number }).statusCode;
-    if (statusCode === 404) {
+    if (isKubernetesErrorStatus(error, 404)) {
       return {
         note: `The source governing Service ${sourceServiceName} was not found. The restored StatefulSet may need manual Service setup.`,
         serviceName: undefined,
@@ -1232,151 +1239,165 @@ async function runBackupOperation(operation: OperationRecord) {
 
 async function runRestoreOperation(operation: OperationRecord) {
   const snapshot = await getClusterSnapshot(true);
+  const restoreMode = operation.mode as "clone-workload" | "pvc-only";
 
   for (const item of operation.items) {
-    const backupSet = snapshot.backupSets.find((entry) => entry.id === item.backupSetId);
-    if (!backupSet) {
+    try {
+      const backupSet = snapshot.backupSets.find((entry) => entry.id === item.backupSetId);
+      if (!backupSet) {
+        await setItemStatus(
+          operation.id,
+          item.id,
+          "failed",
+          "The selected backup set is no longer available.",
+          0,
+        );
+        continue;
+      }
+
+      if (restoreMode === "clone-workload") {
+        const cloneRestoreError = getCloneRestoreValidationError(backupSet);
+        if (cloneRestoreError) {
+          await setItemStatus(operation.id, item.id, "failed", cloneRestoreError, 100);
+          continue;
+        }
+      }
+
+      const targetNamespace = resolveRestoreTargetNamespace(
+        restoreMode,
+        backupSet,
+        item.namespace,
+      );
+      const clonePlan =
+        restoreMode === "clone-workload"
+          ? await prepareCloneWorkloadPlan(backupSet, targetNamespace)
+          : undefined;
+
+      await ensureNamespace(targetNamespace);
       await setItemStatus(
         operation.id,
         item.id,
-        "failed",
-        "The selected backup set is no longer available.",
-        0,
-      );
-      continue;
-    }
-
-    if (operation.mode === "clone-workload") {
-      const cloneRestoreError = getCloneRestoreValidationError(backupSet);
-      if (cloneRestoreError) {
-        await setItemStatus(operation.id, item.id, "failed", cloneRestoreError, 100);
-        continue;
-      }
-    }
-
-    const targetNamespace =
-      item.namespace ||
-      (operation.mode === "clone-workload" && backupSet.namespace
-        ? `${backupSet.namespace}-restore`
-        : backupSet.namespace || "services");
-    const clonePlan =
-      operation.mode === "clone-workload"
-        ? await prepareCloneWorkloadPlan(backupSet, targetNamespace)
-        : undefined;
-
-    await ensureNamespace(targetNamespace);
-    await setItemStatus(
-      operation.id,
-      item.id,
-      "running",
-      `Restoring ${backupSet.volumeCount} volume${backupSet.volumeCount === 1 ? "" : "s"} into ${targetNamespace}.`,
-      5,
-    );
-
-    const claimNameMap = new Map<string, string>();
-
-    for (const [index, backup] of backupSet.volumes.entries()) {
-      const restoredVolumeName = buildName(
-        backup.workloadName || backup.volumeName,
-        "restore",
-        shortId(),
-        String(index + 1),
-      );
-      const restoredPvName = buildName(restoredVolumeName, "pv");
-      const { restoredPvcName, templateClaimMatch } = resolveRestoredClaim(
-        backup,
-        clonePlan,
+        "running",
+        `Restoring ${backupSet.volumeCount} volume${backupSet.volumeCount === 1 ? "" : "s"} into ${targetNamespace}.`,
+        5,
       );
 
-      await updateItem(operation.id, item.id, (entry) => {
-        entry.volumes[index] = {
-          volumeName: backup.volumeName,
-          pvcName: backup.pvcName,
-          restoredVolumeName,
-          restoredClaimName: restoredPvcName,
-          restoredNamespace: targetNamespace,
-          progress: 10,
-          status: "running",
-        };
-      });
+      const claimNameMap = new Map<string, string>();
 
-      await logItem(
-        operation.id,
-        item.id,
-        `Creating restored Longhorn volume ${restoredVolumeName}.`,
-      );
-
-      await createRestoredVolume(backup, restoredVolumeName);
-      await createRestoredClaim(
-        targetNamespace,
-        restoredVolumeName,
-        restoredPvName,
-        restoredPvcName,
-        backup,
-      );
-
-      await updateItem(operation.id, item.id, (entry) => {
-        const volumeState = entry.volumes[index];
-        volumeState.progress = 100;
-        volumeState.status = "succeeded";
-      });
-
-      if (backup.pvcName) {
-        claimNameMap.set(backup.pvcName, restoredPvcName);
-      }
-      if (clonePlan?.kind === "StatefulSet" && templateClaimMatch) {
-        const restoredClaimsForOrdinal =
-          clonePlan.restoredTemplateClaims.get(templateClaimMatch.ordinal) ?? new Set<string>();
-        restoredClaimsForOrdinal.add(templateClaimMatch.templateClaimName);
-        clonePlan.restoredTemplateClaims.set(
-          templateClaimMatch.ordinal,
-          restoredClaimsForOrdinal,
+      for (const [index, backup] of backupSet.volumes.entries()) {
+        const restoredVolumeName = buildName(
+          backup.workloadName || backup.volumeName,
+          "restore",
+          shortId(),
+          String(index + 1),
         );
+        const restoredPvName = buildName(restoredVolumeName, "pv");
+        const { restoredPvcName, templateClaimMatch } = resolveRestoredClaim(
+          backup,
+          clonePlan,
+        );
+
+        await updateItem(operation.id, item.id, (entry) => {
+          entry.volumes[index] = {
+            volumeName: backup.volumeName,
+            pvcName: backup.pvcName,
+            restoredVolumeName,
+            restoredClaimName: restoredPvcName,
+            restoredNamespace: targetNamespace,
+            progress: 10,
+            status: "running",
+          };
+        });
+
+        await logItem(
+          operation.id,
+          item.id,
+          `Creating restored Longhorn volume ${restoredVolumeName}.`,
+        );
+
+        await createRestoredVolume(backup, restoredVolumeName);
+        await createRestoredClaim(
+          targetNamespace,
+          restoredVolumeName,
+          restoredPvName,
+          restoredPvcName,
+          backup,
+        );
+
+        await updateItem(operation.id, item.id, (entry) => {
+          const volumeState = entry.volumes[index];
+          volumeState.progress = 100;
+          volumeState.status = "succeeded";
+        });
+
+        if (backup.pvcName) {
+          claimNameMap.set(backup.pvcName, restoredPvcName);
+        }
+        if (clonePlan?.kind === "StatefulSet" && templateClaimMatch) {
+          const restoredClaimsForOrdinal =
+            clonePlan.restoredTemplateClaims.get(templateClaimMatch.ordinal) ?? new Set<string>();
+          restoredClaimsForOrdinal.add(templateClaimMatch.templateClaimName);
+          clonePlan.restoredTemplateClaims.set(
+            templateClaimMatch.ordinal,
+            restoredClaimsForOrdinal,
+          );
+        }
       }
-    }
 
-    if (operation.mode === "clone-workload") {
-      if (!clonePlan) {
-        throw new Error("Clone restore is missing its source workload details.");
-      }
+      if (restoreMode === "clone-workload") {
+        if (!clonePlan) {
+          throw new Error("Clone restore is missing its source workload details.");
+        }
 
-      const cloneResult =
-        clonePlan.kind === "StatefulSet"
-          ? await cloneStatefulSet(clonePlan, claimNameMap)
-          : await cloneDeployment(clonePlan, claimNameMap);
+        const cloneResult =
+          clonePlan.kind === "StatefulSet"
+            ? await cloneStatefulSet(clonePlan, claimNameMap)
+            : await cloneDeployment(clonePlan, claimNameMap);
 
-      for (const note of cloneResult.notes) {
-        await logItem(operation.id, item.id, note);
+        for (const note of cloneResult.notes) {
+          await logItem(operation.id, item.id, note);
+        }
+
+        await setItemStatus(
+          operation.id,
+          item.id,
+          "succeeded",
+          cloneResult.kind === "StatefulSet"
+            ? `Restored into ${targetNamespace} as StatefulSet ${cloneResult.name}${
+                typeof cloneResult.replicas === "number"
+                  ? ` (${cloneResult.replicas} replica${cloneResult.replicas === 1 ? "" : "s"}).`
+                  : "."
+              }`
+            : `Restored into ${targetNamespace} as deployment ${cloneResult.name}.`,
+          100,
+        );
+        await logItem(
+          operation.id,
+          item.id,
+          `Created cloned ${cloneResult.kind === "StatefulSet" ? "StatefulSet" : "deployment"} ${cloneResult.name} in ${targetNamespace}.`,
+        );
+        continue;
       }
 
       await setItemStatus(
         operation.id,
         item.id,
         "succeeded",
-        cloneResult.kind === "StatefulSet"
-          ? `Restored into ${targetNamespace} as StatefulSet ${cloneResult.name}${
-              typeof cloneResult.replicas === "number"
-                ? ` (${cloneResult.replicas} replica${cloneResult.replicas === 1 ? "" : "s"}).`
-                : "."
-            }`
-          : `Restored into ${targetNamespace} as deployment ${cloneResult.name}.`,
+        `Restored PVCs into ${targetNamespace}.`,
         100,
       );
-      await logItem(
-        operation.id,
-        item.id,
-        `Created cloned ${cloneResult.kind === "StatefulSet" ? "StatefulSet" : "deployment"} ${cloneResult.name} in ${targetNamespace}.`,
-      );
-      continue;
-    }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unexpected restore failure.";
+      await patchOperation(operation.id, (entry) => {
+        const operationItem = entry.items.find((candidate) => candidate.id === item.id);
+        if (!operationItem) {
+          return;
+        }
 
-    await setItemStatus(
-      operation.id,
-      item.id,
-      "succeeded",
-      `Restored PVCs into ${targetNamespace}.`,
-      100,
-    );
+        markInterruptedItem(operationItem, message);
+      });
+    }
   }
 
   invalidateClusterSnapshot();
@@ -1456,10 +1477,11 @@ export async function createOperation(
           return {
             id: `item-${shortId()}`,
             displayName: backupSet?.displayName || backupSetId,
-            namespace:
-              request.restoreMode === "clone-workload"
-                ? request.targetNamespace || `${backupSet?.namespace || "services"}-restore`
-                : request.targetNamespace || backupSet?.namespace || "services",
+            namespace: resolveRestoreTargetNamespace(
+              request.restoreMode,
+              backupSet,
+              request.targetNamespace,
+            ),
             kind: backupSet?.workloadKind,
             resourceName: backupSet?.workloadName,
             backupSetId,
