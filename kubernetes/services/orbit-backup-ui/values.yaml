@@ -1,6 +1,7 @@
 ---
 image:
   repository: "ghcr.io/myrenic/orbit-backup-ui"
+  pullPolicy: Always
   tag: "latest"
 
 ports:
