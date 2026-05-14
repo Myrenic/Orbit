@@ -94,6 +94,13 @@ type SkeletonPanelProps = {
   className?: string;
 };
 
+type BackupConsoleTab =
+  | "overview"
+  | "protect"
+  | "recover"
+  | "automate"
+  | "activity";
+
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -685,6 +692,7 @@ export function BackupConsole() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [unmanagedFilter, setUnmanagedFilter] = useState<"all" | "high" | "review">("all");
   const [selectedUnmanagedRefs, setSelectedUnmanagedRefs] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<BackupConsoleTab>("overview");
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -1118,9 +1126,1145 @@ export function BackupConsole() {
       : healthyTargetCount === targets.length
         ? "Healthy"
         : `${healthyTargetCount}/${targets.length} healthy`;
+  const runningOperations = overview?.runningOperations ?? 0;
+  const tabItems = [
+    {
+      id: "overview" as const,
+      label: "Overview",
+      description: "Health, posture, and navigation",
+      icon: ShieldCheck,
+    },
+    {
+      id: "protect" as const,
+      label: "Protect",
+      description: "Select workloads and queue backups",
+      icon: ArrowUpFromLine,
+      badge: selectedApps.length > 0 ? selectedApps.length : undefined,
+    },
+    {
+      id: "recover" as const,
+      label: "Recover",
+      description: "Restore backups and clean unmanaged items",
+      icon: ArrowDownToLine,
+      badge:
+        selectedBackupSets.length > 0
+          ? selectedBackupSets.length
+          : selectedUnmanagedRefs.length > 0
+            ? selectedUnmanagedRefs.length
+            : undefined,
+    },
+    {
+      id: "automate" as const,
+      label: "Automate",
+      description: "Targets and recurring schedules",
+      icon: Workflow,
+      badge: activeSchedules > 0 ? activeSchedules : undefined,
+    },
+    {
+      id: "activity" as const,
+      label: "Activity",
+      description: "Runs, progress, and logs",
+      icon: LoaderCircle,
+      badge: runningOperations > 0 ? runningOperations : undefined,
+    },
+  ];
+  const activeTabItem = tabItems.find((item) => item.id === activeTab) ?? tabItems[0];
+  const overviewSection = (
+    <>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: "Protected workloads",
+            value: overview?.protectedWorkloadCount ?? protectedApps.length,
+            detail: selectedApps.length
+              ? `${pluralize(selectedApps.length, "selected workload")}`
+              : "Ready for selection",
+            icon: DatabaseBackup,
+            tone: "from-sky-400/20 via-sky-400/5 to-transparent",
+          },
+          {
+            label: "Backup catalog",
+            value: overview?.backupSetCount ?? uiState.backupSets.length,
+            detail: `${pluralize(cloneReadyBackupCount, "clone-ready set")}`,
+            icon: Cloud,
+            tone: "from-violet-400/20 via-violet-400/5 to-transparent",
+          },
+          {
+            label: "Live activity",
+            value: runningOperations,
+            detail: `${pluralize(uiState.operations.length, "recent operation")}`,
+            icon: LoaderCircle,
+            tone: "from-amber-400/20 via-amber-400/5 to-transparent",
+          },
+          {
+            label: "Schedules active",
+            value: activeSchedules,
+            detail: `${pluralize(schedules.length, "saved schedule")}`,
+            icon: Workflow,
+            tone: "from-emerald-400/20 via-emerald-400/5 to-transparent",
+          },
+        ].map(({ label, value, detail, icon: Icon, tone }) => (
+          <div className={`panel rounded-[28px] bg-gradient-to-br ${tone} p-5`} key={label}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="section-label">{label}</div>
+                <div className="mt-4 text-3xl font-semibold tracking-tight text-white">{value}</div>
+                <div className="mt-2 text-sm text-slate-400">{detail}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/6 p-3">
+                <Icon className="h-5 w-5 text-slate-200" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="panel rounded-[32px] p-5 sm:p-6">
+          <SectionHeading
+            description="Tabs keep the console readable on phones without hiding any of the backup, recovery, or automation controls."
+            eyebrow="Quick navigation"
+            title="Jump straight to the task you need"
+          />
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {tabItems
+              .filter((item) => item.id !== "overview")
+              .map(({ id, label, description, icon: Icon, badge }) => (
+                <button
+                  className="flex items-start justify-between gap-3 rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4 text-left transition hover:border-sky-400/25 hover:bg-slate-950/80"
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  type="button"
+                >
+                  <div className="flex min-w-0 gap-3">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                      <Icon className="h-4 w-4 text-slate-100" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-white">{label}</div>
+                      <div className="mt-1 text-sm text-slate-400">{description}</div>
+                    </div>
+                  </div>
+                  {badge ? (
+                    <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-xs font-medium text-sky-100">
+                      {badge}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+          </div>
+        </section>
+
+        <section className="panel rounded-[32px] p-5 sm:p-6">
+          <SectionHeading
+            description="Keep the core recovery signals visible before you dive into a specific tab."
+            eyebrow="Live posture"
+            title="See backup health at a glance"
+          />
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {[
+              {
+                label: "Default target",
+                value: targetStatusLabel,
+                detail: defaultTarget?.backupTargetURL || "Save a Longhorn target to start writing backups.",
+              },
+              {
+                label: "Restore catalog",
+                value: pluralize(uiState.backupSets.length, "set"),
+                detail:
+                  selectedBackupSets.length > 0
+                    ? `${pluralize(selectedBackupSets.length, "set")} selected for recovery review.`
+                    : "Backups stay ready for in-place, clone, or PVC-only restore.",
+              },
+              {
+                label: "Unmanaged cleanup",
+                value: pluralize(highConfidenceUnmanaged.length, "high-confidence item"),
+                detail:
+                  selectedUnmanagedRefs.length > 0
+                    ? `${pluralize(selectedUnmanagedRefs.length, "item")} selected for the next cleanup run.`
+                    : "Review-only items stay read-only until an operator confirms them.",
+              },
+              {
+                label: "Recent activity",
+                value: pluralize(runningOperations, "active run"),
+                detail:
+                  uiState.operations[0]?.summary ||
+                  "Queued, running, and finished operations appear in the activity tab.",
+              },
+            ].map((item) => (
+              <div
+                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
+                key={item.label}
+              >
+                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                  {item.label}
+                </div>
+                <div className="mt-3 text-lg font-semibold text-white">{item.value}</div>
+                <div className="mt-2 text-sm text-slate-400">{item.detail}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+    </>
+  );
+  const protectSection = (
+    <section className="panel rounded-[32px] p-5 sm:p-6">
+      <SectionHeading
+        description="Select PVC-backed apps, choose the backup depth, and queue protection without dropping into PVC-by-PVC workflows."
+        eyebrow="Backup flow"
+        title="Protect workloads"
+      />
+
+      <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="section-label">Step 1</div>
+            <div className="mt-3 text-lg font-medium text-white">
+              Choose workload coverage and queue a backup
+            </div>
+            <p className="mt-2 max-w-2xl text-sm text-slate-400">
+              Orbit only lists workloads with protected storage so the backup path stays
+              focused and shippable.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:items-end">
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  id: "incremental",
+                  label: "Incremental",
+                  description: "Fastest routine protection",
+                },
+                {
+                  id: "full",
+                  label: "Full",
+                  description: "Fresh full backup chain",
+                },
+              ].map((mode) => (
+                <button
+                  className={cn(
+                    "rounded-full border px-3.5 py-2 text-left text-xs transition",
+                    backupMode === mode.id
+                      ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
+                  )}
+                  key={mode.id}
+                  onClick={() => setBackupMode(mode.id as BackupMode)}
+                  type="button"
+                >
+                  <div className="font-medium">{mode.label}</div>
+                  <div className="text-[11px] opacity-80">{mode.description}</div>
+                </button>
+              ))}
+            </div>
+            <button
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={selectedApps.length === 0 || workingLabel === "backup"}
+              onClick={() => void runBackup()}
+              type="button"
+            >
+              <ArrowUpFromLine className="h-4 w-4" />
+              {workingLabel === "backup"
+                ? "Queueing backup..."
+                : `Back up ${selectedApps.length ? pluralize(selectedApps.length, "app") : "selected apps"}`}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[24px] border border-sky-400/20 bg-sky-400/10 px-4 py-4">
+        {selectedApps.length > 0 ? (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="font-medium text-sky-50">
+                {pluralize(selectedApps.length, "workload")} selected for protection
+              </div>
+              <div className="mt-1 text-sm text-sky-100/80">
+                Covers {pluralize(selectedAppVolumeCount, "Longhorn volume")} and can
+                be reused when you create a schedule.
+              </div>
+            </div>
+            <div className="text-xs uppercase tracking-[0.24em] text-sky-100/70">
+              Backup and schedule ready
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="font-medium text-sky-50">No workloads selected yet</div>
+            <div className="mt-1 text-sm text-sky-100/80">
+              Pick one or more PVC-backed apps below to enable backup and schedule
+              actions.
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5">
+        {protectedApps.length > 0 ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {protectedApps.map((app) => (
+              <AppSelectionCard
+                app={app}
+                key={app.ref}
+                onToggle={() => toggleSelection(selectedApps, setSelectedApps, app.ref)}
+                selected={selectedApps.includes(app.ref)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            description="Orbit did not find any PVC-backed workloads to protect yet. Once protected apps appear, they will be listed here with pod health and storage details."
+            title="No protected workloads detected"
+          />
+        )}
+      </div>
+    </section>
+  );
+  const recoverSection = (
+    <div className="space-y-6">
+      <section className="panel rounded-[32px] p-5 sm:p-6">
+        <SectionHeading
+          description="Review backup sets, choose the safest restore path, and send only the work that matches the selected recovery mode."
+          eyebrow="Restore flow"
+          title="Restore from the backup catalog"
+        />
+
+        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="space-y-4">
+              <div>
+                <div className="section-label">Step 2</div>
+                <div className="mt-3 text-lg font-medium text-white">
+                  Choose the restore shape before you queue work
+                </div>
+                <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                  In-place restore is now the primary recovery path: pause Argo,
+                  replace the existing volume identity, then let the app settle again.
+                  Clone and PVC-only restore remain available as fallback tools.
+                </p>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3">
+                {[
+                  {
+                    id: "in-place",
+                    label: "In-place restore",
+                    description: "Preferred: overwrite the current app data safely",
+                  },
+                  {
+                    id: "clone-workload",
+                    label: "Clone workload",
+                    description: "Fallback: rebuild the workload in a safe namespace",
+                  },
+                  {
+                    id: "pvc-only",
+                    label: "PVC-only restore",
+                    description: "Advanced: recreate detached claims without the controller",
+                  },
+                ].map((mode) => (
+                  <button
+                    className={cn(
+                      "rounded-[22px] border px-4 py-3 text-left transition",
+                      restoreMode === mode.id
+                        ? "border-violet-400/30 bg-violet-400/12 text-violet-50"
+                        : "border-white/10 bg-white/5 text-slate-300 hover:border-violet-400/20 hover:text-white",
+                    )}
+                    key={mode.id}
+                    onClick={() => setRestoreMode(mode.id as RestoreMode)}
+                    type="button"
+                  >
+                    <div className="font-medium">{mode.label}</div>
+                    <div className="mt-1 text-xs opacity-80">{mode.description}</div>
+                  </button>
+                ))}
+              </div>
+
+              <label className="block">
+                <span className="field-label">Target namespace</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={restoreMode === "in-place"}
+                  onChange={(event) => setRestoreNamespace(event.target.value)}
+                  placeholder={defaultRestoreNamespace}
+                  value={restoreNamespace}
+                />
+                <div className="mt-2 text-xs text-slate-500">
+                  {restoreMode === "in-place"
+                    ? "In-place restore keeps the original namespace and ignores this field."
+                    : restoreMode === "clone-workload"
+                      ? "Orbit suggests a safe clone namespace based on the selected backup set."
+                      : "PVC-only restore can recreate detached claims in the namespace you choose."}
+                </div>
+              </label>
+            </div>
+
+            <button
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={restoreDisabled}
+              onClick={() => void runRestore()}
+              type="button"
+            >
+              <ArrowDownToLine className="h-4 w-4" />
+              {workingLabel === "restore"
+                ? "Queueing restore..."
+                : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
+            </button>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "mt-4 rounded-[24px] border px-4 py-4 text-sm",
+            restoreSelectionError
+              ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
+              : "border-white/8 bg-slate-950/55 text-slate-300",
+          )}
+        >
+          {restoreMode === "in-place"
+            ? restoreSelectionError ||
+              "In-place restore pauses the owning Argo Application when possible, scales the workload down, restores the original PVC identities, then brings the workload back."
+            : restoreMode === "clone-workload"
+              ? restoreSelectionError ||
+                "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
+              : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
+        </div>
+
+        <div className="mt-4 rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
+          {selectedBackupSets.length > 0 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="font-medium text-violet-50">
+                  {pluralize(selectedBackupSets.length, "backup set")} selected for restore
+                </div>
+                <div className="mt-1 text-sm text-violet-100/80">
+                  Covers {pluralize(selectedBackupVolumeCount, "volume")} with {pluralize(
+                    selectedCloneReadyCount,
+                    "clone-ready set",
+                  )}.
+                </div>
+              </div>
+              <div className="text-xs uppercase tracking-[0.24em] text-violet-100/70">
+                Review compatibility before queueing
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="font-medium text-violet-50">No backup sets selected yet</div>
+              <div className="mt-1 text-sm text-violet-100/80">
+                Select one or more backups below to unlock restore controls and clone-mode
+                validation.
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5">
+          {uiState.backupSets.length > 0 ? (
+            <div className="space-y-4">
+              {uiState.backupSets.map((backupSet) => (
+                <BackupSetCard
+                  backupSet={backupSet}
+                  key={backupSet.id}
+                  onToggle={() =>
+                    toggleSelection(
+                      selectedBackupSets,
+                      setSelectedBackupSets,
+                      backupSet.id,
+                    )
+                  }
+                  selected={selectedBackupSets.includes(backupSet.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description="Once backups are captured, Orbit will list them here with restore compatibility, captured volumes, and current pod context."
+              title="No backup sets available yet"
+            />
+          )}
+        </div>
+      </section>
+
+      <section className="panel rounded-[32px] p-5 sm:p-6">
+        <SectionHeading
+          actions={
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  id: "all",
+                  label: `All (${uiState.unmanagedItems.length})`,
+                },
+                {
+                  id: "high",
+                  label: `High confidence (${highConfidenceUnmanaged.length})`,
+                },
+                {
+                  id: "review",
+                  label: `Needs review (${reviewUnmanaged.length})`,
+                },
+              ].map((filter) => (
+                <button
+                  className={cn(
+                    "rounded-full border px-3.5 py-2 text-xs transition",
+                    unmanagedFilter === filter.id
+                      ? "border-amber-400/30 bg-amber-400/12 text-amber-50"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:border-amber-400/20 hover:text-white",
+                  )}
+                  key={filter.id}
+                  onClick={() =>
+                    setUnmanagedFilter(filter.id as "all" | "high" | "review")
+                  }
+                  type="button"
+                >
+                  {filter.label}
+                </button>
+              ))}
+              <button
+                className="rounded-full border border-amber-400/25 bg-amber-400/12 px-3.5 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={selectedUnmanagedRefs.length === 0 || workingLabel === "cleanup"}
+                onClick={() => void runUnmanagedCleanup(selectedUnmanagedRefs)}
+                type="button"
+              >
+                {workingLabel === "cleanup"
+                  ? "Cleaning selected..."
+                  : `Clean selected (${selectedUnmanagedRefs.length})`}
+              </button>
+            </div>
+          }
+          description="Conservative inventory only: Orbit skips cluster-critical namespaces, Talos/system workloads, and anything with Argo ownership markers. High-confidence items show restore/test signals first; review items stay visible so operators can confirm them manually."
+          eyebrow="Unmanaged inventory"
+          title="Review non-Argo resources"
+        />
+
+        <div className="mt-5 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
+          <div className="font-medium">Safe cleanup is enabled for high-confidence artifacts</div>
+          <div className="mt-1 text-amber-100/80">
+            Orbit only deletes resources that still appear in the current unmanaged
+            snapshot as high-confidence restore/test artifacts. Review-only items stay
+            read-only so you can inspect them without risking cluster-critical cleanup.
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: "Total flagged",
+              value: uiState.unmanagedItems.length,
+              detail: "After conservative safety filters",
+            },
+            {
+              label: "High confidence",
+              value: highConfidenceUnmanaged.length,
+              detail: "Restore/test signals detected",
+            },
+            {
+              label: "Needs review",
+              value: reviewUnmanaged.length,
+              detail: "No Argo owner found, confirm manually",
+            },
+            {
+              label: "Selected",
+              value: selectedUnmanagedRefs.length,
+              detail: "Queued for the next batch cleanup",
+            },
+          ].map((item) => (
+            <div
+              className="rounded-[24px] border border-white/8 bg-slate-950/55 px-4 py-4"
+              key={item.label}
+            >
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                {item.label}
+              </div>
+              <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
+              <div className="mt-1 text-xs text-slate-400">{item.detail}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5">
+          {visibleUnmanagedItems.length > 0 ? (
+            <div className="space-y-4">
+              {visibleUnmanagedItems.map((item) => (
+                <UnmanagedInventoryCard
+                  cleanupBusy={workingLabel === "cleanup"}
+                  item={item}
+                  key={item.ref}
+                  onCleanup={
+                    item.confidence === "high"
+                      ? () => void runUnmanagedCleanup([item.ref])
+                      : undefined
+                  }
+                  onToggleSelect={
+                    item.confidence === "high"
+                      ? () =>
+                          toggleSelection(
+                            selectedUnmanagedRefs,
+                            setSelectedUnmanagedRefs,
+                            item.ref,
+                          )
+                      : undefined
+                  }
+                  selected={selectedUnmanagedRefs.includes(item.ref)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description={
+                unmanagedFilter === "high"
+                  ? "Orbit did not detect any restore/test artifacts that passed the conservative unmanaged filters."
+                  : unmanagedFilter === "review"
+                    ? "Orbit did not find any review-only resources outside Argo ownership in the allowed namespaces."
+                    : "Orbit did not detect any unmanaged resources that passed the conservative safety filters."
+              }
+              title={
+                unmanagedFilter === "high"
+                  ? "No high-confidence artifacts detected"
+                  : unmanagedFilter === "review"
+                    ? "No review-only items detected"
+                    : "No unmanaged resources detected"
+              }
+            />
+          )}
+        </div>
+      </section>
+    </div>
+  );
+  const automateSection = (
+    <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="panel rounded-[32px] p-5 sm:p-6">
+        <SectionHeading
+          actions={
+            <span
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium",
+                healthyTargetCount > 0
+                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
+                  : "border-slate-400/20 bg-slate-400/10 text-slate-200",
+              )}
+            >
+              {targetStatusLabel}
+            </span>
+          }
+          description="Point Longhorn at your object store or share, then keep the polling cadence explicit so operators know how quickly target health updates."
+          eyebrow="Storage target"
+          title="Configure backup storage"
+        />
+
+        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+          <div className="space-y-4">
+            <label className="block">
+              <span className="field-label">Target URL</span>
+              <input
+                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                onChange={(event) => {
+                  setTargetDirty(true);
+                  setTargetUrl(event.target.value);
+                }}
+                placeholder="azblob://backup-container@core.windows.net/"
+                value={targetUrl}
+              />
+            </label>
+
+            <label className="block">
+              <span className="field-label">Credential secret</span>
+              <input
+                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                onChange={(event) => {
+                  setTargetDirty(true);
+                  setTargetSecret(event.target.value);
+                }}
+                placeholder="azure-backup-credentials"
+                value={targetSecret}
+              />
+            </label>
+
+            <label className="block">
+              <span className="field-label">Poll interval</span>
+              <input
+                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                onChange={(event) => {
+                  setTargetDirty(true);
+                  setTargetPollInterval(event.target.value);
+                }}
+                placeholder="300s"
+                value={targetPollInterval}
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/8 bg-white/5 px-4 py-3 text-xs text-slate-400">
+            <span>
+              Changes sync to Longhorn and will surface in the live status cards on the
+              next refresh cycle.
+            </span>
+            {targetDirty ? (
+              <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-amber-100">
+                Unsaved changes
+              </span>
+            ) : null}
+          </div>
+
+          <button
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+            disabled={!targetUrl || workingLabel === "target"}
+            onClick={() => void saveTarget()}
+            type="button"
+          >
+            <Cloud className="h-4 w-4" />
+            {workingLabel === "target" ? "Saving target..." : "Save target"}
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {targets.length > 0 ? (
+            targets.map((target) => (
+              <div
+                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
+                key={target.name}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-white">{target.name}</div>
+                    <div className="mt-1 break-all text-xs text-slate-500">
+                      {target.backupTargetURL || "No target URL configured"}
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                      target.available ? "Completed" : "failed",
+                    )}`}
+                  >
+                    {target.available ? "Available" : "Unavailable"}
+                  </span>
+                </div>
+                <div className="mt-3 text-xs text-slate-400">
+                  Last synced {formatTimestamp(target.lastSyncedAt)}
+                </div>
+                {target.conditions.length > 0 ? (
+                  <div className="mt-3 space-y-2 text-xs text-rose-100">
+                    {target.conditions.map((condition) => (
+                      <div
+                        className="rounded-2xl border border-rose-400/15 bg-rose-400/10 px-3 py-2"
+                        key={condition}
+                      >
+                        {condition}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))
+          ) : (
+            <EmptyState
+              description="Save a target to start writing backups to object storage or a supported share."
+              title="No backup targets configured"
+            />
+          )}
+        </div>
+      </section>
+
+      <section className="panel rounded-[32px] p-5 sm:p-6">
+        <SectionHeading
+          actions={
+            <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-medium text-violet-100">
+              {pluralize(activeSchedules, "active schedule")}
+            </span>
+          }
+          description="Schedules reuse the workload selection from the backup flow so operators can promote the exact set they just reviewed into recurring protection."
+          eyebrow="Recurring protection"
+          title="Manage schedules"
+        />
+
+        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+          <div className="rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
+            {selectedApps.length > 0 ? (
+              <div>
+                <div className="font-medium text-violet-50">
+                  New schedule will cover {pluralize(selectedApps.length, "selected workload")}
+                </div>
+                <div className="mt-1 text-sm text-violet-100/80">
+                  Current selection includes {pluralize(selectedAppVolumeCount, "volume")}.
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="font-medium text-violet-50">Select workloads first</div>
+                <div className="mt-1 text-sm text-violet-100/80">
+                  Use the backup flow to choose which apps this schedule should protect.
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <label className="block">
+              <span className="field-label">Schedule name</span>
+              <input
+                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                onChange={(event) => setScheduleName(event.target.value)}
+                placeholder="Nightly protected apps"
+                value={scheduleName}
+              />
+            </label>
+
+            <label className="block">
+              <span className="field-label">Cron expression</span>
+              <input
+                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                onChange={(event) => setScheduleCron(event.target.value)}
+                placeholder="0 3 * * *"
+                value={scheduleCron}
+              />
+            </label>
+          </div>
+
+          <button
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+            disabled={
+              selectedApps.length === 0 ||
+              !scheduleName.trim() ||
+              workingLabel === "schedule"
+            }
+            onClick={() => void createSchedule()}
+            type="button"
+          >
+            <Workflow className="h-4 w-4" />
+            {workingLabel === "schedule" ? "Saving schedule..." : "Create schedule"}
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {schedules.length > 0 ? (
+            schedules.map((schedule) => (
+              <div
+                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
+                key={schedule.id}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="font-medium text-white">{schedule.name}</div>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                          schedule.enabled ? "Completed" : "stopped",
+                        )}`}
+                      >
+                        {schedule.enabled ? "Enabled" : "Paused"}
+                      </span>
+                      {schedule.backend ? (
+                        <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2.5 py-1 text-xs font-medium text-violet-100">
+                          Longhorn native
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-2 text-xs text-slate-400">
+                      {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
+                      {typeof schedule.activeVolumeCount === "number"
+                        ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
+                        : ""}
+                    </div>
+                    {schedule.appDisplayNames?.length ? (
+                      <div className="mt-2 text-xs text-slate-500">
+                        {schedule.appDisplayNames.slice(0, 3).join(", ")}
+                        {schedule.appDisplayNames.length > 3
+                          ? ` +${schedule.appDisplayNames.length - 3} more`
+                          : ""}
+                      </div>
+                    ) : null}
+                    <div className="mt-2 text-xs text-slate-400">
+                      Next run {formatTimestamp(schedule.nextRunAt)}
+                      {schedule.lastRunAt
+                        ? ` · Last run ${formatTimestamp(schedule.lastRunAt)}`
+                        : ""}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-violet-400/25 hover:text-white"
+                      onClick={() =>
+                        void setScheduleEnabled(schedule, !schedule.enabled)
+                      }
+                      type="button"
+                    >
+                      {workingLabel === `schedule:${schedule.id}`
+                        ? "Saving..."
+                        : schedule.enabled
+                          ? "Pause"
+                          : "Enable"}
+                    </button>
+                    <button
+                      className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
+                      onClick={() => void deleteExistingSchedule(schedule)}
+                      type="button"
+                    >
+                      {workingLabel === `schedule-delete:${schedule.id}`
+                        ? "Deleting..."
+                        : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState
+              description="Recurring jobs will appear here once you save the first schedule."
+              title="No schedules yet"
+            />
+          )}
+        </div>
+      </section>
+    </section>
+  );
+  const activitySection = (
+    <section className="panel rounded-[32px] p-5 sm:p-6">
+      <SectionHeading
+        actions={
+          <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-100">
+            Live queue · {pluralize(runningOperations, "active run")}
+          </span>
+        }
+        description="Operations poll live so you can see queued, active, and finished work without leaving the console. Expand an item for per-volume progress and timeline details."
+        eyebrow="Operations"
+        title="Runs and progress"
+      />
+
+      <div className="mt-5">
+        {uiState.operations.length > 0 ? (
+          <div className="space-y-4">
+            {uiState.operations.map((operation) => {
+              const completedItems = operation.items.filter(
+                (item) => item.status === "succeeded" || item.status === "skipped",
+              ).length;
+              const progress = averageProgress(operation.items);
+
+              return (
+                <article
+                  className={cn(
+                    "rounded-[28px] border p-5",
+                    operation.status === "running"
+                      ? "border-sky-400/20 bg-sky-400/8"
+                      : "border-white/8 bg-slate-950/60",
+                  )}
+                  key={operation.id}
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                          {operation.type}
+                        </span>
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                            operation.status,
+                          )}`}
+                        >
+                          {operation.status}
+                        </span>
+                        {operation.mode ? (
+                          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
+                            {operation.mode}
+                          </span>
+                        ) : null}
+                      </div>
+                      <h3 className="mt-3 text-lg font-semibold text-white">
+                        {operation.summary}
+                      </h3>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+                        <span>Requested by {operation.requestedBy}</span>
+                        <span>•</span>
+                        <span>Created {formatTimestamp(operation.createdAt)}</span>
+                        {operation.finishedAt ? (
+                          <>
+                            <span>•</span>
+                            <span>Finished {formatTimestamp(operation.finishedAt)}</span>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4 text-sm sm:min-w-[14rem]">
+                      <div className="flex items-center justify-between text-slate-400">
+                        <span>Items</span>
+                        <span className="font-medium text-slate-200">{operation.items.length}</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-slate-400">
+                        <span>Completed</span>
+                        <span className="font-medium text-slate-200">
+                          {completedItems}/{operation.items.length}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-slate-400">
+                        <span>Average progress</span>
+                        <span className="font-medium text-slate-200">{progress}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-900/90">
+                    <div
+                      className="h-full rounded-full bg-sky-400 transition-all"
+                      style={{
+                        width: `${Math.max(progress, operation.status === "queued" ? 8 : 0)}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {operation.items.map((item) => {
+                      const podContext = getOperationPodContext(item);
+
+                      return (
+                        <details
+                          className="rounded-[24px] border border-white/8 bg-slate-950/70 px-4 py-4"
+                          key={item.id}
+                        >
+                          <summary className="cursor-pointer list-none">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <div className="font-medium text-white">{item.displayName}</div>
+                                <div className="mt-1 text-sm text-slate-400">
+                                  {item.message || "Waiting for the next step..."}
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                                    item.status,
+                                  )}`}
+                                >
+                                  {item.status}
+                                </span>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
+                                  {item.progress}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-900/90">
+                              <div
+                                className="h-full rounded-full bg-sky-400 transition-all"
+                                style={{ width: `${Math.max(item.progress, 4)}%` }}
+                              />
+                            </div>
+                          </summary>
+
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                            {(item.appRef || item.backupSetId) && (
+                              <WorkloadPodPanel
+                                emptyMessage="No current cluster pods are mapped to this workload."
+                                podCount={podContext.podCount}
+                                pods={podContext.pods}
+                                readyPodCount={podContext.readyPodCount}
+                                workloadLabel={podContext.workloadLabel}
+                              />
+                            )}
+
+                            <div className="space-y-3">
+                              {item.volumes.map((volume, index) => (
+                                <div
+                                  className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-4 text-xs text-slate-300"
+                                  key={`${item.id}-${index}`}
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="font-medium text-white">
+                                      {volume.pvcName || volume.volumeName || "Volume"}
+                                    </div>
+                                    <span
+                                      className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${badgeClass(
+                                        volume.status,
+                                      )}`}
+                                    >
+                                      {volume.status}
+                                    </span>
+                                  </div>
+                                  {volume.message ? (
+                                    <div className="mt-2 text-rose-100">{volume.message}</div>
+                                  ) : null}
+                                  {(volume.backupName ||
+                                    volume.snapshotName ||
+                                    volume.restoredClaimName) && (
+                                    <div className="mt-3 space-y-1 text-slate-400">
+                                      {volume.snapshotName ? (
+                                        <div>Snapshot: {volume.snapshotName}</div>
+                                      ) : null}
+                                      {volume.backupName ? (
+                                        <div>Backup: {volume.backupName}</div>
+                                      ) : null}
+                                      {volume.restoredClaimName ? (
+                                        <div>
+                                          Restored PVC: {volume.restoredNamespace}/
+                                          {volume.restoredClaimName}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+
+                              {item.logs.length > 0 ? (
+                                <div className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-4">
+                                  <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+                                    Timeline
+                                  </div>
+                                  <div className="mt-3 space-y-2">
+                                    {item.logs.slice(0, 8).map((log) => (
+                                      <div
+                                        className="flex gap-3 text-xs"
+                                        key={`${item.id}-${log.timestamp}-${log.message}`}
+                                      >
+                                        <span className="w-32 shrink-0 text-slate-500">
+                                          {formatTimestamp(log.timestamp)}
+                                        </span>
+                                        <span
+                                          className={
+                                            log.level === "error"
+                                              ? "text-rose-100"
+                                              : "text-slate-300"
+                                          }
+                                        >
+                                          {log.message}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </details>
+                      );
+                    })}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            description="Queued, running, and completed backup work will appear here with per-item progress once the first operation is created."
+            title="No backup activity yet"
+          />
+        )}
+      </div>
+    </section>
+  );
+  const activeTabContent =
+    activeTab === "overview"
+      ? overviewSection
+      : activeTab === "protect"
+        ? protectSection
+        : activeTab === "recover"
+          ? recoverSection
+          : activeTab === "automate"
+            ? automateSection
+            : activitySection;
 
   return (
-    <main className="min-h-screen px-4 py-5 text-sm text-slate-100 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <main className="min-h-screen px-3 py-4 text-sm text-slate-100 sm:px-5 sm:py-5 lg:px-8 lg:py-8">
       <div className="mx-auto flex w-full max-w-[94rem] flex-col gap-6">
         <section className="panel panel-grid relative overflow-hidden rounded-[32px] p-6 sm:p-8">
           <div className="absolute -right-16 top-0 hidden h-64 w-64 rounded-full bg-sky-400/10 blur-3xl xl:block" />
@@ -1134,8 +2278,8 @@ export function BackupConsole() {
                 Orbit Backup Console
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                Protect PVC-backed workloads, schedule recurring coverage, and restore safe
-                clones with a calmer, clearer console built for day-two operations.
+                Protect PVC-backed workloads, schedule recurring coverage, and restore apps in
+                place with a calmer, clearer console built for day-two operations.
               </p>
               <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-200">
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
@@ -1191,7 +2335,7 @@ export function BackupConsole() {
                     description:
                       selectedBackupSets.length > 0
                         ? `${pluralize(selectedBackupSets.length, "backup set")} selected for restore review.`
-                        : "Use clone restore for safe workload copies or PVC-only mode for detached claims.",
+                        : "Use in-place restore for live recovery, or fall back to clone and PVC-only flows when you need extra safety.",
                   },
                 ].map((item) => (
                   <div
@@ -1288,999 +2432,49 @@ export function BackupConsole() {
           </section>
         ) : (
           <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  label: "Protected workloads",
-                  value: overview?.protectedWorkloadCount ?? protectedApps.length,
-                  detail: selectedApps.length
-                    ? `${pluralize(selectedApps.length, "selected workload")}`
-                    : "Ready for selection",
-                  icon: DatabaseBackup,
-                  tone: "from-sky-400/20 via-sky-400/5 to-transparent",
-                },
-                {
-                  label: "Backup catalog",
-                  value: overview?.backupSetCount ?? uiState.backupSets.length,
-                  detail: `${pluralize(cloneReadyBackupCount, "clone-ready set")}`,
-                  icon: Cloud,
-                  tone: "from-violet-400/20 via-violet-400/5 to-transparent",
-                },
-                {
-                  label: "Live activity",
-                  value: overview?.runningOperations ?? 0,
-                  detail: `${pluralize(uiState.operations.length, "recent operation")}`,
-                  icon: LoaderCircle,
-                  tone: "from-amber-400/20 via-amber-400/5 to-transparent",
-                },
-                {
-                  label: "Schedules active",
-                  value: activeSchedules,
-                  detail: `${pluralize(schedules.length, "saved schedule")}`,
-                  icon: Workflow,
-                  tone: "from-emerald-400/20 via-emerald-400/5 to-transparent",
-                },
-              ].map(({ label, value, detail, icon: Icon, tone }) => (
-                <div
-                  className={`panel rounded-[28px] bg-gradient-to-br ${tone} p-5`}
-                  key={label}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="section-label">{label}</div>
-                      <div className="mt-4 text-3xl font-semibold tracking-tight text-white">{value}</div>
-                      <div className="mt-2 text-sm text-slate-400">{detail}</div>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/6 p-3">
-                      <Icon className="h-5 w-5 text-slate-200" />
+            <section className="sticky top-3 z-20">
+              <div className="panel rounded-[28px] border border-white/8 bg-slate-950/70 px-3 py-3 shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <div className="section-label">Navigate the console</div>
+                    <div className="mt-2 text-sm text-slate-300">{activeTabItem.description}</div>
+                  </div>
+                  <div className="tab-strip -mx-1 overflow-x-auto px-1">
+                    <div className="flex min-w-max gap-2">
+                      {tabItems.map(({ id, label, icon: Icon, badge }) => (
+                        <button
+                          aria-selected={activeTab === id}
+                          className={cn(
+                            "flex min-w-[9.75rem] items-center justify-between gap-3 rounded-[22px] border px-4 py-3 text-left transition",
+                            activeTab === id
+                              ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
+                              : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
+                          )}
+                          key={id}
+                          onClick={() => setActiveTab(id)}
+                          role="tab"
+                          type="button"
+                        >
+                          <span className="flex items-center gap-3">
+                            <span className="rounded-2xl border border-white/10 bg-slate-950/70 p-2.5">
+                              <Icon className="h-4 w-4" />
+                            </span>
+                            <span className="font-medium">{label}</span>
+                          </span>
+                          {badge ? (
+                            <span className="rounded-full border border-white/10 bg-slate-950/75 px-2.5 py-1 text-xs font-medium text-slate-100">
+                              {badge}
+                            </span>
+                          ) : null}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
-              ))}
-            </section>
-
-            <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-              <div className="space-y-6">
-                <section className="panel rounded-[32px] p-5 sm:p-6">
-                  <SectionHeading
-                    description="Select PVC-backed apps, choose the backup depth, and queue protection without dropping into PVC-by-PVC workflows."
-                    eyebrow="Backup flow"
-                    title="Protect workloads"
-                  />
-
-                  <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <div className="section-label">Step 1</div>
-                        <div className="mt-3 text-lg font-medium text-white">
-                          Choose workload coverage and queue a backup
-                        </div>
-                        <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                          Orbit only lists workloads with protected storage so the backup path stays
-                          focused and shippable.
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col gap-3 sm:items-end">
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            {
-                              id: "incremental",
-                              label: "Incremental",
-                              description: "Fastest routine protection",
-                            },
-                            {
-                              id: "full",
-                              label: "Full",
-                              description: "Fresh full backup chain",
-                            },
-                          ].map((mode) => (
-                            <button
-                              className={cn(
-                                "rounded-full border px-3.5 py-2 text-left text-xs transition",
-                                backupMode === mode.id
-                                  ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
-                                  : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
-                              )}
-                              key={mode.id}
-                              onClick={() => setBackupMode(mode.id as BackupMode)}
-                              type="button"
-                            >
-                              <div className="font-medium">{mode.label}</div>
-                              <div className="text-[11px] opacity-80">{mode.description}</div>
-                            </button>
-                          ))}
-                        </div>
-                        <button
-                          className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-                          disabled={selectedApps.length === 0 || workingLabel === "backup"}
-                          onClick={() => void runBackup()}
-                          type="button"
-                        >
-                          <ArrowUpFromLine className="h-4 w-4" />
-                          {workingLabel === "backup"
-                            ? "Queueing backup..."
-                            : `Back up ${selectedApps.length ? pluralize(selectedApps.length, "app") : "selected apps"}`}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 rounded-[24px] border border-sky-400/20 bg-sky-400/10 px-4 py-4">
-                    {selectedApps.length > 0 ? (
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <div className="font-medium text-sky-50">
-                            {pluralize(selectedApps.length, "workload")} selected for protection
-                          </div>
-                          <div className="mt-1 text-sm text-sky-100/80">
-                            Covers {pluralize(selectedAppVolumeCount, "Longhorn volume")} and can
-                            be reused when you create a schedule.
-                          </div>
-                        </div>
-                        <div className="text-xs uppercase tracking-[0.24em] text-sky-100/70">
-                          Backup and schedule ready
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="font-medium text-sky-50">No workloads selected yet</div>
-                        <div className="mt-1 text-sm text-sky-100/80">
-                          Pick one or more PVC-backed apps below to enable backup and schedule
-                          actions.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-5">
-                    {protectedApps.length > 0 ? (
-                      <div className="grid gap-4 xl:grid-cols-2">
-                        {protectedApps.map((app) => (
-                          <AppSelectionCard
-                            app={app}
-                            key={app.ref}
-                            onToggle={() =>
-                              toggleSelection(selectedApps, setSelectedApps, app.ref)
-                            }
-                            selected={selectedApps.includes(app.ref)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <EmptyState
-                        description="Orbit did not find any PVC-backed workloads to protect yet. Once protected apps appear, they will be listed here with pod health and storage details."
-                        title="No protected workloads detected"
-                      />
-                    )}
-                  </div>
-                </section>
-
-                <section className="panel rounded-[32px] p-5 sm:p-6">
-                  <SectionHeading
-                    actions={
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          {
-                            id: "all",
-                            label: `All (${uiState.unmanagedItems.length})`,
-                          },
-                          {
-                            id: "high",
-                            label: `High confidence (${highConfidenceUnmanaged.length})`,
-                          },
-                          {
-                            id: "review",
-                            label: `Needs review (${reviewUnmanaged.length})`,
-                          },
-                        ].map((filter) => (
-                          <button
-                            className={cn(
-                              "rounded-full border px-3.5 py-2 text-xs transition",
-                              unmanagedFilter === filter.id
-                                ? "border-amber-400/30 bg-amber-400/12 text-amber-50"
-                                : "border-white/10 bg-white/5 text-slate-300 hover:border-amber-400/20 hover:text-white",
-                            )}
-                            key={filter.id}
-                            onClick={() =>
-                              setUnmanagedFilter(filter.id as "all" | "high" | "review")
-                            }
-                            type="button"
-                          >
-                            {filter.label}
-                          </button>
-                        ))}
-                        <button
-                          className="rounded-full border border-amber-400/25 bg-amber-400/12 px-3.5 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
-                          disabled={
-                            selectedUnmanagedRefs.length === 0 ||
-                            workingLabel === "cleanup"
-                          }
-                          onClick={() => void runUnmanagedCleanup(selectedUnmanagedRefs)}
-                          type="button"
-                        >
-                          {workingLabel === "cleanup"
-                            ? "Cleaning selected..."
-                            : `Clean selected (${selectedUnmanagedRefs.length})`}
-                        </button>
-                      </div>
-                    }
-                    description="Conservative inventory only: Orbit skips cluster-critical namespaces, Talos/system workloads, and anything with Argo ownership markers. High-confidence items show restore/test signals first; review items stay visible so operators can confirm them manually."
-                    eyebrow="Unmanaged inventory"
-                    title="Review non-Argo resources"
-                  />
-
-                  <div className="mt-5 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
-                    <div className="font-medium">Safe cleanup is enabled for high-confidence artifacts</div>
-                    <div className="mt-1 text-amber-100/80">
-                      Orbit only deletes resources that still appear in the current unmanaged
-                      snapshot as high-confidence restore/test artifacts. Review-only items stay
-                      read-only so you can inspect them without risking cluster-critical cleanup.
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                    {[
-                      {
-                        label: "Total flagged",
-                        value: uiState.unmanagedItems.length,
-                        detail: "After conservative safety filters",
-                      },
-                      {
-                        label: "High confidence",
-                        value: highConfidenceUnmanaged.length,
-                        detail: "Restore/test signals detected",
-                      },
-                      {
-                        label: "Needs review",
-                        value: reviewUnmanaged.length,
-                        detail: "No Argo owner found, confirm manually",
-                      },
-                      {
-                        label: "Selected",
-                        value: selectedUnmanagedRefs.length,
-                        detail: "Queued for the next batch cleanup",
-                      },
-                    ].map((item) => (
-                      <div
-                        className="rounded-[24px] border border-white/8 bg-slate-950/55 px-4 py-4"
-                        key={item.label}
-                      >
-                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                          {item.label}
-                        </div>
-                        <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
-                        <div className="mt-1 text-xs text-slate-400">{item.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5">
-                    {visibleUnmanagedItems.length > 0 ? (
-                      <div className="space-y-4">
-                        {visibleUnmanagedItems.map((item) => (
-                          <UnmanagedInventoryCard
-                            cleanupBusy={workingLabel === "cleanup"}
-                            item={item}
-                            key={item.ref}
-                            onCleanup={
-                              item.confidence === "high"
-                                ? () => void runUnmanagedCleanup([item.ref])
-                                : undefined
-                            }
-                            onToggleSelect={
-                              item.confidence === "high"
-                                ? () =>
-                                    toggleSelection(
-                                      selectedUnmanagedRefs,
-                                      setSelectedUnmanagedRefs,
-                                      item.ref,
-                                    )
-                                : undefined
-                            }
-                            selected={selectedUnmanagedRefs.includes(item.ref)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <EmptyState
-                        description={
-                          unmanagedFilter === "high"
-                            ? "Orbit did not detect any restore/test artifacts that passed the conservative unmanaged filters."
-                            : unmanagedFilter === "review"
-                              ? "Orbit did not find any review-only resources outside Argo ownership in the allowed namespaces."
-                              : "Orbit did not detect any unmanaged resources that passed the conservative safety filters."
-                        }
-                        title={
-                          unmanagedFilter === "high"
-                            ? "No high-confidence artifacts detected"
-                            : unmanagedFilter === "review"
-                              ? "No review-only items detected"
-                              : "No unmanaged resources detected"
-                        }
-                      />
-                    )}
-                  </div>
-                </section>
-
-                <section className="panel rounded-[32px] p-5 sm:p-6">
-                  <SectionHeading
-                    description="Review backup sets, choose the safest restore path, and send only the work that matches the selected recovery mode."
-                    eyebrow="Restore flow"
-                    title="Restore from the backup catalog"
-                  />
-
-                  <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                      <div className="space-y-4">
-                        <div>
-                          <div className="section-label">Step 2</div>
-                          <div className="mt-3 text-lg font-medium text-white">
-                            Choose the restore shape before you queue work
-                          </div>
-                          <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                            In-place restore is now the primary recovery path: pause Argo,
-                            replace the existing volume identity, then let the app settle again.
-                            Clone and PVC-only restore remain available as fallback tools.
-                          </p>
-                        </div>
-
-                        <div className="grid gap-2 sm:grid-cols-3">
-                          {[
-                            {
-                              id: "in-place",
-                              label: "In-place restore",
-                              description: "Preferred: overwrite the current app data safely",
-                            },
-                            {
-                              id: "clone-workload",
-                              label: "Clone workload",
-                              description: "Fallback: rebuild the workload in a safe namespace",
-                            },
-                            {
-                              id: "pvc-only",
-                              label: "PVC-only restore",
-                              description: "Advanced: recreate detached claims without the controller",
-                            },
-                          ].map((mode) => (
-                            <button
-                              className={cn(
-                                "rounded-[22px] border px-4 py-3 text-left transition",
-                                restoreMode === mode.id
-                                  ? "border-violet-400/30 bg-violet-400/12 text-violet-50"
-                                  : "border-white/10 bg-white/5 text-slate-300 hover:border-violet-400/20 hover:text-white",
-                              )}
-                              key={mode.id}
-                              onClick={() => setRestoreMode(mode.id as RestoreMode)}
-                              type="button"
-                            >
-                              <div className="font-medium">{mode.label}</div>
-                              <div className="mt-1 text-xs opacity-80">{mode.description}</div>
-                            </button>
-                          ))}
-                        </div>
-
-                        <label className="block">
-                          <span className="field-label">Target namespace</span>
-                          <input
-                            className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={restoreMode === "in-place"}
-                            onChange={(event) => setRestoreNamespace(event.target.value)}
-                            placeholder={defaultRestoreNamespace}
-                            value={restoreNamespace}
-                          />
-                          <div className="mt-2 text-xs text-slate-500">
-                            {restoreMode === "in-place"
-                              ? "In-place restore keeps the original namespace and ignores this field."
-                              : restoreMode === "clone-workload"
-                                ? "Orbit suggests a safe clone namespace based on the selected backup set."
-                                : "PVC-only restore can recreate detached claims in the namespace you choose."}
-                          </div>
-                        </label>
-                      </div>
-
-                      <button
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-                        disabled={restoreDisabled}
-                        onClick={() => void runRestore()}
-                        type="button"
-                      >
-                        <ArrowDownToLine className="h-4 w-4" />
-                        {workingLabel === "restore"
-                          ? "Queueing restore..."
-                          : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "mt-4 rounded-[24px] border px-4 py-4 text-sm",
-                      restoreSelectionError
-                        ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
-                        : "border-white/8 bg-slate-950/55 text-slate-300",
-                    )}
-                  >
-                    {restoreMode === "in-place"
-                      ? restoreSelectionError ||
-                        "In-place restore pauses the owning Argo Application when possible, scales the workload down, restores the original PVC identities, then brings the workload back."
-                      : restoreMode === "clone-workload"
-                        ? restoreSelectionError ||
-                          "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
-                        : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
-                  </div>
-
-                  <div className="mt-4 rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
-                    {selectedBackupSets.length > 0 ? (
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <div className="font-medium text-violet-50">
-                            {pluralize(selectedBackupSets.length, "backup set")} selected for restore
-                          </div>
-                          <div className="mt-1 text-sm text-violet-100/80">
-                            Covers {pluralize(selectedBackupVolumeCount, "volume")} with {pluralize(
-                              selectedCloneReadyCount,
-                              "clone-ready set",
-                            )}.
-                          </div>
-                        </div>
-                        <div className="text-xs uppercase tracking-[0.24em] text-violet-100/70">
-                          Review compatibility before queueing
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="font-medium text-violet-50">No backup sets selected yet</div>
-                        <div className="mt-1 text-sm text-violet-100/80">
-                          Select one or more backups below to unlock restore controls and clone-mode
-                          validation.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-5">
-                    {uiState.backupSets.length > 0 ? (
-                      <div className="space-y-4">
-                        {uiState.backupSets.map((backupSet) => (
-                          <BackupSetCard
-                            backupSet={backupSet}
-                            key={backupSet.id}
-                            onToggle={() =>
-                              toggleSelection(
-                                selectedBackupSets,
-                                setSelectedBackupSets,
-                                backupSet.id,
-                              )
-                            }
-                            selected={selectedBackupSets.includes(backupSet.id)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <EmptyState
-                        description="Once backups are captured, Orbit will list them here with restore compatibility, captured volumes, and current pod context."
-                        title="No backup sets available yet"
-                      />
-                    )}
-                  </div>
-                </section>
-              </div>
-
-              <aside className="space-y-6">
-                <section className="panel rounded-[32px] p-5 sm:p-6">
-                  <SectionHeading
-                    actions={
-                      <span
-                        className={cn(
-                          "rounded-full border px-3 py-1 text-xs font-medium",
-                          healthyTargetCount > 0
-                            ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-                            : "border-slate-400/20 bg-slate-400/10 text-slate-200",
-                        )}
-                      >
-                        {targetStatusLabel}
-                      </span>
-                    }
-                    description="Point Longhorn at your object store or share, then keep the polling cadence explicit so operators know how quickly target health updates."
-                    eyebrow="Storage target"
-                    title="Configure backup storage"
-                  />
-
-                  <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-                    <div className="space-y-4">
-                      <label className="block">
-                        <span className="field-label">Target URL</span>
-                        <input
-                          className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                          onChange={(event) => {
-                            setTargetDirty(true);
-                            setTargetUrl(event.target.value);
-                          }}
-                          placeholder="azblob://backup-container@core.windows.net/"
-                          value={targetUrl}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="field-label">Credential secret</span>
-                        <input
-                          className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                          onChange={(event) => {
-                            setTargetDirty(true);
-                            setTargetSecret(event.target.value);
-                          }}
-                          placeholder="azure-backup-credentials"
-                          value={targetSecret}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="field-label">Poll interval</span>
-                        <input
-                          className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                          onChange={(event) => {
-                            setTargetDirty(true);
-                            setTargetPollInterval(event.target.value);
-                          }}
-                          placeholder="300s"
-                          value={targetPollInterval}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/8 bg-white/5 px-4 py-3 text-xs text-slate-400">
-                      <span>
-                        Changes sync to Longhorn and will surface in the live status cards on the
-                        next refresh cycle.
-                      </span>
-                      {targetDirty ? (
-                        <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-amber-100">
-                          Unsaved changes
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <button
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-                      disabled={!targetUrl || workingLabel === "target"}
-                      onClick={() => void saveTarget()}
-                      type="button"
-                    >
-                      <Cloud className="h-4 w-4" />
-                      {workingLabel === "target" ? "Saving target..." : "Save target"}
-                    </button>
-                  </div>
-
-                  <div className="mt-5 space-y-3">
-                    {targets.length > 0 ? (
-                      targets.map((target) => (
-                        <div
-                          className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
-                          key={target.name}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="font-medium text-white">{target.name}</div>
-                              <div className="mt-1 break-all text-xs text-slate-500">
-                                {target.backupTargetURL || "No target URL configured"}
-                              </div>
-                            </div>
-                            <span
-                              className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                                target.available ? "Completed" : "failed",
-                              )}`}
-                            >
-                              {target.available ? "Available" : "Unavailable"}
-                            </span>
-                          </div>
-                          <div className="mt-3 text-xs text-slate-400">
-                            Last synced {formatTimestamp(target.lastSyncedAt)}
-                          </div>
-                          {target.conditions.length > 0 ? (
-                            <div className="mt-3 space-y-2 text-xs text-rose-100">
-                              {target.conditions.map((condition) => (
-                                <div
-                                  className="rounded-2xl border border-rose-400/15 bg-rose-400/10 px-3 py-2"
-                                  key={condition}
-                                >
-                                  {condition}
-                                </div>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))
-                    ) : (
-                      <EmptyState
-                        description="Save a target to start writing backups to object storage or a supported share."
-                        title="No backup targets configured"
-                      />
-                    )}
-                  </div>
-                </section>
-
-                <section className="panel rounded-[32px] p-5 sm:p-6">
-                  <SectionHeading
-                    actions={
-                      <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-medium text-violet-100">
-                        {pluralize(activeSchedules, "active schedule")}
-                      </span>
-                    }
-                    description="Schedules reuse the workload selection from the backup flow so operators can promote the exact set they just reviewed into recurring protection."
-                    eyebrow="Recurring protection"
-                    title="Manage schedules"
-                  />
-
-                  <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-                    <div className="rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
-                      {selectedApps.length > 0 ? (
-                        <div>
-                          <div className="font-medium text-violet-50">
-                            New schedule will cover {pluralize(selectedApps.length, "selected workload")}
-                          </div>
-                          <div className="mt-1 text-sm text-violet-100/80">
-                            Current selection includes {pluralize(selectedAppVolumeCount, "volume")}.
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="font-medium text-violet-50">Select workloads first</div>
-                          <div className="mt-1 text-sm text-violet-100/80">
-                            Use the backup flow to choose which apps this schedule should protect.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-4 space-y-4">
-                      <label className="block">
-                        <span className="field-label">Schedule name</span>
-                        <input
-                          className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
-                          onChange={(event) => setScheduleName(event.target.value)}
-                          placeholder="Nightly protected apps"
-                          value={scheduleName}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="field-label">Cron expression</span>
-                        <input
-                          className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
-                          onChange={(event) => setScheduleCron(event.target.value)}
-                          placeholder="0 3 * * *"
-                          value={scheduleCron}
-                        />
-                      </label>
-                    </div>
-
-                    <button
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-                      disabled={
-                        selectedApps.length === 0 ||
-                        !scheduleName.trim() ||
-                        workingLabel === "schedule"
-                      }
-                      onClick={() => void createSchedule()}
-                      type="button"
-                    >
-                      <Workflow className="h-4 w-4" />
-                      {workingLabel === "schedule" ? "Saving schedule..." : "Create schedule"}
-                    </button>
-                  </div>
-
-                  <div className="mt-5 space-y-3">
-                    {schedules.length > 0 ? (
-                      schedules.map((schedule) => (
-                        <div
-                          className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
-                          key={schedule.id}
-                        >
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <div className="font-medium text-white">{schedule.name}</div>
-                                <span
-                                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                                    schedule.enabled ? "Completed" : "stopped",
-                                  )}`}
-                                >
-                                  {schedule.enabled ? "Enabled" : "Paused"}
-                                </span>
-                                {schedule.backend ? (
-                                  <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2.5 py-1 text-xs font-medium text-violet-100">
-                                    Longhorn native
-                                  </span>
-                                ) : null}
-                              </div>
-                              <div className="mt-2 text-xs text-slate-400">
-                                {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
-                                {typeof schedule.activeVolumeCount === "number"
-                                  ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
-                                  : ""}
-                              </div>
-                              {schedule.appDisplayNames?.length ? (
-                                <div className="mt-2 text-xs text-slate-500">
-                                  {schedule.appDisplayNames.slice(0, 3).join(", ")}
-                                  {schedule.appDisplayNames.length > 3
-                                    ? ` +${schedule.appDisplayNames.length - 3} more`
-                                    : ""}
-                                </div>
-                              ) : null}
-                              <div className="mt-2 text-xs text-slate-400">
-                                Next run {formatTimestamp(schedule.nextRunAt)}
-                                {schedule.lastRunAt
-                                  ? ` · Last run ${formatTimestamp(schedule.lastRunAt)}`
-                                  : ""}
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-violet-400/25 hover:text-white"
-                                onClick={() =>
-                                  void setScheduleEnabled(schedule, !schedule.enabled)
-                                }
-                                type="button"
-                              >
-                                {workingLabel === `schedule:${schedule.id}`
-                                  ? "Saving..."
-                                  : schedule.enabled
-                                    ? "Pause"
-                                    : "Enable"}
-                              </button>
-                              <button
-                                className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
-                                onClick={() => void deleteExistingSchedule(schedule)}
-                                type="button"
-                              >
-                                {workingLabel === `schedule-delete:${schedule.id}`
-                                  ? "Deleting..."
-                                  : "Delete"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <EmptyState
-                        description="Recurring jobs will appear here once you save the first schedule."
-                        title="No schedules yet"
-                      />
-                    )}
-                  </div>
-                </section>
-              </aside>
-            </section>
-
-            <section className="panel rounded-[32px] p-5 sm:p-6">
-              <SectionHeading
-                actions={
-                  <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-100">
-                    Live queue · {pluralize(overview?.runningOperations ?? 0, "active run")}
-                  </span>
-                }
-                description="Operations poll live so you can see queued, active, and finished work without leaving the console. Expand an item for per-volume progress and timeline details."
-                eyebrow="Operations"
-                title="Runs and progress"
-              />
-
-              <div className="mt-5">
-                {uiState.operations.length > 0 ? (
-                  <div className="space-y-4">
-                    {uiState.operations.map((operation) => {
-                      const completedItems = operation.items.filter(
-                        (item) => item.status === "succeeded" || item.status === "skipped",
-                      ).length;
-                      const progress = averageProgress(operation.items);
-
-                      return (
-                        <article
-                          className={cn(
-                            "rounded-[28px] border p-5",
-                            operation.status === "running"
-                              ? "border-sky-400/20 bg-sky-400/8"
-                              : "border-white/8 bg-slate-950/60",
-                          )}
-                          key={operation.id}
-                        >
-                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
-                                  {operation.type}
-                                </span>
-                                <span
-                                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                                    operation.status,
-                                  )}`}
-                                >
-                                  {operation.status}
-                                </span>
-                                {operation.mode ? (
-                                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                                    {operation.mode}
-                                  </span>
-                                ) : null}
-                              </div>
-                              <h3 className="mt-3 text-lg font-semibold text-white">
-                                {operation.summary}
-                              </h3>
-                              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-                                <span>Requested by {operation.requestedBy}</span>
-                                <span>•</span>
-                                <span>Created {formatTimestamp(operation.createdAt)}</span>
-                                {operation.finishedAt ? (
-                                  <>
-                                    <span>•</span>
-                                    <span>Finished {formatTimestamp(operation.finishedAt)}</span>
-                                  </>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4 text-sm sm:min-w-[14rem]">
-                              <div className="flex items-center justify-between text-slate-400">
-                                <span>Items</span>
-                                <span className="font-medium text-slate-200">{operation.items.length}</span>
-                              </div>
-                              <div className="mt-2 flex items-center justify-between text-slate-400">
-                                <span>Completed</span>
-                                <span className="font-medium text-slate-200">
-                                  {completedItems}/{operation.items.length}
-                                </span>
-                              </div>
-                              <div className="mt-2 flex items-center justify-between text-slate-400">
-                                <span>Average progress</span>
-                                <span className="font-medium text-slate-200">{progress}%</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-900/90">
-                            <div
-                              className="h-full rounded-full bg-sky-400 transition-all"
-                              style={{ width: `${Math.max(progress, operation.status === "queued" ? 8 : 0)}%` }}
-                            />
-                          </div>
-
-                          <div className="mt-4 space-y-3">
-                            {operation.items.map((item) => {
-                              const podContext = getOperationPodContext(item);
-
-                              return (
-                                <details
-                                  className="rounded-[24px] border border-white/8 bg-slate-950/70 px-4 py-4"
-                                  key={item.id}
-                                >
-                                  <summary className="cursor-pointer list-none">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                      <div>
-                                        <div className="font-medium text-white">{item.displayName}</div>
-                                        <div className="mt-1 text-sm text-slate-400">
-                                          {item.message || "Waiting for the next step..."}
-                                        </div>
-                                      </div>
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <span
-                                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                                            item.status,
-                                          )}`}
-                                        >
-                                          {item.status}
-                                        </span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                                          {item.progress}%
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-900/90">
-                                      <div
-                                        className="h-full rounded-full bg-sky-400 transition-all"
-                                        style={{ width: `${Math.max(item.progress, 4)}%` }}
-                                      />
-                                    </div>
-                                  </summary>
-
-                                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                                    {(item.appRef || item.backupSetId) && (
-                                      <WorkloadPodPanel
-                                        emptyMessage="No current cluster pods are mapped to this workload."
-                                        podCount={podContext.podCount}
-                                        pods={podContext.pods}
-                                        readyPodCount={podContext.readyPodCount}
-                                        workloadLabel={podContext.workloadLabel}
-                                      />
-                                    )}
-
-                                    <div className="space-y-3">
-                                      {item.volumes.map((volume, index) => (
-                                        <div
-                                          className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-4 text-xs text-slate-300"
-                                          key={`${item.id}-${index}`}
-                                        >
-                                          <div className="flex flex-wrap items-center justify-between gap-3">
-                                            <div className="font-medium text-white">
-                                              {volume.pvcName || volume.volumeName || "Volume"}
-                                            </div>
-                                            <span
-                                              className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${badgeClass(
-                                                volume.status,
-                                              )}`}
-                                            >
-                                              {volume.status}
-                                            </span>
-                                          </div>
-                                          {volume.message ? (
-                                            <div className="mt-2 text-rose-100">{volume.message}</div>
-                                          ) : null}
-                                          {(volume.backupName ||
-                                            volume.snapshotName ||
-                                            volume.restoredClaimName) && (
-                                            <div className="mt-3 space-y-1 text-slate-400">
-                                              {volume.snapshotName ? (
-                                                <div>Snapshot: {volume.snapshotName}</div>
-                                              ) : null}
-                                              {volume.backupName ? (
-                                                <div>Backup: {volume.backupName}</div>
-                                              ) : null}
-                                              {volume.restoredClaimName ? (
-                                                <div>
-                                                  Restored PVC: {volume.restoredNamespace}/
-                                                  {volume.restoredClaimName}
-                                                </div>
-                                              ) : null}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
-
-                                      {item.logs.length > 0 ? (
-                                        <div className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-4">
-                                          <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-                                            Timeline
-                                          </div>
-                                          <div className="mt-3 space-y-2">
-                                            {item.logs.slice(0, 8).map((log) => (
-                                              <div
-                                                className="flex gap-3 text-xs"
-                                                key={`${item.id}-${log.timestamp}-${log.message}`}
-                                              >
-                                                <span className="w-32 shrink-0 text-slate-500">
-                                                  {formatTimestamp(log.timestamp)}
-                                                </span>
-                                                <span
-                                                  className={
-                                                    log.level === "error"
-                                                      ? "text-rose-100"
-                                                      : "text-slate-300"
-                                                  }
-                                                >
-                                                  {log.message}
-                                                </span>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                  </div>
-                                </details>
-                              );
-                            })}
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <EmptyState
-                    description="Queued, running, and completed backup work will appear here with per-item progress once the first operation is created."
-                    title="No backup activity yet"
-                  />
-                )}
               </div>
             </section>
+
+            {activeTabContent}
           </>
         )}
       </div>

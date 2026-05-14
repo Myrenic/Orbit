@@ -140,3 +140,12 @@ textarea {
   border-radius: 9999px;
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.72);
 }
+
+.tab-strip {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tab-strip::-webkit-scrollbar {
+  display: none;
+}
