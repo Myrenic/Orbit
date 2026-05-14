@@ -55,6 +55,54 @@ export interface AppInventoryItem {
   volumes: AppVolume[];
 }
 
+export type UnmanagedResourceKind =
+  | WorkloadKind
+  | "Pod"
+  | "Service"
+  | "PersistentVolumeClaim";
+
+export type UnmanagedConfidence = "high" | "review";
+export type UnmanagedSource = "restore-artifact" | "manual-review";
+
+export interface UnmanagedReason {
+  summary: string;
+  detail: string;
+}
+
+export interface UnmanagedInventoryItem {
+  ref: string;
+  namespace: string;
+  kind: UnmanagedResourceKind;
+  name: string;
+  displayName: string;
+  confidence: UnmanagedConfidence;
+  source: UnmanagedSource;
+  createdAt?: string;
+  managementSummary: string;
+  reasons: UnmanagedReason[];
+  podCount: number;
+  readyPodCount: number;
+  pods: PodSummary[];
+}
+
+export interface CleanupUnmanagedRequest {
+  refs: string[];
+}
+
+export interface CleanupUnmanagedResultItem {
+  ref: string;
+  displayName: string;
+}
+
+export interface CleanupUnmanagedSkippedItem extends CleanupUnmanagedResultItem {
+  reason: string;
+}
+
+export interface CleanupUnmanagedResponse {
+  deleted: CleanupUnmanagedResultItem[];
+  skipped: CleanupUnmanagedSkippedItem[];
+}
+
 export interface BackupEntry {
   name: string;
   setId: string;

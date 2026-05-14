@@ -81,6 +81,7 @@ const ORBIT_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by";
 const ARGO_APPLICATION_GROUP = "argoproj.io";
 const ARGO_APPLICATION_VERSION = "v1alpha1";
 const ARGO_APPLICATION_PLURAL = "applications";
+const ARGO_REFRESH_ANNOTATION = "argocd.argoproj.io/refresh";
 const ARGO_SKIP_RECONCILE_ANNOTATION = "argocd.argoproj.io/skip-reconcile";
 const ARGO_INSTANCE_LABELS = [
   "argocd.argoproj.io/instance",
@@ -659,6 +660,35 @@ async function resumeArgoApplication(argoApplication: ArgoReconcileState) {
     (current) =>
       current?.metadata?.annotations?.[ARGO_SKIP_RECONCILE_ANNOTATION] !== "true",
   );
+}
+
+async function requestArgoApplicationRefresh(
+  namespace: string,
+  name: string,
+  refresh: "normal" | "hard" = "hard",
+) {
+  const application = await getArgoApplication(namespace, name);
+  if (!application) {
+    throw new Error(`Argo Application ${namespace}/${name} was not found.`);
+  }
+
+  await getKubeClients().customObjects.replaceNamespacedCustomObject({
+    group: ARGO_APPLICATION_GROUP,
+    version: ARGO_APPLICATION_VERSION,
+    namespace,
+    plural: ARGO_APPLICATION_PLURAL,
+    name,
+    body: {
+      ...application,
+      metadata: {
+        ...application.metadata,
+        annotations: {
+          ...(application.metadata?.annotations ?? {}),
+          [ARGO_REFRESH_ANNOTATION]: refresh,
+        },
+      },
+    },
+  });
 }
 
 async function waitForArgoApplicationSettled(argoApplication: ArgoReconcileState) {
@@ -1916,15 +1946,6 @@ async function runInPlaceRestoreItem(
 
     volumesRestored = true;
 
-    if (plan.workload.originalReplicas > 0) {
-      await logItem(
-        operation.id,
-        item.id,
-        `Scaling ${plan.workload.kind} ${plan.workload.namespace}/${plan.workload.name} back to ${plan.workload.originalReplicas} replica${plan.workload.originalReplicas === 1 ? "" : "s"}.`,
-      );
-      await scaleWorkload(plan.workload, plan.workload.originalReplicas);
-    }
-
     if (argoApplicationState?.pausedByOrbit) {
       await logItem(
         operation.id,
@@ -1933,6 +1954,22 @@ async function runInPlaceRestoreItem(
       );
       await resumeArgoApplication(argoApplicationState);
       argoResumed = true;
+      await requestArgoApplicationRefresh(
+        argoApplicationState.namespace,
+        argoApplicationState.name,
+      );
+      await logItem(
+        operation.id,
+        item.id,
+        `Requested a hard refresh for Argo Application ${argoApplicationState.namespace}/${argoApplicationState.name} so Git can re-assert the live workload before it starts again.`,
+      );
+    } else if (plan.workload.originalReplicas > 0) {
+      await logItem(
+        operation.id,
+        item.id,
+        `Scaling ${plan.workload.kind} ${plan.workload.namespace}/${plan.workload.name} back to ${plan.workload.originalReplicas} replica${plan.workload.originalReplicas === 1 ? "" : "s"}.`,
+      );
+      await scaleWorkload(plan.workload, plan.workload.originalReplicas);
     }
 
     await waitForWorkloadReplicaState(plan.workload, plan.workload.originalReplicas);
@@ -1950,9 +1987,12 @@ async function runInPlaceRestoreItem(
     );
   } catch (error) {
     const cleanupNotes: string[] = [];
+    const argoOwnsRecovery = Boolean(
+      argoApplicationState && !argoApplicationState.alreadyPaused,
+    );
 
     if (volumesRestored) {
-      if (plan.workload.originalReplicas > 0 && workloadScaledDown) {
+      if (plan.workload.originalReplicas > 0 && workloadScaledDown && !argoOwnsRecovery) {
         try {
           await scaleWorkload(plan.workload, plan.workload.originalReplicas);
           cleanupNotes.push(
@@ -1965,6 +2005,10 @@ async function runInPlaceRestoreItem(
               : "Failed to scale the workload back up automatically.",
           );
         }
+      } else if (plan.workload.originalReplicas > 0 && workloadScaledDown && argoOwnsRecovery) {
+        cleanupNotes.push(
+          `Argo Application ${argoApplicationState?.namespace}/${argoApplicationState?.name} was resumed and remains responsible for reconciling the workload back to its desired state.`,
+        );
       }
 
       if (argoApplicationState?.pausedByOrbit && !argoResumed) {

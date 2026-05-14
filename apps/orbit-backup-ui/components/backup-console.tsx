@@ -22,18 +22,22 @@ import type {
   AppInventoryItem,
   BackupMode,
   BackupSetSummary,
+  CleanupUnmanagedRequest,
+  CleanupUnmanagedResponse,
   DashboardPayload,
   OperationItem,
   OperationRecord,
   PodSummary,
   RestoreMode,
   ScheduleDefinition,
+  UnmanagedInventoryItem,
 } from "@/lib/types";
 
 type UiState = {
   dashboard?: DashboardPayload;
   apps: AppInventoryItem[];
   backupSets: BackupSetSummary[];
+  unmanagedItems: UnmanagedInventoryItem[];
   operations: OperationRecord[];
   loading: boolean;
   error?: string;
@@ -76,6 +80,14 @@ type BackupSetCardProps = {
   backupSet: BackupSetSummary;
   selected: boolean;
   onToggle: () => void;
+};
+
+type UnmanagedInventoryCardProps = {
+  item: UnmanagedInventoryItem;
+  cleanupBusy: boolean;
+  onCleanup?: () => void;
+  onToggleSelect?: () => void;
+  selected?: boolean;
 };
 
 type SkeletonPanelProps = {
@@ -487,6 +499,138 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
   );
 }
 
+function UnmanagedInventoryCard({
+  item,
+  cleanupBusy,
+  onCleanup,
+  onToggleSelect,
+  selected = false,
+}: UnmanagedInventoryCardProps) {
+  const confidenceBadge =
+    item.confidence === "high"
+      ? "border-amber-400/25 bg-amber-400/10 text-amber-100"
+      : "border-slate-400/25 bg-slate-400/10 text-slate-200";
+  const sourceBadge =
+    item.source === "restore-artifact"
+      ? "border-sky-400/25 bg-sky-400/10 text-sky-100"
+      : "border-violet-400/25 bg-violet-400/10 text-violet-100";
+
+  return (
+    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-800/90 bg-slate-950/55 p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-base font-semibold text-white">{item.displayName}</span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${confidenceBadge}`}
+              >
+                {item.confidence === "high" ? "High confidence" : "Needs review"}
+              </span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${sourceBadge}`}
+              >
+                {item.source === "restore-artifact" ? "Restore/test signal" : "No Argo owner"}
+              </span>
+            </div>
+            <div className="mt-1 break-all text-xs text-slate-500">
+              {getWorkloadLabel(item.namespace, item.kind, item.name)}
+            </div>
+          </div>
+
+          <p className="max-w-3xl text-sm text-slate-300">{item.managementSummary}</p>
+
+          <div className="flex flex-wrap gap-2 text-xs text-slate-300">
+            <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+              Kind {item.kind}
+            </span>
+            <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+              Created {formatTimestamp(item.createdAt)}
+            </span>
+            {item.podCount > 0 ? (
+              <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+                {item.readyPodCount}/{item.podCount} pods ready
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-white/8 bg-slate-900/75 px-4 py-3 sm:min-w-[12rem] sm:text-right">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+            Inventory signal
+          </div>
+          <div className="mt-2 text-2xl font-semibold text-white">
+            {item.source === "restore-artifact" ? "Restore" : "Review"}
+          </div>
+          <div className="text-xs text-slate-400">
+            {item.source === "restore-artifact"
+              ? "Orbit restore markers found"
+              : "Outside Argo ownership"}
+          </div>
+          <div className="mt-4 space-y-2">
+           {onCleanup ? (
+             <>
+               <button
+                 className="w-full rounded-full border border-amber-400/25 bg-amber-400/12 px-3 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
+                 disabled={cleanupBusy}
+                 onClick={onCleanup}
+                 type="button"
+               >
+                 {cleanupBusy ? "Cleaning..." : "Clean now"}
+               </button>
+               <button
+                 className={cn(
+                   "w-full rounded-full border px-3 py-2 text-xs font-medium transition",
+                   selected
+                     ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
+                     : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
+                 )}
+                 disabled={cleanupBusy}
+                 onClick={onToggleSelect}
+                 type="button"
+               >
+                 {selected ? "Selected for batch cleanup" : "Select for batch cleanup"}
+               </button>
+             </>
+           ) : (
+             <div className="rounded-[18px] border border-white/8 bg-white/5 px-3 py-2 text-center text-xs text-slate-400">
+               Manual review only
+             </div>
+           )}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
+        <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+          Why Orbit flagged this
+        </div>
+        <div className="mt-4 space-y-3">
+          {item.reasons.map((reason) => (
+            <div
+              className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-3"
+              key={`${item.ref}:${reason.summary}`}
+            >
+              <div className="text-sm font-medium text-white">{reason.summary}</div>
+              <div className="mt-1 text-xs text-slate-400">{reason.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {item.podCount > 0 ? (
+        <WorkloadPodPanel
+          emptyMessage="No live pods are currently mapped to this unmanaged resource."
+          podCount={item.podCount}
+          pods={item.pods}
+          readyPodCount={item.readyPodCount}
+          workloadLabel={item.displayName}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     cache: "no-store",
@@ -521,6 +665,7 @@ export function BackupConsole() {
   const [uiState, setUiState] = useState<UiState>({
     apps: [],
     backupSets: [],
+    unmanagedItems: [],
     operations: [],
     loading: true,
   });
@@ -538,6 +683,8 @@ export function BackupConsole() {
   const [workingLabel, setWorkingLabel] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [unmanagedFilter, setUnmanagedFilter] = useState<"all" | "high" | "review">("all");
+  const [selectedUnmanagedRefs, setSelectedUnmanagedRefs] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -546,7 +693,10 @@ export function BackupConsole() {
       const [dashboardResponse, appsResponse, backupResponse, operationsResponse] =
         await Promise.all([
           fetchJson<DashboardPayload>("/api/dashboard"),
-          fetchJson<{ apps: AppInventoryItem[] }>("/api/apps"),
+          fetchJson<{
+            apps: AppInventoryItem[];
+            unmanagedItems: UnmanagedInventoryItem[];
+          }>("/api/apps"),
           fetchJson<{ backupSets: BackupSetSummary[] }>("/api/backups"),
           fetchJson<{ operations: OperationRecord[] }>("/api/operations"),
         ]);
@@ -555,9 +705,17 @@ export function BackupConsole() {
         dashboard: dashboardResponse,
         apps: appsResponse.apps,
         backupSets: backupResponse.backupSets,
+        unmanagedItems: appsResponse.unmanagedItems,
         operations: operationsResponse.operations,
         loading: false,
       });
+      setSelectedUnmanagedRefs((previous) =>
+        previous.filter((ref) =>
+          appsResponse.unmanagedItems.some(
+            (item) => item.ref === ref && item.confidence === "high",
+          ),
+        ),
+      );
 
       const defaultTarget =
         dashboardResponse.targets.find((target) => target.name === "default") ||
@@ -591,6 +749,29 @@ export function BackupConsole() {
     () => uiState.apps.filter((app) => app.volumes.length > 0),
     [uiState.apps],
   );
+  const highConfidenceUnmanaged = useMemo(
+    () => uiState.unmanagedItems.filter((item) => item.confidence === "high"),
+    [uiState.unmanagedItems],
+  );
+  const reviewUnmanaged = useMemo(
+    () => uiState.unmanagedItems.filter((item) => item.confidence === "review"),
+    [uiState.unmanagedItems],
+  );
+  const visibleUnmanagedItems = useMemo(() => {
+    switch (unmanagedFilter) {
+      case "high":
+        return highConfidenceUnmanaged;
+      case "review":
+        return reviewUnmanaged;
+      default:
+        return uiState.unmanagedItems;
+    }
+  }, [
+    highConfidenceUnmanaged,
+    reviewUnmanaged,
+    uiState.unmanagedItems,
+    unmanagedFilter,
+  ]);
   const appByRef = useMemo(
     () => new Map(uiState.apps.map((app) => [app.ref, app])),
     [uiState.apps],
@@ -656,6 +837,15 @@ export function BackupConsole() {
   useEffect(() => {
     setSelectedBackupSets((previous) => previous.filter((id) => backupSetById.has(id)));
   }, [backupSetById]);
+
+  useEffect(() => {
+    const cleanupEligibleRefs = new Set(
+      highConfidenceUnmanaged.map((item) => item.ref),
+    );
+    setSelectedUnmanagedRefs((previous) =>
+      previous.filter((ref) => cleanupEligibleRefs.has(ref)),
+    );
+  }, [highConfidenceUnmanaged]);
 
   const toggleSelection = (
     selected: string[],
@@ -770,6 +960,57 @@ export function BackupConsole() {
     );
   };
 
+  const runUnmanagedCleanup = async (refs: string[]) => {
+    const cleanupRefs = [...new Set(refs.filter(Boolean))];
+    if (cleanupRefs.length === 0) {
+      return;
+    }
+
+    setWorkingLabel("cleanup");
+    setNotice(null);
+
+    try {
+      const result = await sendJson<CleanupUnmanagedResponse>(
+        "/api/unmanaged",
+        "POST",
+        {
+          refs: cleanupRefs,
+        } satisfies CleanupUnmanagedRequest,
+      );
+      const deletedRefs = new Set(result.deleted.map((item) => item.ref));
+      setSelectedUnmanagedRefs((previous) =>
+        previous.filter((ref) => !deletedRefs.has(ref)),
+      );
+      await refresh();
+
+      const details: string[] = [];
+      if (result.deleted.length > 0) {
+        details.push(`Removed ${pluralize(result.deleted.length, "resource")}.`);
+      }
+      if (result.skipped.length > 0) {
+        details.push(
+          `${pluralize(result.skipped.length, "item")} skipped because they were no longer safe to delete.`,
+        );
+      }
+
+      setNotice({
+        tone: "success",
+        title: result.deleted.length > 0 ? "Cleanup finished" : "Nothing deleted",
+        description:
+          details.join(" ") ||
+          "Orbit did not delete anything because nothing remained eligible for cleanup.",
+      });
+    } catch (error) {
+      setNotice({
+        tone: "error",
+        title: "Could not clean up unmanaged items",
+        description: getErrorMessage(error, "Please try again."),
+      });
+    } finally {
+      setWorkingLabel(null);
+    }
+  };
+
   const saveTarget = async () => {
     await runManagedAction(
       "target",
@@ -863,6 +1104,7 @@ export function BackupConsole() {
   const hasConsoleData =
     Boolean(overview) ||
     protectedApps.length > 0 ||
+    uiState.unmanagedItems.length > 0 ||
     uiState.backupSets.length > 0 ||
     uiState.operations.length > 0 ||
     targets.length > 0 ||
@@ -901,6 +1143,9 @@ export function BackupConsole() {
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
                   {pluralize(overview?.protectedWorkloadCount ?? protectedApps.length, "protected workload")}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
+                  {pluralize(uiState.unmanagedItems.length, "unmanaged item")}
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
                   {pluralize(cloneReadyBackupCount, "clone-ready backup set")}
@@ -1206,6 +1451,153 @@ export function BackupConsole() {
                       <EmptyState
                         description="Orbit did not find any PVC-backed workloads to protect yet. Once protected apps appear, they will be listed here with pod health and storage details."
                         title="No protected workloads detected"
+                      />
+                    )}
+                  </div>
+                </section>
+
+                <section className="panel rounded-[32px] p-5 sm:p-6">
+                  <SectionHeading
+                    actions={
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          {
+                            id: "all",
+                            label: `All (${uiState.unmanagedItems.length})`,
+                          },
+                          {
+                            id: "high",
+                            label: `High confidence (${highConfidenceUnmanaged.length})`,
+                          },
+                          {
+                            id: "review",
+                            label: `Needs review (${reviewUnmanaged.length})`,
+                          },
+                        ].map((filter) => (
+                          <button
+                            className={cn(
+                              "rounded-full border px-3.5 py-2 text-xs transition",
+                              unmanagedFilter === filter.id
+                                ? "border-amber-400/30 bg-amber-400/12 text-amber-50"
+                                : "border-white/10 bg-white/5 text-slate-300 hover:border-amber-400/20 hover:text-white",
+                            )}
+                            key={filter.id}
+                            onClick={() =>
+                              setUnmanagedFilter(filter.id as "all" | "high" | "review")
+                            }
+                            type="button"
+                          >
+                            {filter.label}
+                          </button>
+                        ))}
+                        <button
+                          className="rounded-full border border-amber-400/25 bg-amber-400/12 px-3.5 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={
+                            selectedUnmanagedRefs.length === 0 ||
+                            workingLabel === "cleanup"
+                          }
+                          onClick={() => void runUnmanagedCleanup(selectedUnmanagedRefs)}
+                          type="button"
+                        >
+                          {workingLabel === "cleanup"
+                            ? "Cleaning selected..."
+                            : `Clean selected (${selectedUnmanagedRefs.length})`}
+                        </button>
+                      </div>
+                    }
+                    description="Conservative inventory only: Orbit skips cluster-critical namespaces, Talos/system workloads, and anything with Argo ownership markers. High-confidence items show restore/test signals first; review items stay visible so operators can confirm them manually."
+                    eyebrow="Unmanaged inventory"
+                    title="Review non-Argo resources"
+                  />
+
+                  <div className="mt-5 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
+                    <div className="font-medium">Safe cleanup is enabled for high-confidence artifacts</div>
+                    <div className="mt-1 text-amber-100/80">
+                      Orbit only deletes resources that still appear in the current unmanaged
+                      snapshot as high-confidence restore/test artifacts. Review-only items stay
+                      read-only so you can inspect them without risking cluster-critical cleanup.
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                    {[
+                      {
+                        label: "Total flagged",
+                        value: uiState.unmanagedItems.length,
+                        detail: "After conservative safety filters",
+                      },
+                      {
+                        label: "High confidence",
+                        value: highConfidenceUnmanaged.length,
+                        detail: "Restore/test signals detected",
+                      },
+                      {
+                        label: "Needs review",
+                        value: reviewUnmanaged.length,
+                        detail: "No Argo owner found, confirm manually",
+                      },
+                      {
+                        label: "Selected",
+                        value: selectedUnmanagedRefs.length,
+                        detail: "Queued for the next batch cleanup",
+                      },
+                    ].map((item) => (
+                      <div
+                        className="rounded-[24px] border border-white/8 bg-slate-950/55 px-4 py-4"
+                        key={item.label}
+                      >
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                          {item.label}
+                        </div>
+                        <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
+                        <div className="mt-1 text-xs text-slate-400">{item.detail}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5">
+                    {visibleUnmanagedItems.length > 0 ? (
+                      <div className="space-y-4">
+                        {visibleUnmanagedItems.map((item) => (
+                          <UnmanagedInventoryCard
+                            cleanupBusy={workingLabel === "cleanup"}
+                            item={item}
+                            key={item.ref}
+                            onCleanup={
+                              item.confidence === "high"
+                                ? () => void runUnmanagedCleanup([item.ref])
+                                : undefined
+                            }
+                            onToggleSelect={
+                              item.confidence === "high"
+                                ? () =>
+                                    toggleSelection(
+                                      selectedUnmanagedRefs,
+                                      setSelectedUnmanagedRefs,
+                                      item.ref,
+                                    )
+                                : undefined
+                            }
+                            selected={selectedUnmanagedRefs.includes(item.ref)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        description={
+                          unmanagedFilter === "high"
+                            ? "Orbit did not detect any restore/test artifacts that passed the conservative unmanaged filters."
+                            : unmanagedFilter === "review"
+                              ? "Orbit did not find any review-only resources outside Argo ownership in the allowed namespaces."
+                              : "Orbit did not detect any unmanaged resources that passed the conservative safety filters."
+                        }
+                        title={
+                          unmanagedFilter === "high"
+                            ? "No high-confidence artifacts detected"
+                            : unmanagedFilter === "review"
+                              ? "No review-only items detected"
+                              : "No unmanaged resources detected"
+                        }
                       />
                     )}
                   </div>
