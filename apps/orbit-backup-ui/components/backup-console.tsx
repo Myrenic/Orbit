@@ -406,7 +406,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
@@ -512,7 +512,7 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
@@ -1781,7 +1781,7 @@ export function BackupConsole() {
           }
         />
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <div className="mt-5 grid gap-4">
           <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
             <div className="section-label">Backup mode</div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -1839,7 +1839,7 @@ export function BackupConsole() {
 
         <div className="mt-5">
           {protectedApps.length > 0 ? (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-4">
               {protectedApps.map((app) => (
                 <AppSelectionCard
                   app={app}
@@ -1858,7 +1858,7 @@ export function BackupConsole() {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="grid gap-6">
         <section className="panel rounded-[32px] p-5 sm:p-6">
           <SectionHeading
             description="Point Longhorn at the destination you actually want to use, then save the exact secret reference and poll cadence."
@@ -2589,7 +2589,7 @@ export function BackupConsole() {
         }
       />
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+      <div className="mt-5 grid gap-4">
         <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
           <div className="section-label">Restore mode</div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -2820,7 +2820,7 @@ export function BackupConsole() {
                                 <div className="break-words font-medium text-white">
                                   {item.displayName}
                                 </div>
-                                <div className="mt-1 text-sm text-slate-400">
+                                <div className="mt-1 break-all text-sm text-slate-400">
                                   {item.message || "Waiting for the next step..."}
                                 </div>
                               </div>
@@ -2863,7 +2863,7 @@ export function BackupConsole() {
                                   key={`${item.id}-${index}`}
                                 >
                                   <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="font-medium text-white">
+                                    <div className="break-all font-medium text-white">
                                       {volume.pvcName || volume.volumeName || "Volume"}
                                     </div>
                                     <span
@@ -2875,7 +2875,9 @@ export function BackupConsole() {
                                     </span>
                                   </div>
                                   {volume.message ? (
-                                    <div className="mt-2 text-rose-100">{volume.message}</div>
+                                    <div className="mt-2 break-all text-rose-100">
+                                      {volume.message}
+                                    </div>
                                   ) : null}
                                   {(volume.backupName ||
                                     volume.snapshotName ||
@@ -2915,8 +2917,8 @@ export function BackupConsole() {
                                         <span
                                           className={
                                             log.level === "error"
-                                              ? "text-rose-100"
-                                              : "text-slate-300"
+                                              ? "break-all text-rose-100"
+                                              : "break-all text-slate-300"
                                           }
                                         >
                                           {log.message}
