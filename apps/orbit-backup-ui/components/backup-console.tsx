@@ -406,7 +406,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
@@ -512,7 +512,7 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
@@ -1781,7 +1781,7 @@ export function BackupConsole() {
           }
         />
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
           <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
             <div className="section-label">Backup mode</div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -2589,7 +2589,7 @@ export function BackupConsole() {
         }
       />
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
         <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
           <div className="section-label">Restore mode</div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
