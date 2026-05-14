@@ -10,6 +10,8 @@ ports:
 envs:
   - ADDON_NAME: "AIOStreams"
   - ADDON_ID: "aiostreams.${SECRET_DOMAIN_0}"
+  - SECRET_KEY: "${AIOSTREAM_SECRET_KEY}"
+  - ADDON_PASSWORD: "${AIOSTREAM_ADDON_PASSWORD}"
   - PORT: "3000"
   - BASE_URL: "https://aiostreams.${SECRET_DOMAIN_0}"
   - DATABASE_URI: "sqlite://./data/db.sqlite"
@@ -155,7 +157,3 @@ securityContext:
   capabilities:
     drop:
       - ALL
-
-secretEnvs:
-  - SECRET_KEY: "${AIOSTREAM_SECRET_KEY}"
-  - ADDON_PASSWORD: "${AIOSTREAM_ADDON_PASSWORD}"

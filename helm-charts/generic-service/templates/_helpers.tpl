@@ -74,22 +74,6 @@ tcpSocket:
 {{- end }}
 - name: TZ
   value: Europe/Berlin
-{{- range $k, $v := .Values.secretEnvs }}
-{{- range $kk, $vv := $v }}
-- name: {{ $kk | quote }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "generic-service.name" $ }}
-      key: {{ $kk | quote }}
-{{- end }}
-{{- end }}
-{{- range $name, $config := .Values.existingSecretEnvs }}
-- name: {{ $name | quote }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $config.secretName | quote }}
-      key: {{ default $name $config.key | quote }}
-{{- end }}
 {{- range $k, $v := .Values.envs }}
 {{- range $kk, $vv := $v }}
 - name: {{ $kk | quote }}

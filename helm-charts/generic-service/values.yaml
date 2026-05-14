@@ -76,10 +76,6 @@ args: []
 
 envs: []
 
-secretEnvs: []
-
-existingSecretEnvs: {}
-
 configMaps: []
 # - name: ""
 #   defaultMode: 0644

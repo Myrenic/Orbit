@@ -15,19 +15,13 @@ spec:
       {{- include "generic-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- if or .Values.database.enabled .Values.podAnnotations .Values.configMaps .Values.secretEnvs .Values.existingSecretEnvs }}
+      {{- if or .Values.database.enabled .Values.podAnnotations .Values.configMaps }}
       annotations:
       {{- if .Values.database.enabled }}
         checksum/database: {{ toJson .Values.database | sha256sum }}
       {{- end }}
       {{- if .Values.configMaps }}
         checksum/configmap: {{ toJson .Values.configMaps | sha256sum }}
-      {{- end }}
-      {{- if .Values.secretEnvs }}
-        checksum/secrets: {{ toJson .Values.secretEnvs | sha256sum }}
-      {{- end }}
-      {{- if .Values.existingSecretEnvs }}
-        checksum/existing-secrets: {{ toJson .Values.existingSecretEnvs | sha256sum }}
       {{- end }}
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
