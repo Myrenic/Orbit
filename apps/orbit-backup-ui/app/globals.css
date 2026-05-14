@@ -144,3 +144,17 @@ textarea {
 .bottom-nav-shell {
   padding-bottom: max(env(safe-area-inset-bottom), 0px);
 }
+
+.overflow-safe {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.overflow-safe-chip {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

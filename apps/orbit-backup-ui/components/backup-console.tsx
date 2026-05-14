@@ -262,7 +262,7 @@ function SectionHeading({ eyebrow, title, description, actions }: SectionHeading
           <p className="mt-2 text-sm text-slate-400 sm:text-[15px]">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+      {actions ? <div className="min-w-0 flex flex-wrap items-center gap-3">{actions}</div> : null}
     </div>
   );
 }
@@ -271,7 +271,7 @@ function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="empty-state rounded-[28px] px-5 py-8 text-left">
       <div className="text-base font-semibold text-white">{title}</div>
-      <p className="mt-2 max-w-2xl text-sm text-slate-400">{description}</p>
+      <p className="overflow-safe mt-2 max-w-2xl text-sm text-slate-400">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
@@ -311,7 +311,7 @@ function WorkloadPodPanel({
             Live workload pods
           </div>
           {workloadLabel ? (
-            <div className="mt-1 break-all text-xs text-slate-500">{workloadLabel}</div>
+            <div className="overflow-safe mt-1 text-xs text-slate-500">{workloadLabel}</div>
           ) : null}
         </div>
         <div className="text-xs text-slate-400">
@@ -366,7 +366,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
           : "border-slate-800/90 bg-slate-950/55 hover:border-sky-400/25 hover:bg-slate-950/75",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <input
           checked={selected}
           className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-400"
@@ -387,7 +387,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
                 {app.status}
               </span>
             </div>
-            <div className="mt-1 break-all text-xs text-slate-500">
+            <div className="overflow-safe mt-1 text-xs text-slate-500">
               {getWorkloadLabel(app.namespace, app.kind, app.name)}
             </div>
           </div>
@@ -419,7 +419,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
           <div className="mt-4 flex flex-wrap gap-2">
             {app.volumes.map((volume) => (
               <span
-                className="max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
+                className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-left text-xs text-slate-300"
                 key={volume.longhornVolumeName}
               >
                 {volume.pvcName}
@@ -455,7 +455,7 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
           : "border-slate-800/90 bg-slate-950/55 hover:border-violet-400/25 hover:bg-slate-950/75",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         <input
           checked={selected}
           className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-violet-400"
@@ -486,7 +486,7 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
               </span>
             </div>
             {workloadLabel ? (
-              <div className="mt-1 break-all text-xs text-slate-500">{workloadLabel}</div>
+              <div className="overflow-safe mt-1 text-xs text-slate-500">{workloadLabel}</div>
             ) : null}
           </div>
 
@@ -498,14 +498,14 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
               Created {formatTimestamp(backupSet.createdAt)}
             </span>
             {backupSet.requestedBy ? (
-              <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+              <span className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1 text-left">
                 Requested by {backupSet.requestedBy}
               </span>
             ) : null}
           </div>
 
           {!backupSet.cloneRestoreSupported && backupSet.cloneRestoreBlockedReason ? (
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-100">
+          <div className="overflow-safe rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-100">
               {backupSet.cloneRestoreBlockedReason}
             </div>
           ) : null}
@@ -523,7 +523,7 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
           <div className="mt-4 flex flex-wrap gap-2">
             {backupSet.volumes.map((volume) => (
               <span
-                className="max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
+                className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-left text-xs text-slate-300"
                 key={volume.name}
               >
                 {volume.pvcName || volume.volumeName}
@@ -697,6 +697,7 @@ function BottomNav({
                     ? "bg-sky-400/12 text-sky-50"
                     : "text-slate-400 hover:bg-white/5 hover:text-white",
                 )}
+                data-testid={`nav-${id}`}
                 key={id}
                 onClick={() => onSelect(id)}
                 type="button"
@@ -1703,7 +1704,7 @@ export function BackupConsole() {
                       key={`${latest.displayName}-${index}`}
                     >
                       <div className="font-medium text-rose-50">{latest.displayName}</div>
-                      <div className="mt-1 text-xs text-rose-100/80">
+                      <div className="overflow-safe mt-1 text-xs text-rose-100/80">
                         {latest.message || "The latest backup attempt finished in a failed state."}
                       </div>
                     </div>
@@ -1757,7 +1758,7 @@ export function BackupConsole() {
 
   const backupPage = (
     <div className="space-y-6">
-      <section className="panel rounded-[32px] p-5 sm:p-6">
+      <section className="panel rounded-[32px] p-5 sm:p-6" data-testid="backup-page-shell">
         <SectionHeading
           description="Choose protected workloads, queue a backup, then tune storage and schedules beneath the same screen."
           eyebrow="Backup"
@@ -1782,7 +1783,10 @@ export function BackupConsole() {
         />
 
         <div className="mt-5 grid gap-4">
-          <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+          <div
+            className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5"
+            data-testid="backup-mode-card"
+          >
             <div className="section-label">Backup mode</div>
             <div className="mt-4 flex flex-wrap gap-2">
               {[
@@ -1818,7 +1822,10 @@ export function BackupConsole() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-sky-400/18 bg-sky-400/10 p-4 sm:p-5">
+          <div
+            className="rounded-[28px] border border-sky-400/18 bg-sky-400/10 p-4 sm:p-5"
+            data-testid="backup-summary-card"
+          >
             <div className="text-[11px] uppercase tracking-[0.24em] text-sky-100/75">
               Selection summary
             </div>
@@ -2557,7 +2564,7 @@ export function BackupConsole() {
   );
 
   const restorePage = (
-    <section className="panel rounded-[32px] p-5 sm:p-6">
+    <section className="panel rounded-[32px] p-5 sm:p-6" data-testid="restore-page-shell">
       <SectionHeading
         description="Review backup sets, choose the safest restore path, and queue only the recovery work you actually want."
         eyebrow="Restore"
@@ -2590,7 +2597,10 @@ export function BackupConsole() {
       />
 
       <div className="mt-5 grid gap-4">
-        <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+        <div
+          className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5"
+          data-testid="restore-mode-card"
+        >
           <div className="section-label">Restore mode</div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             {[
@@ -2646,7 +2656,10 @@ export function BackupConsole() {
           </label>
         </div>
 
-        <div className="rounded-[28px] border border-violet-400/18 bg-violet-400/10 p-4 sm:p-5">
+        <div
+          className="rounded-[28px] border border-violet-400/18 bg-violet-400/10 p-4 sm:p-5"
+          data-testid="restore-summary-card"
+        >
           <div className="text-[11px] uppercase tracking-[0.24em] text-violet-100/75">
             Restore selection
           </div>
@@ -2664,7 +2677,7 @@ export function BackupConsole() {
 
       <div
         className={cn(
-          "mt-4 rounded-[24px] border px-4 py-4 text-sm",
+          "overflow-safe mt-4 rounded-[24px] border px-4 py-4 text-sm",
           restoreSelectionError
             ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
             : "border-white/8 bg-slate-950/55 text-slate-300",
@@ -2712,7 +2725,7 @@ export function BackupConsole() {
   );
 
   const activityPage = (
-    <section className="panel rounded-[32px] p-5 sm:p-6">
+    <section className="panel rounded-[32px] p-5 sm:p-6" data-testid="activity-page-shell">
       <SectionHeading
         actions={
           <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-100">
@@ -2766,7 +2779,7 @@ export function BackupConsole() {
                         {operation.summary}
                       </h3>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-                        <span>Requested by {operation.requestedBy}</span>
+                        <span className="overflow-safe">Requested by {operation.requestedBy}</span>
                         <span>•</span>
                         <span>Created {formatTimestamp(operation.createdAt)}</span>
                         {operation.finishedAt ? (
@@ -2820,7 +2833,7 @@ export function BackupConsole() {
                                 <div className="break-words font-medium text-white">
                                   {item.displayName}
                                 </div>
-                                <div className="mt-1 break-all text-sm text-slate-400">
+                                <div className="overflow-safe mt-1 text-sm text-slate-400">
                                   {item.message || "Waiting for the next step..."}
                                 </div>
                               </div>
@@ -2875,7 +2888,7 @@ export function BackupConsole() {
                                     </span>
                                   </div>
                                   {volume.message ? (
-                                    <div className="mt-2 break-all text-rose-100">
+                                    <div className="overflow-safe mt-2 text-rose-100">
                                       {volume.message}
                                     </div>
                                   ) : null}
@@ -2884,13 +2897,13 @@ export function BackupConsole() {
                                     volume.restoredClaimName) && (
                                     <div className="mt-3 space-y-1 text-slate-400">
                                       {volume.snapshotName ? (
-                                        <div>Snapshot: {volume.snapshotName}</div>
+                                        <div className="overflow-safe">Snapshot: {volume.snapshotName}</div>
                                       ) : null}
                                       {volume.backupName ? (
-                                        <div>Backup: {volume.backupName}</div>
+                                        <div className="overflow-safe">Backup: {volume.backupName}</div>
                                       ) : null}
                                       {volume.restoredClaimName ? (
-                                        <div>
+                                        <div className="overflow-safe">
                                           Restored PVC: {volume.restoredNamespace}/
                                           {volume.restoredClaimName}
                                         </div>
@@ -2917,8 +2930,8 @@ export function BackupConsole() {
                                         <span
                                           className={
                                             log.level === "error"
-                                              ? "break-all text-rose-100"
-                                              : "break-all text-slate-300"
+                                              ? "overflow-safe text-rose-100"
+                                              : "overflow-safe text-slate-300"
                                           }
                                         >
                                           {log.message}
@@ -3166,7 +3179,7 @@ export function BackupConsole() {
                   {isRefreshing ? "Refreshing..." : "Refresh now"}
                 </button>
                 {uiState.dashboard?.user.email ? (
-                  <div className="rounded-full border border-white/10 bg-slate-950/70 px-4 py-2 text-xs text-slate-300">
+                  <div className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/10 bg-slate-950/70 px-4 py-2 text-xs text-slate-300">
                     Signed in as {uiState.dashboard.user.email}
                   </div>
                 ) : null}
@@ -3185,14 +3198,14 @@ export function BackupConsole() {
             )}
           >
             <div className="font-medium">{notice.title}</div>
-            <div className="mt-1 text-sm opacity-90">{notice.description}</div>
+            <div className="overflow-safe mt-1 text-sm opacity-90">{notice.description}</div>
           </div>
         ) : null}
 
         {uiState.error && hasConsoleData ? (
           <div className="rounded-[24px] border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-rose-50">
             <div className="font-medium">Live refresh needs attention</div>
-            <div className="mt-1 text-sm opacity-90">{uiState.error}</div>
+            <div className="overflow-safe mt-1 text-sm opacity-90">{uiState.error}</div>
           </div>
         ) : null}
 
