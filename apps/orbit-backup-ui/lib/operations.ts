@@ -20,6 +20,7 @@ import {
   waitForLonghornObject,
 } from "@/lib/longhorn";
 import { getClusterSnapshot, invalidateClusterSnapshot } from "@/lib/cluster";
+import { readBackupDestinationPreferences } from "@/lib/destinations";
 import {
   getCloneRestoreValidationError,
   getInPlaceRestoreValidationError,
@@ -2083,6 +2084,13 @@ async function runInPlaceRestoreItem(
 }
 
 async function runBackupOperation(operation: OperationRecord) {
+  const destinationPreferences = await readBackupDestinationPreferences();
+  if (!destinationPreferences.longhornEnabled) {
+    throw new Error(
+      "The Longhorn backup destination is disabled. Re-enable it to capture volume backups, or use the PBS archive actions for catalog-only exports.",
+    );
+  }
+
   const snapshot = await getClusterSnapshot(true);
   const defaultTarget =
     snapshot.targets.find((target) => target.name === "default") ||

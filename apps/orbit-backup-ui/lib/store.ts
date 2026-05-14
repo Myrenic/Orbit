@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
+  BackupDestinationPreferences,
   OperationRecord,
   PersistedPbsState,
   PersistedState,
@@ -147,5 +148,21 @@ export async function updatePersistedPbsState(
   return mutateState((draft) => {
     draft.pbs = updater(draft.pbs);
     return structuredClone(draft.pbs);
+  });
+}
+
+export async function getBackupDestinationPreferences() {
+  const state = await readState();
+  return state.destinations;
+}
+
+export async function updateBackupDestinationPreferences(
+  updater: (
+    current: BackupDestinationPreferences | undefined,
+  ) => BackupDestinationPreferences | undefined,
+) {
+  return mutateState((draft) => {
+    draft.destinations = updater(draft.destinations);
+    return structuredClone(draft.destinations);
   });
 }

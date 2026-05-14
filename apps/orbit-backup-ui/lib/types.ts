@@ -221,6 +221,7 @@ export interface PersistedState {
   operations: OperationRecord[];
   schedules: ScheduleDefinition[];
   pbs?: PersistedPbsState;
+  destinations?: BackupDestinationPreferences;
 }
 
 export interface OverviewStats {
@@ -354,4 +355,13 @@ export interface UpdatePbsConfigRequest {
 
 export interface PbsActionRequest {
   action: "test" | "archive" | "prune";
+}
+
+export interface BackupDestinationPreferences {
+  longhornEnabled: boolean;
+  updatedAt: string;
+}
+
+export interface UpdateBackupDestinationRequest {
+  longhornEnabled: boolean;
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getRequestedBy } from "@/lib/auth";
 import { getClusterSnapshot } from "@/lib/cluster";
+import { readBackupDestinationPreferences } from "@/lib/destinations";
 import { badRequest, jsonError } from "@/lib/http";
 import { createOperation } from "@/lib/operations";
 import {
@@ -37,6 +38,13 @@ export async function POST(request: Request) {
     if (body.type === "backup") {
       if (!body.appRefs?.length) {
         return badRequest("Select at least one workload to back up.");
+      }
+
+      const destinationPreferences = await readBackupDestinationPreferences();
+      if (!destinationPreferences.longhornEnabled) {
+        return badRequest(
+          "The Longhorn backup destination is currently disabled. Re-enable it to capture volume backups, or use the PBS archive actions for catalog-only exports.",
+        );
       }
     } else {
       if (!isRestoreMode(body.restoreMode)) {

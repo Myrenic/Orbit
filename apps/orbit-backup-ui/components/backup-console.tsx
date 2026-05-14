@@ -770,6 +770,8 @@ export function BackupConsole() {
   const [targetSecret, setTargetSecret] = useState("");
   const [targetPollInterval, setTargetPollInterval] = useState("300s");
   const [targetDirty, setTargetDirty] = useState(false);
+  const [longhornDestinationEnabled, setLonghornDestinationEnabled] = useState(true);
+  const [destinationDirty, setDestinationDirty] = useState(false);
   const [pbsStatus, setPbsStatus] = useState<PbsStatusSummary | null>(null);
   const [pbsForm, setPbsForm] = useState<PbsFormState>(getEmptyPbsForm());
   const [pbsDirty, setPbsDirty] = useState(false);
@@ -861,6 +863,17 @@ export function BackupConsole() {
     }
   }, [pbsDirty]);
 
+  const refreshDestinations = useCallback(async () => {
+    try {
+      const response = await fetchJson<{ longhornEnabled: boolean }>("/api/destinations");
+      if (!destinationDirty) {
+        setLonghornDestinationEnabled(response.longhornEnabled);
+      }
+    } catch {
+      // destination toggles should not block the rest of the console
+    }
+  }, [destinationDirty]);
+
   useEffect(() => {
     void refresh();
     const interval = setInterval(() => {
@@ -876,12 +889,14 @@ export function BackupConsole() {
     }
 
     void refreshPbs();
+    void refreshDestinations();
     const interval = setInterval(() => {
       void refreshPbs();
+      void refreshDestinations();
     }, 60_000);
 
     return () => clearInterval(interval);
-  }, [activePage, refreshPbs]);
+  }, [activePage, refreshDestinations, refreshPbs]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1084,7 +1099,7 @@ export function BackupConsole() {
   };
 
   const runBackup = async () => {
-    if (selectedApps.length === 0) {
+    if (selectedApps.length === 0 || !longhornDestinationEnabled) {
       return;
     }
 
@@ -1196,6 +1211,22 @@ export function BackupConsole() {
       "Backup target saved",
       "Longhorn target settings were updated and will be re-validated on the next poll.",
       "Could not save the backup target",
+    );
+  };
+
+  const saveDestinationPreferences = async () => {
+    await runManagedAction(
+      "destinations",
+      async () => {
+        await sendJson("/api/destinations", "PUT", {
+          longhornEnabled: longhornDestinationEnabled,
+        });
+        setDestinationDirty(false);
+        await refreshDestinations();
+      },
+      "Destinations updated",
+      "Orbit saved the active backup-destination toggles.",
+      "Could not save backup destinations",
     );
   };
 
@@ -1734,7 +1765,11 @@ export function BackupConsole() {
           actions={
             <button
               className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-              disabled={selectedApps.length === 0 || workingLabel === "backup"}
+              disabled={
+                selectedApps.length === 0 ||
+                workingLabel === "backup" ||
+                !longhornDestinationEnabled
+              }
               onClick={() => void runBackup()}
               type="button"
             >
@@ -1796,6 +1831,12 @@ export function BackupConsole() {
           </div>
         </div>
 
+        {!longhornDestinationEnabled ? (
+          <div className="mt-4 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
+            Longhorn volume backups are currently inactive. You can still use PBS archive actions below, but normal app backup runs stay disabled until the Longhorn destination is re-enabled.
+          </div>
+        ) : null}
+
         <div className="mt-5">
           {protectedApps.length > 0 ? (
             <div className="grid gap-4 xl:grid-cols-2">
@@ -1824,6 +1865,142 @@ export function BackupConsole() {
             eyebrow="Target"
             title="Configure backup storage"
           />
+
+          <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="section-label">Active backup destinations</div>
+                <div className="mt-2 text-sm text-slate-400">
+                  Toggle where Orbit actively writes backup data or mirrored backup metadata without deleting the saved connection details.
+                </div>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
+                {[
+                  longhornDestinationEnabled ? "Longhorn" : null,
+                  pbsForm.enabled ? "PBS" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" + ") || "No active destinations"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3">
+              <div className="rounded-[24px] border border-white/8 bg-white/5 px-4 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="font-medium text-white">Longhorn volume backups</div>
+                    <div className="mt-1 text-sm text-slate-400">
+                      Primary app backup path for PVC volume data using the configured Longhorn target.
+                    </div>
+                    <div className="mt-2 break-all text-xs text-slate-500">
+                      {defaultTarget?.backupTargetURL || "No Longhorn target URL configured"}
+                    </div>
+                  </div>
+                  <label className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100">
+                    <input
+                      checked={longhornDestinationEnabled}
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-400"
+                      onChange={(event) => {
+                        setDestinationDirty(true);
+                        setLonghornDestinationEnabled(event.target.checked);
+                      }}
+                      type="checkbox"
+                    />
+                    Active
+                  </label>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${badgeClass(
+                      longhornDestinationEnabled
+                        ? defaultTarget?.available
+                          ? "Completed"
+                          : "failed"
+                        : "stopped",
+                    )}`}
+                  >
+                    {longhornDestinationEnabled
+                      ? defaultTarget?.available
+                        ? "Available"
+                        : "Unavailable"
+                      : "Inactive"}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">
+                    Carries PVC data backups
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-white/8 bg-white/5 px-4 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="font-medium text-white">PBS archive mirror</div>
+                    <div className="mt-1 text-sm text-slate-400">
+                      Mirrors Orbit backup catalog metadata to Proxmox Backup Server after successful backup runs or manual archive requests.
+                    </div>
+                    <div className="mt-2 break-all text-xs text-slate-500">
+                      {pbsStatus?.server ? `${pbsStatus.server}:${pbsStatus.datastore}` : "Configure PBS below"}
+                    </div>
+                  </div>
+                  <label className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100">
+                    <input
+                      checked={pbsForm.enabled}
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400"
+                      onChange={(event) => {
+                        setPbsDirty(true);
+                        setPbsForm((current) => ({
+                          ...current,
+                          enabled: event.target.checked,
+                        }));
+                      }}
+                      type="checkbox"
+                    />
+                    Active
+                  </label>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-1 font-medium ${badgeClass(
+                      pbsForm.enabled
+                        ? pbsStatus?.reachable
+                          ? "Completed"
+                          : pbsStatus?.configured
+                            ? "failed"
+                            : "queued"
+                        : "stopped",
+                    )}`}
+                  >
+                    {pbsForm.enabled
+                      ? pbsStatus?.reachable
+                        ? "Reachable"
+                        : pbsStatus?.configured
+                          ? "Needs attention"
+                          : "Not configured"
+                      : "Inactive"}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">
+                    Catalog metadata mirror
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2.5 text-sm font-medium text-sky-100 transition hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!destinationDirty || workingLabel === "destinations"}
+                onClick={() => void saveDestinationPreferences()}
+                type="button"
+              >
+                {workingLabel === "destinations" ? "Saving..." : "Save Longhorn toggle"}
+              </button>
+              {destinationDirty ? (
+                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs font-medium text-amber-100">
+                  Longhorn toggle has unsaved changes
+                </span>
+              ) : null}
+            </div>
+          </div>
 
           <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
             <div className="space-y-4">
@@ -2068,23 +2245,7 @@ export function BackupConsole() {
               </label>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                <input
-                  checked={pbsForm.enabled}
-                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400"
-                  onChange={(event) => {
-                    setPbsDirty(true);
-                    setPbsForm((current) => ({
-                      ...current,
-                      enabled: event.target.checked,
-                    }));
-                  }}
-                  type="checkbox"
-                />
-                Enable PBS archive mirror
-              </label>
-
+            <div className="mt-4 grid gap-3">
               <label className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-200">
                 <input
                   checked={pbsForm.archiveOnBackup}
@@ -2994,6 +3155,7 @@ export function BackupConsole() {
                     void refresh();
                     if (activePage === "backup") {
                       void refreshPbs();
+                      void refreshDestinations();
                     }
                   }}
                   type="button"
