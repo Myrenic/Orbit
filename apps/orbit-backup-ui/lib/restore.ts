@@ -4,7 +4,12 @@ const DNS_LABEL_MAX_LENGTH = 63;
 const DNS_LABEL_PATTERN = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/;
 const RESTORE_NAMESPACE_FALLBACK = "services";
 const CLONE_RESTORE_NAMESPACE_SUFFIX = "restore";
-const RESTORE_MODES: RestoreMode[] = ["clone-workload", "pvc-only"];
+const RESTORE_MODES: RestoreMode[] = ["in-place", "clone-workload", "pvc-only"];
+
+export const IN_PLACE_RESTORE_SUPPORTED_WORKLOAD_KINDS = [
+  "Deployment",
+  "StatefulSet",
+] as const;
 
 export const CLONE_RESTORE_SUPPORTED_WORKLOAD_KINDS = [
   "Deployment",
@@ -14,6 +19,11 @@ export const CLONE_RESTORE_SUPPORTED_WORKLOAD_KINDS = [
 type CloneRestoreBackupSet = Pick<
   BackupSetSummary,
   "displayName" | "namespace" | "volumes" | "workloadKind" | "workloadName"
+>;
+
+type InPlaceRestoreBackupSet = Pick<
+  BackupSetSummary,
+  "currentAppRef" | "displayName" | "namespace" | "workloadKind" | "workloadName"
 >;
 
 type RestoreNamespaceBackupSet = Pick<BackupSetSummary, "namespace"> | undefined;
@@ -47,6 +57,10 @@ function buildRestoreNamespace(baseName: string, suffix?: string) {
 
 function formatSupportedKinds() {
   return CLONE_RESTORE_SUPPORTED_WORKLOAD_KINDS.join(" and ");
+}
+
+function formatInPlaceSupportedKinds() {
+  return IN_PLACE_RESTORE_SUPPORTED_WORKLOAD_KINDS.join(" and ");
 }
 
 export function isRestoreMode(value: unknown): value is RestoreMode {
@@ -124,6 +138,32 @@ export function getCloneRestoreValidationError(
   return `Clone restore supports ${formatSupportedKinds()} workloads. Restore this ${backupSet.workloadKind} backup as PVCs instead.`;
 }
 
+export function getInPlaceRestoreValidationError(
+  backupSet: InPlaceRestoreBackupSet,
+): string | undefined {
+  if (!backupSet.currentAppRef) {
+    return "In-place restore needs the original workload to still exist in the cluster. Use clone or PVC-only restore instead.";
+  }
+
+  if (!backupSet.namespace || !backupSet.workloadName) {
+    return "In-place restore needs the original namespace and workload name. Use clone or PVC-only restore instead.";
+  }
+
+  if (!backupSet.workloadKind) {
+    return "In-place restore needs the original workload kind. Use clone or PVC-only restore instead.";
+  }
+
+  if (
+    !IN_PLACE_RESTORE_SUPPORTED_WORKLOAD_KINDS.includes(
+      backupSet.workloadKind as (typeof IN_PLACE_RESTORE_SUPPORTED_WORKLOAD_KINDS)[number],
+    )
+  ) {
+    return `In-place restore currently supports ${formatInPlaceSupportedKinds()} workloads. Use clone or PVC-only restore for this ${backupSet.workloadKind} backup instead.`;
+  }
+
+  return undefined;
+}
+
 export function getCloneRestoreSupportState(backupSet: CloneRestoreBackupSet) {
   const blockedReason = getCloneRestoreValidationError(backupSet);
 
@@ -150,4 +190,23 @@ export function getCloneRestoreBatchValidationError(
   }
 
   return `Clone restore is not available for all selected backups. ${blockedBackups.join(" ")}`;
+}
+
+export function getInPlaceRestoreBatchValidationError(
+  backupSets: InPlaceRestoreBackupSet[],
+) {
+  const blockedBackups = backupSets.flatMap((backupSet) => {
+    const blockedReason = getInPlaceRestoreValidationError(backupSet);
+    return blockedReason ? [`${backupSet.displayName}: ${blockedReason}`] : [];
+  });
+
+  if (blockedBackups.length === 0) {
+    return undefined;
+  }
+
+  if (blockedBackups.length === 1) {
+    return blockedBackups[0];
+  }
+
+  return `In-place restore is not available for all selected backups. ${blockedBackups.join(" ")}`;
 }

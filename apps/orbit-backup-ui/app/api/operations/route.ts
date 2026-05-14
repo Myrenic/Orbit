@@ -6,6 +6,7 @@ import { badRequest, jsonError } from "@/lib/http";
 import { createOperation } from "@/lib/operations";
 import {
   getCloneRestoreBatchValidationError,
+  getInPlaceRestoreBatchValidationError,
   getRestoreTargetNamespaceValidationError,
   isRestoreMode,
   normalizeRestoreTargetNamespace,
@@ -46,11 +47,13 @@ export async function POST(request: Request) {
         return badRequest("Select at least one backup set to restore.");
       }
 
-      const targetNamespaceError = getRestoreTargetNamespaceValidationError(
-        body.targetNamespace,
-      );
-      if (targetNamespaceError) {
-        return badRequest(targetNamespaceError);
+      if (body.restoreMode !== "in-place") {
+        const targetNamespaceError = getRestoreTargetNamespaceValidationError(
+          body.targetNamespace,
+        );
+        if (targetNamespaceError) {
+          return badRequest(targetNamespaceError);
+        }
       }
 
       const snapshot = await getClusterSnapshot();
@@ -74,6 +77,12 @@ export async function POST(request: Request) {
         if (cloneRestoreError) {
           return badRequest(cloneRestoreError);
         }
+      } else if (body.restoreMode === "in-place") {
+        const inPlaceRestoreError =
+          getInPlaceRestoreBatchValidationError(requestedBackupSets);
+        if (inPlaceRestoreError) {
+          return badRequest(inPlaceRestoreError);
+        }
       }
     }
 
@@ -81,7 +90,10 @@ export async function POST(request: Request) {
       body.type === "restore"
         ? {
             ...body,
-            targetNamespace: normalizeRestoreTargetNamespace(body.targetNamespace),
+            targetNamespace:
+              body.restoreMode === "in-place"
+                ? undefined
+                : normalizeRestoreTargetNamespace(body.targetNamespace),
           }
         : body;
 

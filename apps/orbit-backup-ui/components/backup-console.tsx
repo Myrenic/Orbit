@@ -13,7 +13,11 @@ import {
   Workflow,
 } from "lucide-react";
 
-import { getCloneRestoreBatchValidationError } from "@/lib/restore";
+import {
+  getCloneRestoreBatchValidationError,
+  getInPlaceRestoreBatchValidationError,
+  resolveRestoreTargetNamespace,
+} from "@/lib/restore";
 import type {
   AppInventoryItem,
   BackupMode,
@@ -523,7 +527,7 @@ export function BackupConsole() {
   const [selectedApps, setSelectedApps] = useState<string[]>([]);
   const [selectedBackupSets, setSelectedBackupSets] = useState<string[]>([]);
   const [backupMode, setBackupMode] = useState<BackupMode>("incremental");
-  const [restoreMode, setRestoreMode] = useState<RestoreMode>("clone-workload");
+  const [restoreMode, setRestoreMode] = useState<RestoreMode>("in-place");
   const [restoreNamespace, setRestoreNamespace] = useState("");
   const [scheduleName, setScheduleName] = useState("");
   const [scheduleCron, setScheduleCron] = useState("0 3 * * *");
@@ -616,26 +620,34 @@ export function BackupConsole() {
         : undefined,
     [restoreMode, selectedBackupSetRecords],
   );
+  const inPlaceRestoreSelectionError = useMemo(
+    () =>
+      restoreMode === "in-place"
+        ? getInPlaceRestoreBatchValidationError(selectedBackupSetRecords)
+        : undefined,
+    [restoreMode, selectedBackupSetRecords],
+  );
+  const restoreSelectionError =
+    restoreMode === "clone-workload"
+      ? cloneRestoreSelectionError
+      : inPlaceRestoreSelectionError;
   const restoreDisabled =
     selectedBackupSets.length === 0 ||
     workingLabel === "restore" ||
-    Boolean(cloneRestoreSelectionError);
+    Boolean(restoreSelectionError);
 
-  const defaultCloneNamespace = useMemo(() => {
+  const defaultRestoreNamespace = useMemo(() => {
     const selected = uiState.backupSets.find((backupSet) =>
       selectedBackupSets.includes(backupSet.id),
     );
-    if (!selected?.namespace) {
-      return "services-restore";
-    }
-    return `${selected.namespace}-restore`;
-  }, [selectedBackupSets, uiState.backupSets]);
+    return resolveRestoreTargetNamespace(restoreMode, selected);
+  }, [restoreMode, selectedBackupSets, uiState.backupSets]);
 
   useEffect(() => {
     if (!restoreNamespace) {
-      setRestoreNamespace(defaultCloneNamespace);
+      setRestoreNamespace(defaultRestoreNamespace);
     }
-  }, [defaultCloneNamespace, restoreNamespace]);
+  }, [defaultRestoreNamespace, restoreNamespace]);
 
   useEffect(() => {
     setSelectedApps((previous) => previous.filter((ref) => appByRef.has(ref)));
@@ -748,7 +760,7 @@ export function BackupConsole() {
           type: "restore",
           backupSetIds: selectedBackupSets,
           restoreMode,
-          targetNamespace: restoreNamespace,
+          targetNamespace: restoreMode === "in-place" ? undefined : restoreNamespace,
         });
         await refresh();
       },
@@ -1215,22 +1227,28 @@ export function BackupConsole() {
                             Choose the restore shape before you queue work
                           </div>
                           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                            Clone restore keeps workload wiring intact for supported backups. PVC-only
-                            restore recreates detached claims when you only need the storage.
+                            In-place restore is now the primary recovery path: pause Argo,
+                            replace the existing volume identity, then let the app settle again.
+                            Clone and PVC-only restore remain available as fallback tools.
                           </p>
                         </div>
 
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="grid gap-2 sm:grid-cols-3">
                           {[
+                            {
+                              id: "in-place",
+                              label: "In-place restore",
+                              description: "Preferred: overwrite the current app data safely",
+                            },
                             {
                               id: "clone-workload",
                               label: "Clone workload",
-                              description: "Rebuild the workload in a safe namespace",
+                              description: "Fallback: rebuild the workload in a safe namespace",
                             },
                             {
                               id: "pvc-only",
                               label: "PVC-only restore",
-                              description: "Create detached claims without the controller",
+                              description: "Advanced: recreate detached claims without the controller",
                             },
                           ].map((mode) => (
                             <button
@@ -1254,15 +1272,17 @@ export function BackupConsole() {
                           <span className="field-label">Target namespace</span>
                           <input
                             className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={restoreMode !== "clone-workload"}
+                            disabled={restoreMode === "in-place"}
                             onChange={(event) => setRestoreNamespace(event.target.value)}
-                            placeholder={defaultCloneNamespace}
+                            placeholder={defaultRestoreNamespace}
                             value={restoreNamespace}
                           />
                           <div className="mt-2 text-xs text-slate-500">
-                            {restoreMode === "clone-workload"
-                              ? "Orbit suggests a safe clone namespace based on the selected backup set."
-                              : "Namespace is only used for clone restore. PVC-only mode ignores this field."}
+                            {restoreMode === "in-place"
+                              ? "In-place restore keeps the original namespace and ignores this field."
+                              : restoreMode === "clone-workload"
+                                ? "Orbit suggests a safe clone namespace based on the selected backup set."
+                                : "PVC-only restore can recreate detached claims in the namespace you choose."}
                           </div>
                         </label>
                       </div>
@@ -1284,15 +1304,18 @@ export function BackupConsole() {
                   <div
                     className={cn(
                       "mt-4 rounded-[24px] border px-4 py-4 text-sm",
-                      cloneRestoreSelectionError
+                      restoreSelectionError
                         ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
                         : "border-white/8 bg-slate-950/55 text-slate-300",
                     )}
                   >
-                    {restoreMode === "clone-workload"
-                      ? cloneRestoreSelectionError ||
-                        "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
-                      : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
+                    {restoreMode === "in-place"
+                      ? restoreSelectionError ||
+                        "In-place restore pauses the owning Argo Application when possible, scales the workload down, restores the original PVC identities, then brings the workload back."
+                      : restoreMode === "clone-workload"
+                        ? restoreSelectionError ||
+                          "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
+                        : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
                   </div>
 
                   <div className="mt-4 rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">

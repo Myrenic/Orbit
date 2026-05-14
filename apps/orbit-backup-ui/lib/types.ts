@@ -7,7 +7,7 @@ export type OperationItemStatus =
   | "succeeded"
   | "failed"
   | "skipped";
-export type RestoreMode = "clone-workload" | "pvc-only";
+export type RestoreMode = "in-place" | "clone-workload" | "pvc-only";
 export type BackupMode = "incremental" | "full";
 
 export interface UserSummary {
