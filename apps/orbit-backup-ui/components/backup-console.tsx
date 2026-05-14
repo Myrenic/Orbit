@@ -359,6 +359,7 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
 
   return (
     <label
+      data-testid="backup-app-card"
       className={cn(
         "flex cursor-pointer flex-col gap-4 rounded-[28px] border p-4 transition duration-200 sm:p-5",
         selected
@@ -374,68 +375,87 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
           type="checkbox"
         />
         <div className="min-w-0 flex-1 space-y-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="break-words text-base font-semibold text-white">
-                {app.displayName}
-              </span>
-              <span
-                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                  app.status,
-                )}`}
-              >
-                {app.status}
-              </span>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+             <div className="flex flex-wrap items-center gap-2">
+               <span className="break-words text-base font-semibold text-white">
+                 {app.displayName}
+               </span>
+               <span
+                 className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                   app.status,
+                 )}`}
+               >
+                 {app.status}
+               </span>
+             </div>
+             <div className="overflow-safe mt-1 text-xs text-slate-500">
+               {getWorkloadLabel(app.namespace, app.kind, app.name)}
+             </div>
+             <div className="mt-3 text-sm text-slate-300">
+               Protects {pluralize(app.volumes.length, "volume")} for {app.readyPodCount}/
+               {app.podCount} ready {pluralize(app.podCount, "pod")}. Last backup{" "}
+               {latestBackupAt ? formatTimestamp(latestBackupAt) : "not recorded"}.
+             </div>
             </div>
-            <div className="overflow-safe mt-1 text-xs text-slate-500">
-              {getWorkloadLabel(app.namespace, app.kind, app.name)}
+            <div className="flex flex-wrap gap-2 text-xs text-slate-300 sm:max-w-[16rem] sm:justify-end">
+             <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+               {pluralize(app.volumes.length, "protected volume")}
+             </span>
+             <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
+               {app.readyPodCount}/{app.podCount} pods ready
+             </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-            <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
-              {pluralize(app.volumes.length, "protected volume")}
-            </span>
-            <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
-              {app.readyPodCount}/{app.podCount} pods ready
-            </span>
-            <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
-              Last backup {latestBackupAt ? formatTimestamp(latestBackupAt) : "not recorded"}
-            </span>
+          <div className="space-y-4 border-t border-white/8 pt-4">
+            <div>
+             <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-500">
+               Protected storage
+             </div>
+             <div className="mt-3 flex flex-wrap gap-2">
+               {app.volumes.map((volume) => (
+                 <span
+                   className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-left text-xs text-slate-300"
+                   key={volume.longhornVolumeName}
+                 >
+                   {volume.pvcName}
+                   {volume.size ? ` · ${volume.size}` : ""}
+                 </span>
+               ))}
+             </div>
+            </div>
+
+            <div>
+             <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-500">
+               Live pods
+             </div>
+             {app.pods.length > 0 ? (
+               <div className="mt-3 flex flex-wrap gap-2">
+                 {app.pods.map((pod) => {
+                   const tone = getPodTone(pod);
+                   return (
+                     <span
+                       className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${tone.badge}`}
+                       key={pod.name}
+                     >
+                       <span className={`status-dot shrink-0 ${tone.dot}`} />
+                       <span className="overflow-safe-chip max-w-full font-medium text-white">
+                         {pod.name}
+                       </span>
+                       <span>{tone.label}</span>
+                     </span>
+                   );
+                 })}
+               </div>
+             ) : (
+               <div className="mt-3 text-xs text-slate-400">
+                 Pods will appear here once the workload is scheduled and running.
+               </div>
+             )}
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-              Protected storage
-            </div>
-            <div className="text-xs text-slate-400">
-              {pluralize(app.volumes.length, "claim")}
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {app.volumes.map((volume) => (
-              <span
-                className="overflow-safe-chip inline-flex max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-left text-xs text-slate-300"
-                key={volume.longhornVolumeName}
-              >
-                {volume.pvcName}
-                {volume.size ? ` · ${volume.size}` : ""}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <WorkloadPodPanel
-          emptyMessage="Pods will appear here once the workload is scheduled and running."
-          podCount={app.podCount}
-          pods={app.pods}
-          readyPodCount={app.readyPodCount}
-          workloadLabel={app.displayName}
-        />
       </div>
     </label>
   );
@@ -1782,69 +1802,101 @@ export function BackupConsole() {
           }
         />
 
-        <div className="mt-5 grid gap-4">
-          <div
-            className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5"
-            data-testid="backup-mode-card"
-          >
-            <div className="section-label">Backup mode</div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                {
-                  id: "incremental",
-                  label: "Incremental",
-                  description: "Fastest routine protection",
-                },
-                {
-                  id: "full",
-                  label: "Full",
-                  description: "Fresh full backup chain",
-                },
-              ].map((mode) => (
-                <button
-                  className={cn(
-                    "rounded-full border px-3.5 py-2 text-left text-xs transition",
-                    backupMode === mode.id
-                      ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
-                      : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
-                  )}
-                  key={mode.id}
-                  onClick={() => setBackupMode(mode.id as BackupMode)}
-                  type="button"
+        <div
+          className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5"
+          data-testid="backup-control-card"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="section-label">Backup run</div>
+                <div className="mt-2 text-lg font-semibold text-white">
+                  Pick the workloads you want to protect
+                </div>
+                <div className="mt-2 text-sm text-slate-400">
+                  Orbit keeps the backup page focused on PVC-backed apps, so the list below only shows workloads that can actually be restored.
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1.5 font-medium text-sky-100">
+                  {pluralize(selectedApps.length, "workload")} selected
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-slate-200">
+                  {pluralize(selectedAppVolumeCount, "Longhorn volume")}
+                </span>
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1.5 font-medium ${badgeClass(
+                    longhornDestinationEnabled
+                      ? defaultTarget?.available
+                        ? "Completed"
+                        : "failed"
+                      : "stopped",
+                  )}`}
                 >
-                  <div className="font-medium">{mode.label}</div>
-                  <div className="text-[11px] opacity-80">{mode.description}</div>
-                </button>
-              ))}
+                  {longhornDestinationEnabled
+                    ? defaultTarget?.available
+                      ? "Longhorn target ready"
+                      : "Longhorn target needs attention"
+                    : "Longhorn backups inactive"}
+                </span>
+              </div>
             </div>
-            <div className="mt-4 text-sm text-slate-400">
-              Orbit only lists PVC-backed workloads here, so the backup page stays focused on real recoverable app data.
-            </div>
-          </div>
 
-          <div
-            className="rounded-[28px] border border-sky-400/18 bg-sky-400/10 p-4 sm:p-5"
-            data-testid="backup-summary-card"
-          >
-            <div className="text-[11px] uppercase tracking-[0.24em] text-sky-100/75">
-              Selection summary
+            <div className="border-t border-white/8 pt-4" data-testid="backup-mode-card">
+              <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-500">
+                Backup mode
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  {
+                    id: "incremental",
+                    label: "Incremental",
+                    description: "Fastest routine protection",
+                  },
+                  {
+                    id: "full",
+                    label: "Full",
+                    description: "Fresh full backup chain",
+                  },
+                ].map((mode) => (
+                  <button
+                    className={cn(
+                      "rounded-full border px-3.5 py-2 text-left text-xs transition",
+                      backupMode === mode.id
+                        ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
+                        : "border-white/10 bg-slate-950/70 text-slate-300 hover:border-sky-400/20 hover:text-white",
+                    )}
+                    key={mode.id}
+                    onClick={() => setBackupMode(mode.id as BackupMode)}
+                    type="button"
+                  >
+                    <div className="font-medium">{mode.label}</div>
+                    <div className="text-[11px] opacity-80">{mode.description}</div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="mt-3 text-xl font-semibold text-sky-50">
-              {pluralize(selectedApps.length, "workload")}
-            </div>
-            <div className="mt-2 text-sm text-sky-100/80">
-              Covers {pluralize(selectedAppVolumeCount, "Longhorn volume")} and can be reused for scheduling.
-            </div>
+
+            {!longhornDestinationEnabled ? (
+              <div className="rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
+                Longhorn volume backups are currently inactive. You can still use PBS archive actions below, but normal app backup runs stay disabled until the Longhorn destination is re-enabled.
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {!longhornDestinationEnabled ? (
-          <div className="mt-4 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
-            Longhorn volume backups are currently inactive. You can still use PBS archive actions below, but normal app backup runs stay disabled until the Longhorn destination is re-enabled.
-          </div>
-        ) : null}
-
         <div className="mt-5">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="section-label">Protected workloads</div>
+              <div className="mt-2 text-sm text-slate-400">
+                Compact cards keep the backup inventory scannable on mobile while still surfacing storage, pod health, and the last backup point.
+              </div>
+            </div>
+            <div className="text-xs text-slate-500">
+              {pluralize(protectedApps.length, "eligible workload")}
+            </div>
+          </div>
           {protectedApps.length > 0 ? (
             <div className="grid gap-4">
               {protectedApps.map((app) => (

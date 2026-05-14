@@ -314,12 +314,9 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 async function expectCardsToFillContainer(
-  page: Page,
-  cardTestIds: string[],
+  locators: Array<ReturnType<Page["locator"]>>,
 ) {
-  const cardBoxes = await Promise.all(
-    cardTestIds.map((cardTestId) => page.getByTestId(cardTestId).boundingBox()),
-  );
+  const cardBoxes = await Promise.all(locators.map((locator) => locator.boundingBox()));
   const [firstCardBox] = cardBoxes;
   expect(firstCardBox).not.toBeNull();
 
@@ -329,6 +326,12 @@ async function expectCardsToFillContainer(
     expect(cardBox!.width).toBeCloseTo(firstCardBox!.width, 0);
     expect(cardBox!.width).toBeGreaterThan(viewport.width * 0.75);
   }
+}
+
+async function expectMinimumWidth(locator: ReturnType<Page["locator"]>, minimumWidth: number) {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width).toBeGreaterThan(minimumWidth);
 }
 
 test.use({
@@ -346,7 +349,11 @@ test("backup page stays full width on mobile", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("nav-backup").click({ force: true });
   await expect(page.getByRole("heading", { name: "Protect workloads" })).toBeVisible();
-  await expectCardsToFillContainer(page, ["backup-mode-card", "backup-summary-card"]);
+  await expectCardsToFillContainer([
+    page.getByTestId("backup-control-card"),
+    page.getByTestId("backup-app-card").first(),
+  ]);
+  await expectMinimumWidth(page.getByTestId("backup-mode-card"), viewport.width * 0.65);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -354,7 +361,10 @@ test("restore page stays full width on mobile", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("nav-restore").click({ force: true });
   await expect(page.getByRole("heading", { name: "Recover apps from the backup catalog" })).toBeVisible();
-  await expectCardsToFillContainer(page, ["restore-mode-card", "restore-summary-card"]);
+  await expectCardsToFillContainer([
+    page.getByTestId("restore-mode-card"),
+    page.getByTestId("restore-summary-card"),
+  ]);
   await expectNoHorizontalOverflow(page);
 });
 
