@@ -581,29 +581,59 @@ async function detectOwningArgoApplication(workload: LiveInPlaceWorkload) {
   };
 }
 
+async function updateArgoApplication(
+  namespace: string,
+  name: string,
+  mutate: (application: ArgoApplicationObject) => ArgoApplicationObject,
+) {
+  const maxAttempts = 5;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const application = await getArgoApplication(namespace, name);
+    if (!application) {
+      throw new Error(`Argo Application ${namespace}/${name} was not found.`);
+    }
+
+    try {
+      await getKubeClients().customObjects.replaceNamespacedCustomObject({
+        group: ARGO_APPLICATION_GROUP,
+        version: ARGO_APPLICATION_VERSION,
+        namespace,
+        plural: ARGO_APPLICATION_PLURAL,
+        name,
+        body: mutate(structuredClone(application)),
+      });
+      return;
+    } catch (error) {
+      if (!isKubernetesErrorStatus(error, 409) || attempt === maxAttempts - 1) {
+        throw error;
+      }
+
+      await sleep(250 * (attempt + 1));
+    }
+  }
+}
+
 async function replaceArgoApplicationSyncPolicy(
   namespace: string,
   name: string,
   syncPolicy?: Record<string, unknown>,
 ) {
-  const application = await getArgoApplication(namespace, name);
-  if (!application) {
-    throw new Error(`Argo Application ${namespace}/${name} was not found.`);
-  }
+  await updateArgoApplication(namespace, name, (application) => {
+    const spec = {
+      ...application.spec,
+    };
 
-  await getKubeClients().customObjects.replaceNamespacedCustomObject({
-    group: ARGO_APPLICATION_GROUP,
-    version: ARGO_APPLICATION_VERSION,
-    namespace,
-    plural: ARGO_APPLICATION_PLURAL,
-    name,
-    body: {
+    if (syncPolicy) {
+      spec.syncPolicy = syncPolicy;
+    } else {
+      delete spec.syncPolicy;
+    }
+
+    return {
       ...application,
-      spec: {
-        ...application.spec,
-        ...(syncPolicy ? { syncPolicy } : {}),
-      },
-    },
+      spec,
+    };
   });
 }
 
@@ -664,28 +694,16 @@ async function requestArgoApplicationRefresh(
   name: string,
   refresh: "normal" | "hard" = "hard",
 ) {
-  const application = await getArgoApplication(namespace, name);
-  if (!application) {
-    throw new Error(`Argo Application ${namespace}/${name} was not found.`);
-  }
-
-  await getKubeClients().customObjects.replaceNamespacedCustomObject({
-    group: ARGO_APPLICATION_GROUP,
-    version: ARGO_APPLICATION_VERSION,
-    namespace,
-    plural: ARGO_APPLICATION_PLURAL,
-    name,
-    body: {
-      ...application,
-      metadata: {
-        ...application.metadata,
-        annotations: {
-          ...(application.metadata?.annotations ?? {}),
-          [ARGO_REFRESH_ANNOTATION]: refresh,
-        },
+  await updateArgoApplication(namespace, name, (application) => ({
+    ...application,
+    metadata: {
+      ...application.metadata,
+      annotations: {
+        ...(application.metadata?.annotations ?? {}),
+        [ARGO_REFRESH_ANNOTATION]: refresh,
       },
     },
-  });
+  }));
 }
 
 async function waitForArgoApplicationSettled(argoApplication: ArgoReconcileState) {
