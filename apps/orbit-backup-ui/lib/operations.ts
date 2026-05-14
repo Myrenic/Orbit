@@ -76,6 +76,19 @@ function getNextRunAtSafe(cronExpression: string) {
 }
 
 const ORBIT_MANAGED_BY_LABEL = "app.kubernetes.io/managed-by";
+
+function sanitizeLabelValue(value: string, maxLength = 63) {
+  const normalized = value
+    .replace(/[^A-Za-z0-9._-]/g, "-")
+    .replace(/^[^A-Za-z0-9]+/, "")
+    .replace(/[^A-Za-z0-9]+$/, "");
+
+  return normalized.slice(0, maxLength).replace(/[^A-Za-z0-9]+$/, "");
+}
+
+function buildRestoreSourceLabelValue(namespace?: string, name?: string) {
+  return sanitizeLabelValue([namespace, name].filter(Boolean).join(".")) || "restore";
+}
 const ORBIT_MANAGED_BY_VALUE = "orbit-backup-ui";
 const ORBIT_SCHEDULE_MARKER_LABEL = "orbit.myrenic.io/managed-schedule";
 const ORBIT_SCHEDULE_NAME_ANNOTATION = "orbit.myrenic.io/schedule-name";
@@ -707,7 +720,10 @@ function sanitizeDeploymentForClone(
     labels: {
       ...(sourceDeployment.metadata?.labels ?? {}),
       "orbit.myrenic.io/restore-source":
-        `${sourceDeployment.metadata?.namespace}/${sourceDeployment.metadata?.name}`,
+        buildRestoreSourceLabelValue(
+          sourceDeployment.metadata?.namespace,
+          sourceDeployment.metadata?.name,
+        ),
       "orbit.myrenic.io/restore-instance": restoreInstance,
     },
   };
@@ -790,7 +806,10 @@ function sanitizeServiceForClone(
     labels: {
       ...(sourceService.metadata?.labels ?? {}),
       "orbit.myrenic.io/restore-source":
-        `${sourceService.metadata?.namespace}/${sourceService.metadata?.name}`,
+        buildRestoreSourceLabelValue(
+          sourceService.metadata?.namespace,
+          sourceService.metadata?.name,
+        ),
       "orbit.myrenic.io/restore-instance": restoreInstance,
     },
     annotations: sourceService.metadata?.annotations,
@@ -898,7 +917,10 @@ function sanitizeStatefulSetForClone(
     labels: {
       ...(plan.sourceStatefulSet.metadata?.labels ?? {}),
       "orbit.myrenic.io/restore-source":
-        `${plan.sourceStatefulSet.metadata?.namespace}/${plan.sourceStatefulSet.metadata?.name}`,
+        buildRestoreSourceLabelValue(
+          plan.sourceStatefulSet.metadata?.namespace,
+          plan.sourceStatefulSet.metadata?.name,
+        ),
       "orbit.myrenic.io/restore-instance": plan.restoreInstance,
     },
   };
