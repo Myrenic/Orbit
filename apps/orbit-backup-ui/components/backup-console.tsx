@@ -1,15 +1,18 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowUpFromLine,
   Cloud,
   DatabaseBackup,
-  LoaderCircle,
+  House,
   RefreshCw,
+  ShieldAlert,
   ShieldCheck,
+  Trash2,
   Workflow,
 } from "lucide-react";
 
@@ -48,6 +51,8 @@ type Notice = {
   title: string;
   description: string;
 };
+
+type ConsolePage = "home" | "backup" | "restore" | "activity" | "cleanup";
 
 type SectionHeadingProps = {
   eyebrow?: string;
@@ -94,12 +99,13 @@ type SkeletonPanelProps = {
   className?: string;
 };
 
-type BackupConsoleTab =
-  | "overview"
-  | "protect"
-  | "recover"
-  | "automate"
-  | "activity";
+type BottomNavItem = {
+  id: ConsolePage;
+  label: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
+  badge?: number;
+};
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -212,6 +218,10 @@ function averageProgress(items: OperationItem[]) {
   return Math.round(items.reduce((sum, item) => sum + item.progress, 0) / items.length);
 }
 
+function isConsolePage(value: string): value is ConsolePage {
+  return ["home", "backup", "restore", "activity", "cleanup"].includes(value);
+}
+
 function SectionHeading({ eyebrow, title, description, actions }: SectionHeadingProps) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -220,7 +230,9 @@ function SectionHeading({ eyebrow, title, description, actions }: SectionHeading
         <h2 className="mt-3 text-xl font-semibold tracking-tight text-white sm:text-2xl">
           {title}
         </h2>
-        {description ? <p className="mt-2 text-sm text-slate-400 sm:text-[15px]">{description}</p> : null}
+        {description ? (
+          <p className="mt-2 text-sm text-slate-400 sm:text-[15px]">{description}</p>
+        ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
     </div>
@@ -291,7 +303,7 @@ function WorkloadPodPanel({
                 key={pod.name}
               >
                 <span className={`status-dot shrink-0 ${tone.dot}`} />
-                <span className="max-w-[10rem] truncate font-medium text-white sm:max-w-[14rem]">
+                <span className="max-w-[8rem] truncate font-medium text-white sm:max-w-[12rem]">
                   {pod.name}
                 </span>
                 <span>{tone.label}</span>
@@ -320,35 +332,35 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
   return (
     <label
       className={cn(
-        "flex cursor-pointer flex-col gap-4 rounded-[28px] border p-5 transition duration-200",
+        "flex cursor-pointer flex-col gap-4 rounded-[28px] border p-4 transition duration-200 sm:p-5",
         selected
           ? "border-sky-400/40 bg-sky-400/10 shadow-[0_24px_70px_rgba(14,165,233,0.12)]"
           : "border-slate-800/90 bg-slate-950/55 hover:border-sky-400/25 hover:bg-slate-950/75",
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <input
-              checked={selected}
-              className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-400"
-              onChange={onToggle}
-              type="checkbox"
-            />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-semibold text-white">{app.displayName}</span>
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                    app.status,
-                  )}`}
-                >
-                  {app.status}
-                </span>
-              </div>
-              <div className="mt-1 break-all text-xs text-slate-500">
-                {getWorkloadLabel(app.namespace, app.kind, app.name)}
-              </div>
+      <div className="flex items-start gap-3">
+        <input
+          checked={selected}
+          className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-400"
+          onChange={onToggle}
+          type="checkbox"
+        />
+        <div className="min-w-0 flex-1 space-y-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="break-words text-base font-semibold text-white">
+                {app.displayName}
+              </span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                  app.status,
+                )}`}
+              >
+                {app.status}
+              </span>
+            </div>
+            <div className="mt-1 break-all text-xs text-slate-500">
+              {getWorkloadLabel(app.namespace, app.kind, app.name)}
             </div>
           </div>
 
@@ -364,40 +376,39 @@ function AppSelectionCard({ app, selected, onToggle }: AppSelectionCardProps) {
             </span>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-[24px] border border-white/8 bg-slate-900/75 px-4 py-3 sm:min-w-[12rem] sm:text-right">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-            Protection scope
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
+        <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+              Protected storage
+            </div>
+            <div className="text-xs text-slate-400">
+              {pluralize(app.volumes.length, "claim")}
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-semibold text-white">{app.volumes.length}</div>
-          <div className="text-xs text-slate-400">Longhorn-backed claim{app.volumes.length === 1 ? "" : "s"}</div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {app.volumes.map((volume) => (
+              <span
+                className="max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
+                key={volume.longhornVolumeName}
+              >
+                {volume.pvcName}
+                {volume.size ? ` · ${volume.size}` : ""}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
-        <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-          Protected storage
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {app.volumes.map((volume) => (
-            <span
-              className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
-              key={volume.longhornVolumeName}
-            >
-              {volume.pvcName}
-              {volume.size ? ` · ${volume.size}` : ""} → {volume.longhornVolumeName}
-            </span>
-          ))}
-        </div>
+        <WorkloadPodPanel
+          emptyMessage="Pods will appear here once the workload is scheduled and running."
+          podCount={app.podCount}
+          pods={app.pods}
+          readyPodCount={app.readyPodCount}
+          workloadLabel={app.displayName}
+        />
       </div>
-
-      <WorkloadPodPanel
-        emptyMessage="Pods will appear here once the workload is scheduled and running."
-        podCount={app.podCount}
-        pods={app.pods}
-        readyPodCount={app.readyPodCount}
-        workloadLabel={app.displayName}
-      />
     </label>
   );
 }
@@ -410,45 +421,45 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
   return (
     <label
       className={cn(
-        "flex cursor-pointer flex-col gap-4 rounded-[28px] border p-5 transition duration-200",
+        "flex cursor-pointer flex-col gap-4 rounded-[28px] border p-4 transition duration-200 sm:p-5",
         selected
           ? "border-violet-400/40 bg-violet-400/10 shadow-[0_24px_70px_rgba(167,139,250,0.12)]"
           : "border-slate-800/90 bg-slate-950/55 hover:border-violet-400/25 hover:bg-slate-950/75",
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <input
-              checked={selected}
-              className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-violet-400"
-              onChange={onToggle}
-              type="checkbox"
-            />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-semibold text-white">{backupSet.displayName}</span>
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                    backupSet.state,
-                  )}`}
-                >
-                  {backupSet.state}
-                </span>
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
-                    backupSet.cloneRestoreSupported
-                      ? "border-violet-400/25 bg-violet-400/10 text-violet-100"
-                      : "border-slate-400/20 bg-slate-400/10 text-slate-200"
-                  }`}
-                >
-                  {backupSet.cloneRestoreSupported ? "Clone ready" : "PVC-only"}
-                </span>
-              </div>
-              {workloadLabel ? (
-                <div className="mt-1 break-all text-xs text-slate-500">{workloadLabel}</div>
-              ) : null}
+      <div className="flex items-start gap-3">
+        <input
+          checked={selected}
+          className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-violet-400"
+          onChange={onToggle}
+          type="checkbox"
+        />
+        <div className="min-w-0 flex-1 space-y-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="break-words text-base font-semibold text-white">
+                {backupSet.displayName}
+              </span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                  backupSet.state,
+                )}`}
+              >
+                {backupSet.state}
+              </span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
+                  backupSet.cloneRestoreSupported
+                    ? "border-violet-400/25 bg-violet-400/10 text-violet-100"
+                    : "border-slate-400/20 bg-slate-400/10 text-slate-200"
+                }`}
+              >
+                {backupSet.cloneRestoreSupported ? "Clone ready" : "PVC-only"}
+              </span>
             </div>
+            {workloadLabel ? (
+              <div className="mt-1 break-all text-xs text-slate-500">{workloadLabel}</div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs text-slate-300">
@@ -471,37 +482,36 @@ function BackupSetCard({ backupSet, selected, onToggle }: BackupSetCardProps) {
             </div>
           ) : null}
         </div>
-
-        <div className="rounded-[24px] border border-white/8 bg-slate-900/75 px-4 py-3 sm:min-w-[12rem] sm:text-right">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Restore scope</div>
-          <div className="mt-2 text-2xl font-semibold text-white">{backupSet.volumeCount}</div>
-          <div className="text-xs text-slate-400">Volume snapshot{backupSet.volumeCount === 1 ? "" : "s"}</div>
-        </div>
       </div>
 
-      <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
-        <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-          Captured volumes
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
+        <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+              Captured volumes
+            </div>
+            <div className="text-xs text-slate-400">{pluralize(backupSet.volumeCount, "set")}</div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {backupSet.volumes.map((volume) => (
+              <span
+                className="max-w-full rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
+                key={volume.name}
+              >
+                {volume.pvcName || volume.volumeName}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {backupSet.volumes.map((volume) => (
-            <span
-              className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs text-slate-300"
-              key={volume.name}
-            >
-              {volume.pvcName || volume.volumeName}
-            </span>
-          ))}
-        </div>
-      </div>
 
-      <WorkloadPodPanel
-        emptyMessage="No current cluster pods are mapped to this workload."
-        podCount={backupSet.podCount}
-        pods={backupSet.pods}
-        readyPodCount={backupSet.readyPodCount}
-        workloadLabel={workloadLabel}
-      />
+        <WorkloadPodPanel
+          emptyMessage="No current cluster pods are mapped to this workload."
+          podCount={backupSet.podCount}
+          pods={backupSet.pods}
+          readyPodCount={backupSet.readyPodCount}
+          workloadLabel={workloadLabel}
+        />
+      </div>
     </label>
   );
 }
@@ -523,12 +533,14 @@ function UnmanagedInventoryCard({
       : "border-violet-400/25 bg-violet-400/10 text-violet-100";
 
   return (
-    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-800/90 bg-slate-950/55 p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
+    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-800/90 bg-slate-950/55 p-4 sm:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base font-semibold text-white">{item.displayName}</span>
+              <span className="break-words text-base font-semibold text-white">
+                {item.displayName}
+              </span>
               <span
                 className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${confidenceBadge}`}
               >
@@ -545,7 +557,7 @@ function UnmanagedInventoryCard({
             </div>
           </div>
 
-          <p className="max-w-3xl text-sm text-slate-300">{item.managementSummary}</p>
+          <p className="text-sm text-slate-300">{item.managementSummary}</p>
 
           <div className="flex flex-wrap gap-2 text-xs text-slate-300">
             <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">
@@ -562,48 +574,45 @@ function UnmanagedInventoryCard({
           </div>
         </div>
 
-        <div className="rounded-[24px] border border-white/8 bg-slate-900/75 px-4 py-3 sm:min-w-[12rem] sm:text-right">
+        <div className="w-full shrink-0 rounded-[24px] border border-white/8 bg-slate-900/75 px-4 py-4 lg:w-64">
           <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-            Inventory signal
+            Cleanup actions
           </div>
-          <div className="mt-2 text-2xl font-semibold text-white">
-            {item.source === "restore-artifact" ? "Restore" : "Review"}
-          </div>
-          <div className="text-xs text-slate-400">
+          <div className="mt-2 text-sm text-slate-300">
             {item.source === "restore-artifact"
-              ? "Orbit restore markers found"
-              : "Outside Argo ownership"}
+              ? "High-signal restore/test artifact."
+              : "Manual review candidate only."}
           </div>
           <div className="mt-4 space-y-2">
-           {onCleanup ? (
-             <>
-               <button
-                 className="w-full rounded-full border border-amber-400/25 bg-amber-400/12 px-3 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
-                 disabled={cleanupBusy}
-                 onClick={onCleanup}
-                 type="button"
-               >
-                 {cleanupBusy ? "Cleaning..." : "Clean now"}
-               </button>
-               <button
-                 className={cn(
-                   "w-full rounded-full border px-3 py-2 text-xs font-medium transition",
-                   selected
-                     ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
-                     : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
-                 )}
-                 disabled={cleanupBusy}
-                 onClick={onToggleSelect}
-                 type="button"
-               >
-                 {selected ? "Selected for batch cleanup" : "Select for batch cleanup"}
-               </button>
-             </>
-           ) : (
-             <div className="rounded-[18px] border border-white/8 bg-white/5 px-3 py-2 text-center text-xs text-slate-400">
-               Manual review only
-             </div>
-           )}
+            {onCleanup ? (
+              <>
+                <button
+                  className="w-full rounded-full border border-amber-400/25 bg-amber-400/12 px-3 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={cleanupBusy}
+                  onClick={onCleanup}
+                  type="button"
+                >
+                  {cleanupBusy ? "Cleaning..." : "Clean now"}
+                </button>
+                <button
+                  className={cn(
+                    "w-full rounded-full border px-3 py-2 text-xs font-medium transition",
+                    selected
+                      ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
+                  )}
+                  disabled={cleanupBusy}
+                  onClick={onToggleSelect}
+                  type="button"
+                >
+                  {selected ? "Selected for batch cleanup" : "Select for batch cleanup"}
+                </button>
+              </>
+            ) : (
+              <div className="rounded-[18px] border border-white/8 bg-white/5 px-3 py-2 text-center text-xs text-slate-400">
+                Manual review only
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -634,6 +643,50 @@ function UnmanagedInventoryCard({
           workloadLabel={item.displayName}
         />
       ) : null}
+    </div>
+  );
+}
+
+function BottomNav({
+  items,
+  activePage,
+  onSelect,
+}: {
+  items: BottomNavItem[];
+  activePage: ConsolePage;
+  onSelect: (page: ConsolePage) => void;
+}) {
+  return (
+    <div className="bottom-nav-shell fixed inset-x-0 bottom-0 z-30">
+      <div className="mx-auto max-w-[94rem] px-3 pb-3 sm:px-5 lg:px-8">
+        <nav className="panel rounded-[26px] border border-white/10 bg-slate-950/88 p-2 shadow-[0_30px_80px_rgba(2,6,23,0.6)]">
+          <div className="grid grid-cols-5 gap-1">
+            {items.map(({ id, label, icon: Icon, badge }) => (
+              <button
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 rounded-[20px] px-2 py-2.5 text-center text-[11px] font-medium transition sm:text-xs",
+                  activePage === id
+                    ? "bg-sky-400/12 text-sky-50"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white",
+                )}
+                key={id}
+                onClick={() => onSelect(id)}
+                type="button"
+              >
+                <div className="relative">
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {badge ? (
+                    <span className="absolute -right-3 -top-2 inline-flex min-w-[1.1rem] items-center justify-center rounded-full border border-slate-950 bg-sky-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-950">
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  ) : null}
+                </div>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+      </div>
     </div>
   );
 }
@@ -692,7 +745,7 @@ export function BackupConsole() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [unmanagedFilter, setUnmanagedFilter] = useState<"all" | "high" | "review">("all");
   const [selectedUnmanagedRefs, setSelectedUnmanagedRefs] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<BackupConsoleTab>("overview");
+  const [activePage, setActivePage] = useState<ConsolePage>("home");
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -752,6 +805,37 @@ export function BackupConsole() {
 
     return () => clearInterval(interval);
   }, [refresh]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const applyHash = () => {
+      const value = window.location.hash.replace(/^#/, "");
+      if (isConsolePage(value)) {
+        setActivePage(value);
+      } else if (!value) {
+        setActivePage("home");
+      }
+    };
+
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const nextHash = activePage === "home" ? "" : `#${activePage}`;
+    if (window.location.hash !== nextHash) {
+      const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activePage]);
 
   const protectedApps = useMemo(
     () => uiState.apps.filter((app) => app.volumes.length > 0),
@@ -847,9 +931,7 @@ export function BackupConsole() {
   }, [backupSetById]);
 
   useEffect(() => {
-    const cleanupEligibleRefs = new Set(
-      highConfidenceUnmanaged.map((item) => item.ref),
-    );
+    const cleanupEligibleRefs = new Set(highConfidenceUnmanaged.map((item) => item.ref));
     setSelectedUnmanagedRefs((previous) =>
       previous.filter((ref) => cleanupEligibleRefs.has(ref)),
     );
@@ -939,6 +1021,7 @@ export function BackupConsole() {
         });
         setSelectedBackupSets([]);
         await refresh();
+        setActivePage("activity");
       },
       "Backup queued",
       `${pluralize(selectedApps.length, "workload")} added to the backup queue in ${backupMode} mode.`,
@@ -961,6 +1044,7 @@ export function BackupConsole() {
           targetNamespace: restoreMode === "in-place" ? undefined : restoreNamespace,
         });
         await refresh();
+        setActivePage("activity");
       },
       "Restore queued",
       `${pluralize(selectedBackupSets.length, "backup set")} added to the restore queue in ${restoreMode} mode.`,
@@ -1008,6 +1092,7 @@ export function BackupConsole() {
           details.join(" ") ||
           "Orbit did not delete anything because nothing remained eligible for cleanup.",
       });
+      setActivePage("cleanup");
     } catch (error) {
       setNotice({
         tone: "error",
@@ -1095,9 +1180,6 @@ export function BackupConsole() {
   const overview = uiState.dashboard?.overview;
   const activeSchedules = schedules.filter((schedule) => schedule.enabled).length;
   const healthyTargetCount = targets.filter((target) => target.available).length;
-  const cloneReadyBackupCount = uiState.backupSets.filter(
-    (backupSet) => backupSet.cloneRestoreSupported,
-  ).length;
   const selectedAppVolumeCount = selectedAppRecords.reduce(
     (sum, app) => sum + app.volumes.length,
     0,
@@ -1127,80 +1209,145 @@ export function BackupConsole() {
         ? "Healthy"
         : `${healthyTargetCount}/${targets.length} healthy`;
   const runningOperations = overview?.runningOperations ?? 0;
-  const tabItems = [
+  const backupsLastWeek = uiState.backupSets.filter((backupSet) => {
+    if (!backupSet.createdAt) {
+      return false;
+    }
+
+    return Date.now() - new Date(backupSet.createdAt).getTime() <= 7 * 24 * 60 * 60 * 1000;
+  }).length;
+  const latestBackupByAppRef = useMemo(() => {
+    const latest = new Map<
+      string,
+      { status: OperationItem["status"]; timestamp: number; displayName: string; message?: string }
+    >();
+
+    for (const operation of uiState.operations) {
+      if (operation.type !== "backup") {
+        continue;
+      }
+
+      const timestamp = new Date(
+        operation.finishedAt || operation.startedAt || operation.createdAt,
+      ).getTime();
+
+      for (const item of operation.items) {
+        if (!item.appRef) {
+          continue;
+        }
+
+        const current = latest.get(item.appRef);
+        if (!current || timestamp >= current.timestamp) {
+          latest.set(item.appRef, {
+            status: item.status,
+            timestamp,
+            displayName: item.displayName,
+            message: item.message,
+          });
+        }
+      }
+    }
+
+    return latest;
+  }, [uiState.operations]);
+  const failedLatestBackups = protectedApps
+    .map((app) => ({
+      app,
+      latest: latestBackupByAppRef.get(app.ref),
+    }))
+    .filter(
+      (
+        entry,
+      ): entry is {
+        app: AppInventoryItem;
+        latest: { status: OperationItem["status"]; timestamp: number; displayName: string; message?: string };
+      } => entry.latest?.status === "failed",
+    );
+
+  const pageItems: BottomNavItem[] = [
     {
-      id: "overview" as const,
-      label: "Overview",
-      description: "Health, posture, and navigation",
-      icon: ShieldCheck,
+      id: "home",
+      label: "Home",
+      description: "Status, counts, and quick actions",
+      icon: House,
     },
     {
-      id: "protect" as const,
-      label: "Protect",
-      description: "Select workloads and queue backups",
+      id: "backup",
+      label: "Backup",
+      description: "Pick workloads, schedules, and targets",
       icon: ArrowUpFromLine,
       badge: selectedApps.length > 0 ? selectedApps.length : undefined,
     },
     {
-      id: "recover" as const,
-      label: "Recover",
-      description: "Restore backups and clean unmanaged items",
+      id: "restore",
+      label: "Restore",
+      description: "Recover apps from the backup catalog",
       icon: ArrowDownToLine,
-      badge:
-        selectedBackupSets.length > 0
-          ? selectedBackupSets.length
-          : selectedUnmanagedRefs.length > 0
-            ? selectedUnmanagedRefs.length
-            : undefined,
+      badge: selectedBackupSets.length > 0 ? selectedBackupSets.length : undefined,
     },
     {
-      id: "automate" as const,
-      label: "Automate",
-      description: "Targets and recurring schedules",
-      icon: Workflow,
-      badge: activeSchedules > 0 ? activeSchedules : undefined,
-    },
-    {
-      id: "activity" as const,
+      id: "activity",
       label: "Activity",
-      description: "Runs, progress, and logs",
-      icon: LoaderCircle,
+      description: "Track live runs and progress",
+      icon: Activity,
       badge: runningOperations > 0 ? runningOperations : undefined,
     },
+    {
+      id: "cleanup",
+      label: "Cleanup",
+      description: "Review and remove orphaned resources",
+      icon: Trash2,
+      badge:
+        selectedUnmanagedRefs.length > 0
+          ? selectedUnmanagedRefs.length
+          : highConfidenceUnmanaged.length > 0
+            ? highConfidenceUnmanaged.length
+            : undefined,
+    },
   ];
-  const activeTabItem = tabItems.find((item) => item.id === activeTab) ?? tabItems[0];
-  const overviewSection = (
-    <>
+
+  const homePage = (
+    <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
-            label: "Protected workloads",
-            value: overview?.protectedWorkloadCount ?? protectedApps.length,
-            detail: selectedApps.length
-              ? `${pluralize(selectedApps.length, "selected workload")}`
-              : "Ready for selection",
+            label: "Schedules",
+            value: schedules.length,
+            detail:
+              schedules.length > 0
+                ? `${pluralize(activeSchedules, "active schedule")} right now`
+                : "No recurring protection configured",
+            icon: Workflow,
+            tone: "from-violet-400/20 via-violet-400/5 to-transparent",
+          },
+          {
+            label: "Backups this week",
+            value: backupsLastWeek,
+            detail:
+              backupsLastWeek > 0
+                ? `${pluralize(uiState.backupSets.length, "catalog entry")} currently visible`
+                : "No backups captured in the last 7 days",
             icon: DatabaseBackup,
             tone: "from-sky-400/20 via-sky-400/5 to-transparent",
           },
           {
-            label: "Backup catalog",
-            value: overview?.backupSetCount ?? uiState.backupSets.length,
-            detail: `${pluralize(cloneReadyBackupCount, "clone-ready set")}`,
+            label: "Failed last backup",
+            value: failedLatestBackups.length,
+            detail:
+              failedLatestBackups.length > 0
+                ? `${pluralize(failedLatestBackups.length, "workload")} needs attention`
+                : "Latest backup is healthy across protected workloads",
+            icon: ShieldAlert,
+            tone: "from-rose-400/20 via-rose-400/5 to-transparent",
+          },
+          {
+            label: "Backup targets",
+            value: targetStatusLabel,
+            detail:
+              targets.length > 0
+                ? defaultTarget?.backupTargetURL || "Target is configured"
+                : "Save a Longhorn target to start writing backups",
             icon: Cloud,
-            tone: "from-violet-400/20 via-violet-400/5 to-transparent",
-          },
-          {
-            label: "Live activity",
-            value: runningOperations,
-            detail: `${pluralize(uiState.operations.length, "recent operation")}`,
-            icon: LoaderCircle,
-            tone: "from-amber-400/20 via-amber-400/5 to-transparent",
-          },
-          {
-            label: "Schedules active",
-            value: activeSchedules,
-            detail: `${pluralize(schedules.length, "saved schedule")}`,
-            icon: Workflow,
             tone: "from-emerald-400/20 via-emerald-400/5 to-transparent",
           },
         ].map(({ label, value, detail, icon: Icon, tone }) => (
@@ -1208,7 +1355,9 @@ export function BackupConsole() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="section-label">{label}</div>
-                <div className="mt-4 text-3xl font-semibold tracking-tight text-white">{value}</div>
+                <div className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                  {value}
+                </div>
                 <div className="mt-2 text-sm text-slate-400">{detail}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/6 p-3">
@@ -1219,22 +1368,22 @@ export function BackupConsole() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="panel rounded-[32px] p-5 sm:p-6">
           <SectionHeading
-            description="Tabs keep the console readable on phones without hiding any of the backup, recovery, or automation controls."
-            eyebrow="Quick navigation"
-            title="Jump straight to the task you need"
+            description="Move straight into backup, restore, activity, or orphan cleanup without scrolling through the whole console."
+            eyebrow="Quick actions"
+            title="Open the page you need"
           />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {tabItems
-              .filter((item) => item.id !== "overview")
+            {pageItems
+              .filter((item) => item.id !== "home")
               .map(({ id, label, description, icon: Icon, badge }) => (
                 <button
                   className="flex items-start justify-between gap-3 rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4 text-left transition hover:border-sky-400/25 hover:bg-slate-950/80"
                   key={id}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => setActivePage(id)}
                   type="button"
                 >
                   <div className="flex min-w-0 gap-3">
@@ -1258,81 +1407,112 @@ export function BackupConsole() {
 
         <section className="panel rounded-[32px] p-5 sm:p-6">
           <SectionHeading
-            description="Keep the core recovery signals visible before you dive into a specific tab."
-            eyebrow="Live posture"
-            title="See backup health at a glance"
+            description="The home page keeps only the operational summary that matters once the workflows are already in place."
+            eyebrow="Operational summary"
+            title="Cluster backup health"
           />
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {[
-              {
-                label: "Default target",
-                value: targetStatusLabel,
-                detail: defaultTarget?.backupTargetURL || "Save a Longhorn target to start writing backups.",
-              },
-              {
-                label: "Restore catalog",
-                value: pluralize(uiState.backupSets.length, "set"),
-                detail:
-                  selectedBackupSets.length > 0
-                    ? `${pluralize(selectedBackupSets.length, "set")} selected for recovery review.`
-                    : "Backups stay ready for in-place, clone, or PVC-only restore.",
-              },
-              {
-                label: "Unmanaged cleanup",
-                value: pluralize(highConfidenceUnmanaged.length, "high-confidence item"),
-                detail:
-                  selectedUnmanagedRefs.length > 0
-                    ? `${pluralize(selectedUnmanagedRefs.length, "item")} selected for the next cleanup run.`
-                    : "Review-only items stay read-only until an operator confirms them.",
-              },
-              {
-                label: "Recent activity",
-                value: pluralize(runningOperations, "active run"),
-                detail:
-                  uiState.operations[0]?.summary ||
-                  "Queued, running, and finished operations appear in the activity tab.",
-              },
-            ].map((item) => (
-              <div
-                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
-                key={item.label}
-              >
-                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                  {item.label}
-                </div>
-                <div className="mt-3 text-lg font-semibold text-white">{item.value}</div>
-                <div className="mt-2 text-sm text-slate-400">{item.detail}</div>
+          <div className="mt-5 grid gap-3">
+            <div className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                Target status
               </div>
-            ))}
+              <div className="mt-2 text-lg font-semibold text-white">{targetStatusLabel}</div>
+              <div className="mt-2 break-all text-sm text-slate-400">
+                {defaultTarget?.backupTargetURL || "No target URL configured yet."}
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                Recent failures
+              </div>
+              {failedLatestBackups.length > 0 ? (
+                <div className="mt-3 space-y-3">
+                  {failedLatestBackups.slice(0, 3).map(({ latest }, index) => (
+                    <div
+                      className="rounded-[20px] border border-rose-400/15 bg-rose-400/10 px-4 py-3"
+                      key={`${latest.displayName}-${index}`}
+                    >
+                      <div className="font-medium text-rose-50">{latest.displayName}</div>
+                      <div className="mt-1 text-xs text-rose-100/80">
+                        {latest.message || "The latest backup attempt finished in a failed state."}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-3 text-sm text-slate-400">
+                  No protected workload is currently flagged as failed on its most recent backup.
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                Schedule posture
+              </div>
+              {schedules.length > 0 ? (
+                <div className="mt-3 space-y-2">
+                  {schedules.slice(0, 3).map((schedule) => (
+                    <div
+                      className="flex items-center justify-between gap-3 rounded-[18px] border border-white/8 bg-white/5 px-3 py-3 text-sm"
+                      key={schedule.id}
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-white">{schedule.name}</div>
+                        <div className="mt-1 text-xs text-slate-400">
+                          {schedule.cron} · Next {formatTimestamp(schedule.nextRunAt)}
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                          schedule.enabled ? "Completed" : "stopped",
+                        )}`}
+                      >
+                        {schedule.enabled ? "Enabled" : "Paused"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-3 text-sm text-slate-400">
+                  No schedules saved yet. Use the backup page to create recurring protection.
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </section>
-    </>
+    </div>
   );
-  const protectSection = (
-    <section className="panel rounded-[32px] p-5 sm:p-6">
-      <SectionHeading
-        description="Select PVC-backed apps, choose the backup depth, and queue protection without dropping into PVC-by-PVC workflows."
-        eyebrow="Backup flow"
-        title="Protect workloads"
-      />
 
-      <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="section-label">Step 1</div>
-            <div className="mt-3 text-lg font-medium text-white">
-              Choose workload coverage and queue a backup
-            </div>
-            <p className="mt-2 max-w-2xl text-sm text-slate-400">
-              Orbit only lists workloads with protected storage so the backup path stays
-              focused and shippable.
-            </p>
-          </div>
+  const backupPage = (
+    <div className="space-y-6">
+      <section className="panel rounded-[32px] p-5 sm:p-6">
+        <SectionHeading
+          description="Choose protected workloads, queue a backup, then tune storage and schedules beneath the same screen."
+          eyebrow="Backup"
+          title="Protect workloads"
+          actions={
+            <button
+              className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={selectedApps.length === 0 || workingLabel === "backup"}
+              onClick={() => void runBackup()}
+              type="button"
+            >
+              <ArrowUpFromLine className="h-4 w-4" />
+              {workingLabel === "backup"
+                ? "Queueing backup..."
+                : `Back up ${selectedApps.length ? pluralize(selectedApps.length, "app") : "selected apps"}`}
+            </button>
+          }
+        />
 
-          <div className="flex flex-col gap-3 sm:items-end">
-            <div className="flex flex-wrap gap-2">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+          <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+            <div className="section-label">Backup mode</div>
+            <div className="mt-4 flex flex-wrap gap-2">
               {[
                 {
                   id: "incremental",
@@ -1361,666 +1541,450 @@ export function BackupConsole() {
                 </button>
               ))}
             </div>
+            <div className="mt-4 text-sm text-slate-400">
+              Orbit only lists PVC-backed workloads here, so the backup page stays focused on real recoverable app data.
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-sky-400/18 bg-sky-400/10 p-4 sm:p-5">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-sky-100/75">
+              Selection summary
+            </div>
+            <div className="mt-3 text-xl font-semibold text-sky-50">
+              {pluralize(selectedApps.length, "workload")}
+            </div>
+            <div className="mt-2 text-sm text-sky-100/80">
+              Covers {pluralize(selectedAppVolumeCount, "Longhorn volume")} and can be reused for scheduling.
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          {protectedApps.length > 0 ? (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {protectedApps.map((app) => (
+                <AppSelectionCard
+                  app={app}
+                  key={app.ref}
+                  onToggle={() => toggleSelection(selectedApps, setSelectedApps, app.ref)}
+                  selected={selectedApps.includes(app.ref)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              description="Orbit did not find any PVC-backed workloads to protect yet. Once protected apps appear, they will be listed here with pod health and storage details."
+              title="No protected workloads detected"
+            />
+          )}
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <section className="panel rounded-[32px] p-5 sm:p-6">
+          <SectionHeading
+            description="Point Longhorn at the destination you actually want to use, then save the exact secret reference and poll cadence."
+            eyebrow="Target"
+            title="Configure backup storage"
+          />
+
+          <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+            <div className="space-y-4">
+              <label className="block">
+                <span className="field-label">Target URL</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                  onChange={(event) => {
+                    setTargetDirty(true);
+                    setTargetUrl(event.target.value);
+                  }}
+                  placeholder="azblob://backup-container@core.windows.net/"
+                  value={targetUrl}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Credential secret</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                  onChange={(event) => {
+                    setTargetDirty(true);
+                    setTargetSecret(event.target.value);
+                  }}
+                  placeholder="azure-backup-credentials"
+                  value={targetSecret}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Poll interval</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
+                  onChange={(event) => {
+                    setTargetDirty(true);
+                    setTargetPollInterval(event.target.value);
+                  }}
+                  placeholder="300s"
+                  value={targetPollInterval}
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/8 bg-white/5 px-4 py-3 text-xs text-slate-400">
+              <span>Changes sync to Longhorn and appear in the status cards after the next refresh.</span>
+              {targetDirty ? (
+                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-amber-100">
+                  Unsaved changes
+                </span>
+              ) : null}
+            </div>
+
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-              disabled={selectedApps.length === 0 || workingLabel === "backup"}
-              onClick={() => void runBackup()}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={!targetUrl || workingLabel === "target"}
+              onClick={() => void saveTarget()}
               type="button"
             >
-              <ArrowUpFromLine className="h-4 w-4" />
-              {workingLabel === "backup"
-                ? "Queueing backup..."
-                : `Back up ${selectedApps.length ? pluralize(selectedApps.length, "app") : "selected apps"}`}
+              <Cloud className="h-4 w-4" />
+              {workingLabel === "target" ? "Saving target..." : "Save target"}
             </button>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {targets.length > 0 ? (
+              targets.map((target) => (
+                <div
+                  className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
+                  key={target.name}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-medium text-white">{target.name}</div>
+                      <div className="mt-1 break-all text-xs text-slate-500">
+                        {target.backupTargetURL || "No target URL configured"}
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                        target.available ? "Completed" : "failed",
+                      )}`}
+                    >
+                      {target.available ? "Available" : "Unavailable"}
+                    </span>
+                  </div>
+                  <div className="mt-3 text-xs text-slate-400">
+                    Last synced {formatTimestamp(target.lastSyncedAt)}
+                  </div>
+                  {target.conditions.length > 0 ? (
+                    <div className="mt-3 space-y-2 text-xs text-rose-100">
+                      {target.conditions.map((condition) => (
+                        <div
+                          className="rounded-2xl border border-rose-400/15 bg-rose-400/10 px-3 py-2"
+                          key={condition}
+                        >
+                          {condition}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <EmptyState
+                description="Save a target to start writing backups to object storage or a supported share."
+                title="No backup targets configured"
+              />
+            )}
+          </div>
+        </section>
+
+        <section className="panel rounded-[32px] p-5 sm:p-6">
+          <SectionHeading
+            actions={
+              <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-medium text-violet-100">
+                {pluralize(activeSchedules, "active schedule")}
+              </span>
+            }
+            description="Schedules reuse the currently selected workloads so the recurring protection plan matches the backup set you just reviewed."
+            eyebrow="Schedules"
+            title="Manage recurring backups"
+          />
+
+          <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+            <div className="rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
+              {selectedApps.length > 0 ? (
+                <div>
+                  <div className="font-medium text-violet-50">
+                    New schedule will cover {pluralize(selectedApps.length, "selected workload")}
+                  </div>
+                  <div className="mt-1 text-sm text-violet-100/80">
+                    Current selection includes {pluralize(selectedAppVolumeCount, "volume")}.
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="font-medium text-violet-50">Select workloads first</div>
+                  <div className="mt-1 text-sm text-violet-100/80">
+                    Use the backup page selections to decide which apps this schedule should protect.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <label className="block">
+                <span className="field-label">Schedule name</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                  onChange={(event) => setScheduleName(event.target.value)}
+                  placeholder="Nightly protected apps"
+                  value={scheduleName}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Cron expression</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                  onChange={(event) => setScheduleCron(event.target.value)}
+                  placeholder="0 3 * * *"
+                  value={scheduleCron}
+                />
+              </label>
+            </div>
+
+            <button
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={
+                selectedApps.length === 0 ||
+                !scheduleName.trim() ||
+                workingLabel === "schedule"
+              }
+              onClick={() => void createSchedule()}
+              type="button"
+            >
+              <Workflow className="h-4 w-4" />
+              {workingLabel === "schedule" ? "Saving schedule..." : "Create schedule"}
+            </button>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {schedules.length > 0 ? (
+              schedules.map((schedule) => (
+                <div
+                  className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
+                  key={schedule.id}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-medium text-white">{schedule.name}</div>
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                            schedule.enabled ? "Completed" : "stopped",
+                          )}`}
+                        >
+                          {schedule.enabled ? "Enabled" : "Paused"}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-xs text-slate-400">
+                        {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
+                        {typeof schedule.activeVolumeCount === "number"
+                          ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
+                          : ""}
+                      </div>
+                      {schedule.appDisplayNames?.length ? (
+                        <div className="mt-2 text-xs text-slate-500">
+                          {schedule.appDisplayNames.slice(0, 3).join(", ")}
+                          {schedule.appDisplayNames.length > 3
+                            ? ` +${schedule.appDisplayNames.length - 3} more`
+                            : ""}
+                        </div>
+                      ) : null}
+                      <div className="mt-2 text-xs text-slate-400">
+                        Next run {formatTimestamp(schedule.nextRunAt)}
+                        {schedule.lastRunAt
+                          ? ` · Last run ${formatTimestamp(schedule.lastRunAt)}`
+                          : ""}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-violet-400/25 hover:text-white"
+                        onClick={() => void setScheduleEnabled(schedule, !schedule.enabled)}
+                        type="button"
+                      >
+                        {workingLabel === `schedule:${schedule.id}`
+                          ? "Saving..."
+                          : schedule.enabled
+                            ? "Pause"
+                            : "Enable"}
+                      </button>
+                      <button
+                        className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
+                        onClick={() => void deleteExistingSchedule(schedule)}
+                        type="button"
+                      >
+                        {workingLabel === `schedule-delete:${schedule.id}`
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <EmptyState
+                description="Recurring jobs will appear here once you save the first schedule."
+                title="No schedules yet"
+              />
+            )}
+          </div>
+        </section>
+      </section>
+    </div>
+  );
+
+  const restorePage = (
+    <section className="panel rounded-[32px] p-5 sm:p-6">
+      <SectionHeading
+        description="Review backup sets, choose the safest restore path, and queue only the recovery work you actually want."
+        eyebrow="Restore"
+        title="Recover apps from the backup catalog"
+        actions={
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+            disabled={restoreDisabled}
+            onClick={() => void runRestore()}
+            type="button"
+          >
+            <ArrowDownToLine className="h-4 w-4" />
+            {workingLabel === "restore"
+              ? "Queueing restore..."
+              : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
+          </button>
+        }
+      />
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
+        <div className="rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+          <div className="section-label">Restore mode</div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {[
+              {
+                id: "in-place",
+                label: "In-place restore",
+                description: "Overwrite the live app safely",
+              },
+              {
+                id: "clone-workload",
+                label: "Clone workload",
+                description: "Validate in a safe namespace",
+              },
+              {
+                id: "pvc-only",
+                label: "PVC-only restore",
+                description: "Advanced detached claim flow",
+              },
+            ].map((mode) => (
+              <button
+                className={cn(
+                  "rounded-[22px] border px-4 py-3 text-left transition",
+                  restoreMode === mode.id
+                    ? "border-violet-400/30 bg-violet-400/12 text-violet-50"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:border-violet-400/20 hover:text-white",
+                )}
+                key={mode.id}
+                onClick={() => setRestoreMode(mode.id as RestoreMode)}
+                type="button"
+              >
+                <div className="font-medium">{mode.label}</div>
+                <div className="mt-1 text-xs opacity-80">{mode.description}</div>
+              </button>
+            ))}
+          </div>
+
+          <label className="mt-4 block">
+            <span className="field-label">Target namespace</span>
+            <input
+              className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={restoreMode === "in-place"}
+              onChange={(event) => setRestoreNamespace(event.target.value)}
+              placeholder={defaultRestoreNamespace}
+              value={restoreNamespace}
+            />
+            <div className="mt-2 text-xs text-slate-500">
+              {restoreMode === "in-place"
+                ? "In-place restore keeps the original namespace and ignores this field."
+                : restoreMode === "clone-workload"
+                  ? "Orbit suggests a safe clone namespace based on the selected backup set."
+                  : "PVC-only restore can recreate detached claims in the namespace you choose."}
+            </div>
+          </label>
+        </div>
+
+        <div className="rounded-[28px] border border-violet-400/18 bg-violet-400/10 p-4 sm:p-5">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-violet-100/75">
+            Restore selection
+          </div>
+          <div className="mt-3 text-xl font-semibold text-violet-50">
+            {pluralize(selectedBackupSets.length, "backup set")}
+          </div>
+          <div className="mt-2 text-sm text-violet-100/80">
+            Covers {pluralize(selectedBackupVolumeCount, "volume")} with {pluralize(
+              selectedCloneReadyCount,
+              "clone-ready set",
+            )}.
           </div>
         </div>
       </div>
 
-      <div className="mt-4 rounded-[24px] border border-sky-400/20 bg-sky-400/10 px-4 py-4">
-        {selectedApps.length > 0 ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="font-medium text-sky-50">
-                {pluralize(selectedApps.length, "workload")} selected for protection
-              </div>
-              <div className="mt-1 text-sm text-sky-100/80">
-                Covers {pluralize(selectedAppVolumeCount, "Longhorn volume")} and can
-                be reused when you create a schedule.
-              </div>
-            </div>
-            <div className="text-xs uppercase tracking-[0.24em] text-sky-100/70">
-              Backup and schedule ready
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="font-medium text-sky-50">No workloads selected yet</div>
-            <div className="mt-1 text-sm text-sky-100/80">
-              Pick one or more PVC-backed apps below to enable backup and schedule
-              actions.
-            </div>
-          </div>
+      <div
+        className={cn(
+          "mt-4 rounded-[24px] border px-4 py-4 text-sm",
+          restoreSelectionError
+            ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
+            : "border-white/8 bg-slate-950/55 text-slate-300",
         )}
+      >
+        {restoreMode === "in-place"
+          ? restoreSelectionError ||
+            "In-place restore pauses the owning Argo Application when possible, swaps the original PVC identity, then resumes normal reconciliation."
+          : restoreMode === "clone-workload"
+            ? restoreSelectionError ||
+              "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
+            : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
       </div>
 
       <div className="mt-5">
-        {protectedApps.length > 0 ? (
-          <div className="grid gap-4 xl:grid-cols-2">
-            {protectedApps.map((app) => (
-              <AppSelectionCard
-                app={app}
-                key={app.ref}
-                onToggle={() => toggleSelection(selectedApps, setSelectedApps, app.ref)}
-                selected={selectedApps.includes(app.ref)}
+        {uiState.backupSets.length > 0 ? (
+          <div className="space-y-4">
+            {uiState.backupSets.map((backupSet) => (
+              <BackupSetCard
+                backupSet={backupSet}
+                key={backupSet.id}
+                onToggle={() =>
+                  toggleSelection(
+                    selectedBackupSets,
+                    setSelectedBackupSets,
+                    backupSet.id,
+                  )
+                }
+                selected={selectedBackupSets.includes(backupSet.id)}
               />
             ))}
           </div>
         ) : (
           <EmptyState
-            description="Orbit did not find any PVC-backed workloads to protect yet. Once protected apps appear, they will be listed here with pod health and storage details."
-            title="No protected workloads detected"
+            description="Once backups are captured, Orbit will list them here with restore compatibility, captured volumes, and current pod context."
+            title="No backup sets available yet"
           />
         )}
       </div>
     </section>
   );
-  const recoverSection = (
-    <div className="space-y-6">
-      <section className="panel rounded-[32px] p-5 sm:p-6">
-        <SectionHeading
-          description="Review backup sets, choose the safest restore path, and send only the work that matches the selected recovery mode."
-          eyebrow="Restore flow"
-          title="Restore from the backup catalog"
-        />
 
-        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div className="space-y-4">
-              <div>
-                <div className="section-label">Step 2</div>
-                <div className="mt-3 text-lg font-medium text-white">
-                  Choose the restore shape before you queue work
-                </div>
-                <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                  In-place restore is now the primary recovery path: pause Argo,
-                  replace the existing volume identity, then let the app settle again.
-                  Clone and PVC-only restore remain available as fallback tools.
-                </p>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3">
-                {[
-                  {
-                    id: "in-place",
-                    label: "In-place restore",
-                    description: "Preferred: overwrite the current app data safely",
-                  },
-                  {
-                    id: "clone-workload",
-                    label: "Clone workload",
-                    description: "Fallback: rebuild the workload in a safe namespace",
-                  },
-                  {
-                    id: "pvc-only",
-                    label: "PVC-only restore",
-                    description: "Advanced: recreate detached claims without the controller",
-                  },
-                ].map((mode) => (
-                  <button
-                    className={cn(
-                      "rounded-[22px] border px-4 py-3 text-left transition",
-                      restoreMode === mode.id
-                        ? "border-violet-400/30 bg-violet-400/12 text-violet-50"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:border-violet-400/20 hover:text-white",
-                    )}
-                    key={mode.id}
-                    onClick={() => setRestoreMode(mode.id as RestoreMode)}
-                    type="button"
-                  >
-                    <div className="font-medium">{mode.label}</div>
-                    <div className="mt-1 text-xs opacity-80">{mode.description}</div>
-                  </button>
-                ))}
-              </div>
-
-              <label className="block">
-                <span className="field-label">Target namespace</span>
-                <input
-                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={restoreMode === "in-place"}
-                  onChange={(event) => setRestoreNamespace(event.target.value)}
-                  placeholder={defaultRestoreNamespace}
-                  value={restoreNamespace}
-                />
-                <div className="mt-2 text-xs text-slate-500">
-                  {restoreMode === "in-place"
-                    ? "In-place restore keeps the original namespace and ignores this field."
-                    : restoreMode === "clone-workload"
-                      ? "Orbit suggests a safe clone namespace based on the selected backup set."
-                      : "PVC-only restore can recreate detached claims in the namespace you choose."}
-                </div>
-              </label>
-            </div>
-
-            <button
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-              disabled={restoreDisabled}
-              onClick={() => void runRestore()}
-              type="button"
-            >
-              <ArrowDownToLine className="h-4 w-4" />
-              {workingLabel === "restore"
-                ? "Queueing restore..."
-                : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
-            </button>
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            "mt-4 rounded-[24px] border px-4 py-4 text-sm",
-            restoreSelectionError
-              ? "border-amber-400/25 bg-amber-400/10 text-amber-50"
-              : "border-white/8 bg-slate-950/55 text-slate-300",
-          )}
-        >
-          {restoreMode === "in-place"
-            ? restoreSelectionError ||
-              "In-place restore pauses the owning Argo Application when possible, scales the workload down, restores the original PVC identities, then brings the workload back."
-            : restoreMode === "clone-workload"
-              ? restoreSelectionError ||
-                "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
-              : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
-        </div>
-
-        <div className="mt-4 rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
-          {selectedBackupSets.length > 0 ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="font-medium text-violet-50">
-                  {pluralize(selectedBackupSets.length, "backup set")} selected for restore
-                </div>
-                <div className="mt-1 text-sm text-violet-100/80">
-                  Covers {pluralize(selectedBackupVolumeCount, "volume")} with {pluralize(
-                    selectedCloneReadyCount,
-                    "clone-ready set",
-                  )}.
-                </div>
-              </div>
-              <div className="text-xs uppercase tracking-[0.24em] text-violet-100/70">
-                Review compatibility before queueing
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="font-medium text-violet-50">No backup sets selected yet</div>
-              <div className="mt-1 text-sm text-violet-100/80">
-                Select one or more backups below to unlock restore controls and clone-mode
-                validation.
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-5">
-          {uiState.backupSets.length > 0 ? (
-            <div className="space-y-4">
-              {uiState.backupSets.map((backupSet) => (
-                <BackupSetCard
-                  backupSet={backupSet}
-                  key={backupSet.id}
-                  onToggle={() =>
-                    toggleSelection(
-                      selectedBackupSets,
-                      setSelectedBackupSets,
-                      backupSet.id,
-                    )
-                  }
-                  selected={selectedBackupSets.includes(backupSet.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              description="Once backups are captured, Orbit will list them here with restore compatibility, captured volumes, and current pod context."
-              title="No backup sets available yet"
-            />
-          )}
-        </div>
-      </section>
-
-      <section className="panel rounded-[32px] p-5 sm:p-6">
-        <SectionHeading
-          actions={
-            <div className="flex flex-wrap gap-2">
-              {[
-                {
-                  id: "all",
-                  label: `All (${uiState.unmanagedItems.length})`,
-                },
-                {
-                  id: "high",
-                  label: `High confidence (${highConfidenceUnmanaged.length})`,
-                },
-                {
-                  id: "review",
-                  label: `Needs review (${reviewUnmanaged.length})`,
-                },
-              ].map((filter) => (
-                <button
-                  className={cn(
-                    "rounded-full border px-3.5 py-2 text-xs transition",
-                    unmanagedFilter === filter.id
-                      ? "border-amber-400/30 bg-amber-400/12 text-amber-50"
-                      : "border-white/10 bg-white/5 text-slate-300 hover:border-amber-400/20 hover:text-white",
-                  )}
-                  key={filter.id}
-                  onClick={() =>
-                    setUnmanagedFilter(filter.id as "all" | "high" | "review")
-                  }
-                  type="button"
-                >
-                  {filter.label}
-                </button>
-              ))}
-              <button
-                className="rounded-full border border-amber-400/25 bg-amber-400/12 px-3.5 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={selectedUnmanagedRefs.length === 0 || workingLabel === "cleanup"}
-                onClick={() => void runUnmanagedCleanup(selectedUnmanagedRefs)}
-                type="button"
-              >
-                {workingLabel === "cleanup"
-                  ? "Cleaning selected..."
-                  : `Clean selected (${selectedUnmanagedRefs.length})`}
-              </button>
-            </div>
-          }
-          description="Conservative inventory only: Orbit skips cluster-critical namespaces, Talos/system workloads, and anything with Argo ownership markers. High-confidence items show restore/test signals first; review items stay visible so operators can confirm them manually."
-          eyebrow="Unmanaged inventory"
-          title="Review non-Argo resources"
-        />
-
-        <div className="mt-5 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
-          <div className="font-medium">Safe cleanup is enabled for high-confidence artifacts</div>
-          <div className="mt-1 text-amber-100/80">
-            Orbit only deletes resources that still appear in the current unmanaged
-            snapshot as high-confidence restore/test artifacts. Review-only items stay
-            read-only so you can inspect them without risking cluster-critical cleanup.
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              label: "Total flagged",
-              value: uiState.unmanagedItems.length,
-              detail: "After conservative safety filters",
-            },
-            {
-              label: "High confidence",
-              value: highConfidenceUnmanaged.length,
-              detail: "Restore/test signals detected",
-            },
-            {
-              label: "Needs review",
-              value: reviewUnmanaged.length,
-              detail: "No Argo owner found, confirm manually",
-            },
-            {
-              label: "Selected",
-              value: selectedUnmanagedRefs.length,
-              detail: "Queued for the next batch cleanup",
-            },
-          ].map((item) => (
-            <div
-              className="rounded-[24px] border border-white/8 bg-slate-950/55 px-4 py-4"
-              key={item.label}
-            >
-              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                {item.label}
-              </div>
-              <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
-              <div className="mt-1 text-xs text-slate-400">{item.detail}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5">
-          {visibleUnmanagedItems.length > 0 ? (
-            <div className="space-y-4">
-              {visibleUnmanagedItems.map((item) => (
-                <UnmanagedInventoryCard
-                  cleanupBusy={workingLabel === "cleanup"}
-                  item={item}
-                  key={item.ref}
-                  onCleanup={
-                    item.confidence === "high"
-                      ? () => void runUnmanagedCleanup([item.ref])
-                      : undefined
-                  }
-                  onToggleSelect={
-                    item.confidence === "high"
-                      ? () =>
-                          toggleSelection(
-                            selectedUnmanagedRefs,
-                            setSelectedUnmanagedRefs,
-                            item.ref,
-                          )
-                      : undefined
-                  }
-                  selected={selectedUnmanagedRefs.includes(item.ref)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              description={
-                unmanagedFilter === "high"
-                  ? "Orbit did not detect any restore/test artifacts that passed the conservative unmanaged filters."
-                  : unmanagedFilter === "review"
-                    ? "Orbit did not find any review-only resources outside Argo ownership in the allowed namespaces."
-                    : "Orbit did not detect any unmanaged resources that passed the conservative safety filters."
-              }
-              title={
-                unmanagedFilter === "high"
-                  ? "No high-confidence artifacts detected"
-                  : unmanagedFilter === "review"
-                    ? "No review-only items detected"
-                    : "No unmanaged resources detected"
-              }
-            />
-          )}
-        </div>
-      </section>
-    </div>
-  );
-  const automateSection = (
-    <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-      <section className="panel rounded-[32px] p-5 sm:p-6">
-        <SectionHeading
-          actions={
-            <span
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium",
-                healthyTargetCount > 0
-                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-                  : "border-slate-400/20 bg-slate-400/10 text-slate-200",
-              )}
-            >
-              {targetStatusLabel}
-            </span>
-          }
-          description="Point Longhorn at your object store or share, then keep the polling cadence explicit so operators know how quickly target health updates."
-          eyebrow="Storage target"
-          title="Configure backup storage"
-        />
-
-        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-          <div className="space-y-4">
-            <label className="block">
-              <span className="field-label">Target URL</span>
-              <input
-                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                onChange={(event) => {
-                  setTargetDirty(true);
-                  setTargetUrl(event.target.value);
-                }}
-                placeholder="azblob://backup-container@core.windows.net/"
-                value={targetUrl}
-              />
-            </label>
-
-            <label className="block">
-              <span className="field-label">Credential secret</span>
-              <input
-                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                onChange={(event) => {
-                  setTargetDirty(true);
-                  setTargetSecret(event.target.value);
-                }}
-                placeholder="azure-backup-credentials"
-                value={targetSecret}
-              />
-            </label>
-
-            <label className="block">
-              <span className="field-label">Poll interval</span>
-              <input
-                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40"
-                onChange={(event) => {
-                  setTargetDirty(true);
-                  setTargetPollInterval(event.target.value);
-                }}
-                placeholder="300s"
-                value={targetPollInterval}
-              />
-            </label>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/8 bg-white/5 px-4 py-3 text-xs text-slate-400">
-            <span>
-              Changes sync to Longhorn and will surface in the live status cards on the
-              next refresh cycle.
-            </span>
-            {targetDirty ? (
-              <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-amber-100">
-                Unsaved changes
-              </span>
-            ) : null}
-          </div>
-
-          <button
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-            disabled={!targetUrl || workingLabel === "target"}
-            onClick={() => void saveTarget()}
-            type="button"
-          >
-            <Cloud className="h-4 w-4" />
-            {workingLabel === "target" ? "Saving target..." : "Save target"}
-          </button>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {targets.length > 0 ? (
-            targets.map((target) => (
-              <div
-                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
-                key={target.name}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-medium text-white">{target.name}</div>
-                    <div className="mt-1 break-all text-xs text-slate-500">
-                      {target.backupTargetURL || "No target URL configured"}
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                      target.available ? "Completed" : "failed",
-                    )}`}
-                  >
-                    {target.available ? "Available" : "Unavailable"}
-                  </span>
-                </div>
-                <div className="mt-3 text-xs text-slate-400">
-                  Last synced {formatTimestamp(target.lastSyncedAt)}
-                </div>
-                {target.conditions.length > 0 ? (
-                  <div className="mt-3 space-y-2 text-xs text-rose-100">
-                    {target.conditions.map((condition) => (
-                      <div
-                        className="rounded-2xl border border-rose-400/15 bg-rose-400/10 px-3 py-2"
-                        key={condition}
-                      >
-                        {condition}
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ))
-          ) : (
-            <EmptyState
-              description="Save a target to start writing backups to object storage or a supported share."
-              title="No backup targets configured"
-            />
-          )}
-        </div>
-      </section>
-
-      <section className="panel rounded-[32px] p-5 sm:p-6">
-        <SectionHeading
-          actions={
-            <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-medium text-violet-100">
-              {pluralize(activeSchedules, "active schedule")}
-            </span>
-          }
-          description="Schedules reuse the workload selection from the backup flow so operators can promote the exact set they just reviewed into recurring protection."
-          eyebrow="Recurring protection"
-          title="Manage schedules"
-        />
-
-        <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
-          <div className="rounded-[24px] border border-violet-400/18 bg-violet-400/10 px-4 py-4">
-            {selectedApps.length > 0 ? (
-              <div>
-                <div className="font-medium text-violet-50">
-                  New schedule will cover {pluralize(selectedApps.length, "selected workload")}
-                </div>
-                <div className="mt-1 text-sm text-violet-100/80">
-                  Current selection includes {pluralize(selectedAppVolumeCount, "volume")}.
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="font-medium text-violet-50">Select workloads first</div>
-                <div className="mt-1 text-sm text-violet-100/80">
-                  Use the backup flow to choose which apps this schedule should protect.
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 space-y-4">
-            <label className="block">
-              <span className="field-label">Schedule name</span>
-              <input
-                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
-                onChange={(event) => setScheduleName(event.target.value)}
-                placeholder="Nightly protected apps"
-                value={scheduleName}
-              />
-            </label>
-
-            <label className="block">
-              <span className="field-label">Cron expression</span>
-              <input
-                className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
-                onChange={(event) => setScheduleCron(event.target.value)}
-                placeholder="0 3 * * *"
-                value={scheduleCron}
-              />
-            </label>
-          </div>
-
-          <button
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-            disabled={
-              selectedApps.length === 0 ||
-              !scheduleName.trim() ||
-              workingLabel === "schedule"
-            }
-            onClick={() => void createSchedule()}
-            type="button"
-          >
-            <Workflow className="h-4 w-4" />
-            {workingLabel === "schedule" ? "Saving schedule..." : "Create schedule"}
-          </button>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {schedules.length > 0 ? (
-            schedules.map((schedule) => (
-              <div
-                className="rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4"
-                key={schedule.id}
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="font-medium text-white">{schedule.name}</div>
-                      <span
-                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
-                          schedule.enabled ? "Completed" : "stopped",
-                        )}`}
-                      >
-                        {schedule.enabled ? "Enabled" : "Paused"}
-                      </span>
-                      {schedule.backend ? (
-                        <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2.5 py-1 text-xs font-medium text-violet-100">
-                          Longhorn native
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-2 text-xs text-slate-400">
-                      {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
-                      {typeof schedule.activeVolumeCount === "number"
-                        ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
-                        : ""}
-                    </div>
-                    {schedule.appDisplayNames?.length ? (
-                      <div className="mt-2 text-xs text-slate-500">
-                        {schedule.appDisplayNames.slice(0, 3).join(", ")}
-                        {schedule.appDisplayNames.length > 3
-                          ? ` +${schedule.appDisplayNames.length - 3} more`
-                          : ""}
-                      </div>
-                    ) : null}
-                    <div className="mt-2 text-xs text-slate-400">
-                      Next run {formatTimestamp(schedule.nextRunAt)}
-                      {schedule.lastRunAt
-                        ? ` · Last run ${formatTimestamp(schedule.lastRunAt)}`
-                        : ""}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-violet-400/25 hover:text-white"
-                      onClick={() =>
-                        void setScheduleEnabled(schedule, !schedule.enabled)
-                      }
-                      type="button"
-                    >
-                      {workingLabel === `schedule:${schedule.id}`
-                        ? "Saving..."
-                        : schedule.enabled
-                          ? "Pause"
-                          : "Enable"}
-                    </button>
-                    <button
-                      className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
-                      onClick={() => void deleteExistingSchedule(schedule)}
-                      type="button"
-                    >
-                      {workingLabel === `schedule-delete:${schedule.id}`
-                        ? "Deleting..."
-                        : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <EmptyState
-              description="Recurring jobs will appear here once you save the first schedule."
-              title="No schedules yet"
-            />
-          )}
-        </div>
-      </section>
-    </section>
-  );
-  const activitySection = (
+  const activityPage = (
     <section className="panel rounded-[32px] p-5 sm:p-6">
       <SectionHeading
         actions={
@@ -2028,8 +1992,8 @@ export function BackupConsole() {
             Live queue · {pluralize(runningOperations, "active run")}
           </span>
         }
-        description="Operations poll live so you can see queued, active, and finished work without leaving the console. Expand an item for per-volume progress and timeline details."
-        eyebrow="Operations"
+        description="Queued, running, and finished work all stay in one place so you can follow the exact timeline for each app and volume."
+        eyebrow="Activity"
         title="Runs and progress"
       />
 
@@ -2045,7 +2009,7 @@ export function BackupConsole() {
               return (
                 <article
                   className={cn(
-                    "rounded-[28px] border p-5",
+                    "rounded-[28px] border p-4 sm:p-5",
                     operation.status === "running"
                       ? "border-sky-400/20 bg-sky-400/8"
                       : "border-white/8 bg-slate-950/60",
@@ -2053,7 +2017,7 @@ export function BackupConsole() {
                   key={operation.id}
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
                           {operation.type}
@@ -2071,7 +2035,7 @@ export function BackupConsole() {
                           </span>
                         ) : null}
                       </div>
-                      <h3 className="mt-3 text-lg font-semibold text-white">
+                      <h3 className="mt-3 break-words text-lg font-semibold text-white">
                         {operation.summary}
                       </h3>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
@@ -2087,7 +2051,7 @@ export function BackupConsole() {
                       </div>
                     </div>
 
-                    <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4 text-sm sm:min-w-[14rem]">
+                    <div className="rounded-[24px] border border-white/8 bg-slate-950/65 px-4 py-4 text-sm lg:w-56">
                       <div className="flex items-center justify-between text-slate-400">
                         <span>Items</span>
                         <span className="font-medium text-slate-200">{operation.items.length}</span>
@@ -2125,8 +2089,10 @@ export function BackupConsole() {
                         >
                           <summary className="cursor-pointer list-none">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                              <div>
-                                <div className="font-medium text-white">{item.displayName}</div>
+                              <div className="min-w-0">
+                                <div className="break-words font-medium text-white">
+                                  {item.displayName}
+                                </div>
                                 <div className="mt-1 text-sm text-slate-400">
                                   {item.message || "Waiting for the next step..."}
                                 </div>
@@ -2213,10 +2179,10 @@ export function BackupConsole() {
                                   <div className="mt-3 space-y-2">
                                     {item.logs.slice(0, 8).map((log) => (
                                       <div
-                                        className="flex gap-3 text-xs"
+                                        className="flex flex-col gap-1 text-xs sm:flex-row sm:gap-3"
                                         key={`${item.id}-${log.timestamp}-${log.message}`}
                                       >
-                                        <span className="w-32 shrink-0 text-slate-500">
+                                        <span className="shrink-0 text-slate-500 sm:w-32">
                                           {formatTimestamp(log.timestamp)}
                                         </span>
                                         <span
@@ -2252,36 +2218,182 @@ export function BackupConsole() {
       </div>
     </section>
   );
-  const activeTabContent =
-    activeTab === "overview"
-      ? overviewSection
-      : activeTab === "protect"
-        ? protectSection
-        : activeTab === "recover"
-          ? recoverSection
-          : activeTab === "automate"
-            ? automateSection
-            : activitySection;
+
+  const cleanupPage = (
+    <section className="panel rounded-[32px] p-5 sm:p-6">
+      <SectionHeading
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {[
+              {
+                id: "all",
+                label: `All (${uiState.unmanagedItems.length})`,
+              },
+              {
+                id: "high",
+                label: `High confidence (${highConfidenceUnmanaged.length})`,
+              },
+              {
+                id: "review",
+                label: `Needs review (${reviewUnmanaged.length})`,
+              },
+            ].map((filter) => (
+              <button
+                className={cn(
+                  "rounded-full border px-3.5 py-2 text-xs transition",
+                  unmanagedFilter === filter.id
+                    ? "border-amber-400/30 bg-amber-400/12 text-amber-50"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:border-amber-400/20 hover:text-white",
+                )}
+                key={filter.id}
+                onClick={() => setUnmanagedFilter(filter.id as "all" | "high" | "review")}
+                type="button"
+              >
+                {filter.label}
+              </button>
+            ))}
+            <button
+              className="rounded-full border border-amber-400/25 bg-amber-400/12 px-3.5 py-2 text-xs font-medium text-amber-50 transition hover:border-amber-300/40 hover:bg-amber-400/18 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={selectedUnmanagedRefs.length === 0 || workingLabel === "cleanup"}
+              onClick={() => void runUnmanagedCleanup(selectedUnmanagedRefs)}
+              type="button"
+            >
+              {workingLabel === "cleanup"
+                ? "Cleaning selected..."
+                : `Clean selected (${selectedUnmanagedRefs.length})`}
+            </button>
+          </div>
+        }
+        description="Orbit shows only conservative orphan candidates here: non-Argo resources outside critical namespaces, with high-confidence restore/test leftovers prioritized first."
+        eyebrow="Orphaned resources"
+        title="Review and clean up leftovers"
+      />
+
+      <div className="mt-5 rounded-[24px] border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
+        <div className="font-medium">High-confidence cleanup only</div>
+        <div className="mt-1 text-amber-100/80">
+          Orbit only deletes resources that still appear in the current unmanaged snapshot as high-confidence restore/test artifacts. Review-only items stay read-only.
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: "Total flagged",
+            value: uiState.unmanagedItems.length,
+            detail: "After conservative safety filters",
+          },
+          {
+            label: "High confidence",
+            value: highConfidenceUnmanaged.length,
+            detail: "Restore/test signals detected",
+          },
+          {
+            label: "Needs review",
+            value: reviewUnmanaged.length,
+            detail: "No Argo owner found, confirm manually",
+          },
+          {
+            label: "Selected",
+            value: selectedUnmanagedRefs.length,
+            detail: "Queued for the next cleanup run",
+          },
+        ].map((item) => (
+          <div
+            className="rounded-[24px] border border-white/8 bg-slate-950/55 px-4 py-4"
+            key={item.label}
+          >
+            <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+              {item.label}
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-white">{item.value}</div>
+            <div className="mt-1 text-xs text-slate-400">{item.detail}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5">
+        {visibleUnmanagedItems.length > 0 ? (
+          <div className="space-y-4">
+            {visibleUnmanagedItems.map((item) => (
+              <UnmanagedInventoryCard
+                cleanupBusy={workingLabel === "cleanup"}
+                item={item}
+                key={item.ref}
+                onCleanup={
+                  item.confidence === "high"
+                    ? () => void runUnmanagedCleanup([item.ref])
+                    : undefined
+                }
+                onToggleSelect={
+                  item.confidence === "high"
+                    ? () =>
+                        toggleSelection(
+                          selectedUnmanagedRefs,
+                          setSelectedUnmanagedRefs,
+                          item.ref,
+                        )
+                    : undefined
+                }
+                selected={selectedUnmanagedRefs.includes(item.ref)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            description={
+              unmanagedFilter === "high"
+                ? "Orbit did not detect any restore/test artifacts that passed the conservative unmanaged filters."
+                : unmanagedFilter === "review"
+                  ? "Orbit did not find any review-only resources outside Argo ownership in the allowed namespaces."
+                  : "Orbit did not detect any orphaned resources that passed the conservative safety filters."
+            }
+            title={
+              unmanagedFilter === "high"
+                ? "No high-confidence orphaned resources detected"
+                : unmanagedFilter === "review"
+                  ? "No review-only items detected"
+                  : "No orphaned resources detected"
+            }
+          />
+        )}
+      </div>
+    </section>
+  );
+
+  const activePageItem =
+    pageItems.find((item) => item.id === activePage) ?? pageItems[0];
+
+  const pageContent =
+    activePage === "home"
+      ? homePage
+      : activePage === "backup"
+        ? backupPage
+        : activePage === "restore"
+          ? restorePage
+          : activePage === "activity"
+            ? activityPage
+            : cleanupPage;
 
   return (
-    <main className="min-h-screen px-3 py-4 text-sm text-slate-100 sm:px-5 sm:py-5 lg:px-8 lg:py-8">
+    <main className="min-h-screen px-3 pb-[calc(6.75rem+env(safe-area-inset-bottom))] pt-4 text-sm text-slate-100 sm:px-5 sm:pt-5 lg:px-8 lg:pt-8">
       <div className="mx-auto flex w-full max-w-[94rem] flex-col gap-6">
-        <section className="panel panel-grid relative overflow-hidden rounded-[32px] p-6 sm:p-8">
+        <section className="panel panel-grid relative overflow-hidden rounded-[32px] p-5 sm:p-6 lg:p-8">
           <div className="absolute -right-16 top-0 hidden h-64 w-64 rounded-full bg-sky-400/10 blur-3xl xl:block" />
-          <div className="relative grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium tracking-wide text-sky-100">
                 <ShieldCheck className="h-4 w-4" />
                 Behind oauth2-proxy, powered by Longhorn
               </div>
-              <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                 Orbit Backup Console
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                Protect PVC-backed workloads, schedule recurring coverage, and restore apps in
-                place with a calmer, clearer console built for day-two operations.
+              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                A cleaner backup and restore surface for daily operations: home summary first,
+                focused pages second, and no giant checklist once the workflows already work.
               </p>
-              <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-200">
+              <div className="mt-5 flex flex-wrap gap-2 text-xs text-slate-200">
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
                   Auto-refresh every 5s
                 </span>
@@ -2289,71 +2401,26 @@ export function BackupConsole() {
                   {pluralize(overview?.protectedWorkloadCount ?? protectedApps.length, "protected workload")}
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
-                  {pluralize(uiState.unmanagedItems.length, "unmanaged item")}
+                  {pluralize(uiState.backupSets.length, "backup set")}
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
-                  {pluralize(cloneReadyBackupCount, "clone-ready backup set")}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5">
-                  Target status: {targetStatusLabel}
+                  {pluralize(uiState.unmanagedItems.length, "orphan candidate")}
                 </span>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-slate-950/60 p-5 shadow-[0_20px_70px_rgba(2,6,23,0.35)]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="section-label">Operator checklist</div>
-                  <h2 className="mt-3 text-lg font-semibold text-white">Keep the daily flow obvious</h2>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Configure storage, pick workloads, then use the restore catalog when you need
-                    a fast recovery path.
-                  </p>
+            <div className="flex flex-col gap-3 lg:items-end">
+              <div className="rounded-[24px] border border-white/10 bg-slate-950/65 px-4 py-3 text-sm text-slate-300">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                  Current page
                 </div>
-                {isRefreshing ? <LoaderCircle className="h-5 w-5 animate-spin text-sky-200" /> : null}
+                <div className="mt-2 font-medium text-white">{activePageItem.label}</div>
+                <div className="mt-1 max-w-xs text-xs text-slate-400">
+                  {activePageItem.description}
+                </div>
               </div>
 
-              <div className="mt-5 space-y-3">
-                {[
-                  {
-                    step: "01",
-                    title: "Configure the backup target",
-                    description:
-                      defaultTarget?.backupTargetURL || "Point Longhorn at S3, Azure Blob, NFS, or SMB.",
-                  },
-                  {
-                    step: "02",
-                    title: "Pick workloads to protect",
-                    description:
-                      selectedApps.length > 0
-                        ? `${pluralize(selectedApps.length, "workload")} selected across ${pluralize(selectedAppVolumeCount, "volume")}.`
-                        : "Select PVC-backed apps to unlock backup and scheduling actions.",
-                  },
-                  {
-                    step: "03",
-                    title: "Restore with the right level of safety",
-                    description:
-                      selectedBackupSets.length > 0
-                        ? `${pluralize(selectedBackupSets.length, "backup set")} selected for restore review.`
-                        : "Use in-place restore for live recovery, or fall back to clone and PVC-only flows when you need extra safety.",
-                  },
-                ].map((item) => (
-                  <div
-                    className="flex items-start gap-4 rounded-[24px] border border-white/8 bg-white/5 px-4 py-4"
-                    key={item.step}
-                  >
-                    <div className="rounded-full border border-white/10 bg-slate-950/75 px-2.5 py-1 text-[11px] font-semibold tracking-[0.24em] text-slate-400">
-                      {item.step}
-                    </div>
-                    <div>
-                      <div className="font-medium text-white">{item.title}</div>
-                      <div className="mt-1 text-sm text-slate-400">{item.description}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 font-medium text-slate-100 transition hover:border-sky-400/40 hover:bg-sky-400/10 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={isRefreshing}
@@ -2401,16 +2468,7 @@ export function BackupConsole() {
                 <SkeletonPanel className="rounded-[28px] p-5" key={index} />
               ))}
             </section>
-            <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-              <div className="space-y-6">
-                <SkeletonPanel />
-                <SkeletonPanel />
-              </div>
-              <div className="space-y-6">
-                <SkeletonPanel />
-                <SkeletonPanel />
-              </div>
-            </section>
+            <SkeletonPanel />
             <SkeletonPanel />
           </>
         ) : fatalError ? (
@@ -2431,53 +2489,17 @@ export function BackupConsole() {
             />
           </section>
         ) : (
-          <>
-            <section className="sticky top-3 z-20">
-              <div className="panel rounded-[28px] border border-white/8 bg-slate-950/70 px-3 py-3 shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <div className="section-label">Navigate the console</div>
-                    <div className="mt-2 text-sm text-slate-300">{activeTabItem.description}</div>
-                  </div>
-                  <div className="tab-strip -mx-1 overflow-x-auto px-1">
-                    <div className="flex min-w-max gap-2">
-                      {tabItems.map(({ id, label, icon: Icon, badge }) => (
-                        <button
-                          aria-selected={activeTab === id}
-                          className={cn(
-                            "flex min-w-[9.75rem] items-center justify-between gap-3 rounded-[22px] border px-4 py-3 text-left transition",
-                            activeTab === id
-                              ? "border-sky-400/30 bg-sky-400/12 text-sky-50"
-                              : "border-white/10 bg-white/5 text-slate-300 hover:border-sky-400/20 hover:text-white",
-                          )}
-                          key={id}
-                          onClick={() => setActiveTab(id)}
-                          role="tab"
-                          type="button"
-                        >
-                          <span className="flex items-center gap-3">
-                            <span className="rounded-2xl border border-white/10 bg-slate-950/70 p-2.5">
-                              <Icon className="h-4 w-4" />
-                            </span>
-                            <span className="font-medium">{label}</span>
-                          </span>
-                          {badge ? (
-                            <span className="rounded-full border border-white/10 bg-slate-950/75 px-2.5 py-1 text-xs font-medium text-slate-100">
-                              {badge}
-                            </span>
-                          ) : null}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {activeTabContent}
-          </>
+          pageContent
         )}
       </div>
+
+      {!bootstrapping && !fatalError ? (
+        <BottomNav
+          activePage={activePage}
+          items={pageItems}
+          onSelect={(page) => setActivePage(page)}
+        />
+      ) : null}
     </main>
   );
 }
