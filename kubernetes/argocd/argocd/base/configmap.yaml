@@ -8,6 +8,17 @@ metadata:
 data:
   command.sh: |
     #!/bin/bash
-    set -e
-    extras="--namespace $PARAM_NAMESPACE"
-    helm $extras $@
+    set -euo pipefail
+
+    command="${1:-}"
+    if [ -z "${command}" ]; then
+      exec helm
+    fi
+
+    shift
+
+    if [ "${command}" = "template" ] && [ -n "${PARAM_NAMESPACE:-}" ]; then
+      exec helm "${command}" --namespace "${PARAM_NAMESPACE}" "$@"
+    fi
+
+    exec helm "${command}" "$@"
