@@ -2966,6 +2966,15 @@ export async function purgeBackupSets(setIds: string[]): Promise<PurgeBackupSets
     try {
       for (const volume of backupSet.volumes) {
         await deleteLonghornObject("backups", volume.name);
+        await waitForCondition(
+          `backup ${volume.name} deletion`,
+          async () => getLonghornObject("backups", volume.name),
+          (backup) => !backup,
+          {
+            timeoutMs: 120_000,
+            intervalMs: 2_000,
+          },
+        );
       }
 
       deleted.push({
