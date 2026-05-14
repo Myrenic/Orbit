@@ -1,0 +1,56 @@
+---
+image:
+  repository: "ghcr.io/myrenic/orbit-backup-ui"
+  tag: "latest"
+
+ports:
+  - name: main
+    containerPort: 3000
+
+health:
+  port: main
+  path: /api/health
+
+envs:
+  - NODE_ENV: "production"
+  - NEXT_TELEMETRY_DISABLED: "1"
+  - HOSTNAME: "0.0.0.0"
+  - APP_DATA_DIR: "/data"
+  - ORBIT_BACKUP_STATE_FILE: "/data/state.json"
+  - LONGHORN_NAMESPACE: "storage"
+  - ORBIT_BACKUP_EXCLUDED_NAMESPACES: "kube-system,kube-public,kube-node-lease"
+
+ingress:
+  host: backups.${SECRET_DOMAIN_0}
+  port: main
+  middlewares:
+    - name: oauth2-proxy-auth
+      namespace: network
+
+hostPaths:
+  - name: orbit-backup-ui-data
+    type: longhorn
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    containerPath: /data
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+podSecurityContext:
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
