@@ -1217,25 +1217,43 @@ async function setPersistentVolumeReclaimPolicy(
   return persistentVolume;
 }
 
-async function waitForPersistentVolumeClaimDeleted(namespace: string, name: string) {
-  await waitForCondition(
-    `PersistentVolumeClaim ${namespace}/${name} deletion`,
-    async () => {
-      try {
-        return await getKubeClients().core.readNamespacedPersistentVolumeClaim({
+async function waitForPersistentVolumeClaimDeleted(
+  namespace: string,
+  name: string,
+  originalUid?: string,
+) {
+  const { core } = getKubeClients();
+  const timeoutMs = 5 * 60 * 1000;
+  const intervalMs = 2_000;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const persistentVolumeClaim = await core.readNamespacedPersistentVolumeClaim({
+        namespace,
+        name,
+      });
+      const currentUid = persistentVolumeClaim.metadata?.uid;
+
+      if (originalUid && currentUid && currentUid !== originalUid) {
+        await core.deleteNamespacedPersistentVolumeClaim({
           namespace,
           name,
+          body: {},
         });
-      } catch (error) {
-        if (isKubernetesErrorStatus(error, 404)) {
-          return undefined;
-        }
-
-        throw error;
       }
-    },
-    (persistentVolumeClaim) => !persistentVolumeClaim,
-  );
+    } catch (error) {
+      if (isKubernetesErrorStatus(error, 404)) {
+        return;
+      }
+
+      throw error;
+    }
+
+    await sleep(intervalMs);
+  }
+
+  throw new Error(`PersistentVolumeClaim ${namespace}/${name} deletion did not reach the expected state in time.`);
 }
 
 async function waitForPersistentVolumeDeleted(name: string) {
@@ -1297,6 +1315,7 @@ async function replaceLonghornVolumeInPlace(volumePlan: InPlaceVolumePlan) {
   await waitForPersistentVolumeClaimDeleted(
     volumePlan.persistentVolumeClaim.metadata?.namespace ?? "",
     persistentVolumeClaimName,
+    volumePlan.persistentVolumeClaim.metadata?.uid,
   );
 
   await core.deletePersistentVolume({
