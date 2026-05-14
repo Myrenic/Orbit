@@ -35,6 +35,7 @@ import {
   OperationItemStatus,
   OperationRecord,
   OperationStatus,
+  PurgeBackupSetsResponse,
   ScheduleDefinition,
   UpdateScheduleRequest,
 } from "@/lib/types";
@@ -45,6 +46,7 @@ import {
   patchOperation,
   upsertOperation,
 } from "@/lib/store";
+import { archiveBackupCatalogToPbsIfEnabled } from "@/lib/pbs";
 
 function now() {
   return new Date().toISOString();
@@ -2512,12 +2514,16 @@ async function runOperation(operationId: string) {
       await runRestoreOperation(operation);
     }
 
-    await patchOperation(operationId, (entry) => {
+    const completed = await patchOperation(operationId, (entry) => {
       entry.status = entry.items.some((item) => item.status === "failed")
         ? "failed"
         : "succeeded";
       entry.finishedAt = now();
     });
+
+    if (completed.type === "backup" && completed.status === "succeeded") {
+      await archiveBackupCatalogToPbsIfEnabled(completed);
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unexpected operation failure";
@@ -2605,7 +2611,15 @@ export async function createOperation(
 function buildRecurringJobObject(
   schedule: Pick<
     ScheduleDefinition,
-    "id" | "name" | "cron" | "appRefs" | "enabled" | "createdAt" | "updatedAt" | "lastRunAt"
+    | "id"
+    | "name"
+    | "cron"
+    | "retain"
+    | "appRefs"
+    | "enabled"
+    | "createdAt"
+    | "updatedAt"
+    | "lastRunAt"
   >,
   current?: LonghornObject,
 ): LonghornObject {
@@ -2637,7 +2651,10 @@ function buildRecurringJobObject(
       name: schedule.id,
       cron: schedule.cron,
       task: "backup",
-      retain: getPositiveInteger(spec.retain, RECURRING_JOB_RETAIN),
+      retain: getPositiveInteger(
+        schedule.retain,
+        getPositiveInteger(spec.retain, RECURRING_JOB_RETAIN),
+      ),
       concurrency: getPositiveInteger(spec.concurrency, RECURRING_JOB_CONCURRENCY),
       labels: {
         ...currentLabels,
@@ -2741,6 +2758,7 @@ function buildScheduleDefinition(
     id: recurringJobName,
     name: annotations[ORBIT_SCHEDULE_NAME_ANNOTATION] || recurringJobName,
     cron,
+    retain: getPositiveInteger(recurringJob.spec?.retain, RECURRING_JOB_RETAIN),
     enabled,
     appRefs,
     appDisplayNames: appRefs.map((appRef) => appByRef.get(appRef)?.displayName ?? appRef),
@@ -2832,7 +2850,7 @@ export async function migratePersistedSchedules() {
 }
 
 export async function createSchedule(
-  input: { name: string; cron: string; appRefs: string[] },
+  input: { name: string; cron: string; appRefs: string[]; retain?: number },
 ) {
   const scheduleId = buildRecurringJobName(input.name.trim());
   const createdAt = now();
@@ -2843,6 +2861,7 @@ export async function createSchedule(
     id: scheduleId,
     name: input.name.trim(),
     cron,
+    retain: getPositiveInteger(input.retain, RECURRING_JOB_RETAIN),
     appRefs: [...new Set(input.appRefs)],
     enabled: true,
     createdAt,
@@ -2874,6 +2893,10 @@ export async function updateSchedule(update: UpdateScheduleRequest) {
     id: update.id,
     name: update.name?.trim() || annotations[ORBIT_SCHEDULE_NAME_ANNOTATION] || update.id,
     cron: nextCron,
+    retain: getPositiveInteger(
+      update.retain,
+      getPositiveInteger(current.spec?.retain, RECURRING_JOB_RETAIN),
+    ),
     appRefs: update.appRefs
       ? [...new Set(update.appRefs)]
       : parseScheduleAppRefs(annotations[ORBIT_SCHEDULE_APP_REFS_ANNOTATION]),
@@ -2914,6 +2937,55 @@ export async function removeSchedule(input: DeleteScheduleRequest) {
   await syncRecurringJobVolumeAssignments(input.id, [], false);
   await deleteLonghornObject("recurringjobs", input.id);
   await deletePersistedSchedule(input.id);
+}
+
+export async function purgeBackupSets(setIds: string[]): Promise<PurgeBackupSetsResponse> {
+  const requestedIds = [...new Set(setIds.filter(Boolean))];
+  if (requestedIds.length === 0) {
+    return {
+      deleted: [],
+      skipped: [],
+    };
+  }
+
+  const snapshot = await getClusterSnapshot(true);
+  const deleted: PurgeBackupSetsResponse["deleted"] = [];
+  const skipped: PurgeBackupSetsResponse["skipped"] = [];
+
+  for (const setId of requestedIds) {
+    const backupSet = snapshot.backupSets.find((entry) => entry.id === setId);
+    if (!backupSet) {
+      skipped.push({
+        id: setId,
+        displayName: setId,
+        reason: "The backup set no longer exists.",
+      });
+      continue;
+    }
+
+    try {
+      for (const volume of backupSet.volumes) {
+        await deleteLonghornObject("backups", volume.name);
+      }
+
+      deleted.push({
+        id: backupSet.id,
+        displayName: backupSet.displayName,
+      });
+    } catch (error) {
+      skipped.push({
+        id: backupSet.id,
+        displayName: backupSet.displayName,
+        reason: error instanceof Error ? error.message : "Backup deletion failed.",
+      });
+    }
+  }
+
+  invalidateClusterSnapshot();
+  return {
+    deleted,
+    skipped,
+  };
 }
 
 export async function syncBackupTarget(input: {

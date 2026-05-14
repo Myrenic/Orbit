@@ -30,7 +30,9 @@ import type {
   DashboardPayload,
   OperationItem,
   OperationRecord,
+  PbsStatusSummary,
   PodSummary,
+  PurgeBackupSetsResponse,
   RestoreMode,
   ScheduleDefinition,
   UnmanagedInventoryItem,
@@ -44,6 +46,18 @@ type UiState = {
   operations: OperationRecord[];
   loading: boolean;
   error?: string;
+};
+
+type PbsFormState = {
+  enabled: boolean;
+  server: string;
+  datastore: string;
+  username: string;
+  password: string;
+  fingerprint: string;
+  backupId: string;
+  keepLast: string;
+  archiveOnBackup: boolean;
 };
 
 type Notice = {
@@ -220,6 +234,20 @@ function averageProgress(items: OperationItem[]) {
 
 function isConsolePage(value: string): value is ConsolePage {
   return ["home", "backup", "restore", "activity", "cleanup"].includes(value);
+}
+
+function getEmptyPbsForm(): PbsFormState {
+  return {
+    enabled: true,
+    server: "",
+    datastore: "backups",
+    username: "root@pam",
+    password: "",
+    fingerprint: "",
+    backupId: "orbit-backup-ui",
+    keepLast: "7",
+    archiveOnBackup: true,
+  };
 }
 
 function SectionHeading({ eyebrow, title, description, actions }: SectionHeadingProps) {
@@ -736,10 +764,15 @@ export function BackupConsole() {
   const [restoreNamespace, setRestoreNamespace] = useState("");
   const [scheduleName, setScheduleName] = useState("");
   const [scheduleCron, setScheduleCron] = useState("0 3 * * *");
+  const [scheduleRetain, setScheduleRetain] = useState("7");
+  const [scheduleRetainDrafts, setScheduleRetainDrafts] = useState<Record<string, string>>({});
   const [targetUrl, setTargetUrl] = useState("");
   const [targetSecret, setTargetSecret] = useState("");
   const [targetPollInterval, setTargetPollInterval] = useState("300s");
   const [targetDirty, setTargetDirty] = useState(false);
+  const [pbsStatus, setPbsStatus] = useState<PbsStatusSummary | null>(null);
+  const [pbsForm, setPbsForm] = useState<PbsFormState>(getEmptyPbsForm());
+  const [pbsDirty, setPbsDirty] = useState(false);
   const [workingLabel, setWorkingLabel] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -797,6 +830,37 @@ export function BackupConsole() {
     }
   }, [targetDirty]);
 
+  const refreshPbs = useCallback(async () => {
+    try {
+      const response = await fetchJson<{ pbs: PbsStatusSummary }>("/api/pbs");
+      setPbsStatus(response.pbs);
+      if (!pbsDirty) {
+        setPbsForm((current) => ({
+          ...current,
+          enabled: response.pbs.enabled,
+          server: response.pbs.server || "",
+          datastore: response.pbs.datastore || "backups",
+          username: response.pbs.username || "root@pam",
+          password: "",
+          fingerprint: response.pbs.fingerprint || "",
+          backupId: response.pbs.backupId || "orbit-backup-ui",
+          keepLast: String(response.pbs.keepLast ?? 7),
+          archiveOnBackup: response.pbs.archiveOnBackup,
+        }));
+      }
+    } catch (error) {
+      setPbsStatus((current) =>
+        current
+          ? {
+              ...current,
+              reachable: false,
+              error: getErrorMessage(error, "PBS status refresh failed."),
+            }
+          : null,
+      );
+    }
+  }, [pbsDirty]);
+
   useEffect(() => {
     void refresh();
     const interval = setInterval(() => {
@@ -805,6 +869,19 @@ export function BackupConsole() {
 
     return () => clearInterval(interval);
   }, [refresh]);
+
+  useEffect(() => {
+    if (activePage !== "backup") {
+      return;
+    }
+
+    void refreshPbs();
+    const interval = setInterval(() => {
+      void refreshPbs();
+    }, 60_000);
+
+    return () => clearInterval(interval);
+  }, [activePage, refreshPbs]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1134,13 +1211,41 @@ export function BackupConsole() {
           name: scheduleName,
           cron: scheduleCron,
           appRefs: selectedApps,
+          retain: Number(scheduleRetain),
         });
         setScheduleName("");
+        setScheduleRetain("7");
         await refresh();
       },
       "Schedule created",
       `${scheduleName.trim()} will protect ${pluralize(selectedApps.length, "selected workload")}.`,
       "Could not create the schedule",
+    );
+  };
+
+  const updateScheduleRetention = async (schedule: ScheduleDefinition) => {
+    const retain = Number(scheduleRetainDrafts[schedule.id] || schedule.retain || 7);
+    if (!Number.isInteger(retain) || retain < 1) {
+      setNotice({
+        tone: "error",
+        title: "Retention must be a positive number",
+        description: "Enter how many recurring backups Longhorn should keep for this schedule.",
+      });
+      return;
+    }
+
+    await runManagedAction(
+      `schedule-retain:${schedule.id}`,
+      async () => {
+        await sendJson("/api/schedules", "PUT", {
+          id: schedule.id,
+          retain,
+        });
+        await refresh();
+      },
+      "Retention updated",
+      `${schedule.name} will now keep ${pluralize(retain, "backup")}.`,
+      "Could not update schedule retention",
     );
   };
 
@@ -1175,9 +1280,127 @@ export function BackupConsole() {
     );
   };
 
-  const targets = uiState.dashboard?.targets || [];
-  const schedules = uiState.dashboard?.schedules || [];
+  const purgeSelectedBackupSets = async () => {
+    if (selectedBackupSets.length === 0) {
+      return;
+    }
+
+    await runManagedAction(
+      "purge-backups",
+      async () => {
+        const result = await sendJson<PurgeBackupSetsResponse>("/api/backups", "DELETE", {
+          setIds: selectedBackupSets,
+        });
+        setSelectedBackupSets([]);
+        await refresh();
+
+        const details: string[] = [];
+        if (result.deleted.length > 0) {
+          details.push(`Purged ${pluralize(result.deleted.length, "backup set")}.`);
+        }
+        if (result.skipped.length > 0) {
+          details.push(`${pluralize(result.skipped.length, "set")} skipped.`);
+        }
+
+        setNotice({
+          tone: "success",
+          title: result.deleted.length > 0 ? "Backup purge finished" : "Nothing purged",
+          description:
+            details.join(" ") ||
+            "Orbit did not remove any backup sets because none were still available.",
+        });
+      },
+      "Backup purge finished",
+      `${pluralize(selectedBackupSets.length, "backup set")} removed from the Longhorn catalog.`,
+      "Could not purge the selected backup sets",
+    );
+  };
+
+  const savePbsConfig = async () => {
+    await runManagedAction(
+      "pbs",
+      async () => {
+        const response = await sendJson<{ pbs: PbsStatusSummary }>("/api/pbs", "PUT", {
+          enabled: pbsForm.enabled,
+          server: pbsForm.server,
+          datastore: pbsForm.datastore,
+          username: pbsForm.username,
+          password: pbsForm.password,
+          fingerprint: pbsForm.fingerprint,
+          backupId: pbsForm.backupId,
+          keepLast: Number(pbsForm.keepLast),
+          archiveOnBackup: pbsForm.archiveOnBackup,
+        });
+        setPbsStatus(response.pbs);
+        setPbsForm((current) => ({
+          ...current,
+          password: "",
+          fingerprint: response.pbs.fingerprint || current.fingerprint,
+        }));
+        setPbsDirty(false);
+      },
+      "PBS settings saved",
+      "Orbit validated the Proxmox Backup Server settings and saved the archive mirror profile.",
+      "Could not save the PBS settings",
+    );
+  };
+
+  const runPbsAction = async (action: "test" | "archive" | "prune") => {
+    const messages = {
+      test: {
+        successTitle: "PBS connection checked",
+        successDescription: "Orbit refreshed the PBS group status and snapshot list.",
+        errorTitle: "Could not validate PBS",
+      },
+      archive: {
+        successTitle: "PBS archive uploaded",
+        successDescription:
+          "Orbit uploaded a fresh backup catalog archive and refreshed the PBS snapshot list.",
+        errorTitle: "Could not archive to PBS",
+      },
+      prune: {
+        successTitle: "PBS prune finished",
+        successDescription: "Orbit applied the keep-last policy to the PBS archive group.",
+        errorTitle: "Could not prune PBS archives",
+      },
+    } as const;
+
+    await runManagedAction(
+      `pbs-${action}`,
+      async () => {
+        const response = await sendJson<{ pbs: PbsStatusSummary }>("/api/pbs", "POST", {
+          action,
+        });
+        setPbsStatus(response.pbs);
+        setPbsForm((current) => ({
+          ...current,
+          password: "",
+          fingerprint: response.pbs.fingerprint || current.fingerprint,
+        }));
+      },
+      messages[action].successTitle,
+      messages[action].successDescription,
+      messages[action].errorTitle,
+    );
+  };
+
+  const targets = useMemo(() => uiState.dashboard?.targets ?? [], [uiState.dashboard?.targets]);
+  const schedules = useMemo(
+    () => uiState.dashboard?.schedules ?? [],
+    [uiState.dashboard?.schedules],
+  );
   const overview = uiState.dashboard?.overview;
+
+  useEffect(() => {
+    setScheduleRetainDrafts((previous) => {
+      const next: Record<string, string> = {};
+      for (const schedule of schedules) {
+        next[schedule.id] = previous[schedule.id] ?? String(schedule.retain ?? 7);
+      }
+      return next;
+    });
+  }, [schedules]);
+
   const activeSchedules = schedules.filter((schedule) => schedule.enabled).length;
   const healthyTargetCount = targets.filter((target) => target.available).length;
   const selectedAppVolumeCount = selectedAppRecords.reduce(
@@ -1208,6 +1431,20 @@ export function BackupConsole() {
       : healthyTargetCount === targets.length
         ? "Healthy"
         : `${healthyTargetCount}/${targets.length} healthy`;
+  const pbsSnapshots = pbsStatus?.snapshots ?? [];
+  const pbsKeepLast = Number(pbsForm.keepLast || "0");
+  const pbsConfigReady =
+    Boolean(pbsForm.server.trim()) &&
+    Boolean(pbsForm.datastore.trim()) &&
+    Boolean(pbsForm.username.trim()) &&
+    (Boolean(pbsForm.password.trim()) || Boolean(pbsStatus?.passwordConfigured));
+  const pbsStatusLabel = !pbsStatus?.configured
+    ? "Not configured"
+    : pbsStatus.reachable
+      ? "Reachable"
+      : pbsStatus.enabled
+        ? "Needs attention"
+        : "Saved";
   const runningOperations = overview?.runningOperations ?? 0;
   const backupsLastWeek = uiState.backupSets.filter((backupSet) => {
     if (!backupSet.createdAt) {
@@ -1696,6 +1933,272 @@ export function BackupConsole() {
               />
             )}
           </div>
+
+          <div className="mt-5 rounded-[28px] border border-white/8 bg-slate-950/55 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="section-label">PBS archive mirror</div>
+                <div className="mt-2 text-sm text-slate-400">
+                  Orbit can mirror its backup catalog and recovery metadata to Proxmox Backup Server after successful backup runs. Longhorn remains the source of truth for volume data.
+                </div>
+              </div>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                  pbsStatus?.reachable ? "Completed" : pbsStatus?.configured ? "failed" : "stopped",
+                )}`}
+              >
+                {pbsStatusLabel}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <label className="block">
+                <span className="field-label">Server</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      server: event.target.value,
+                    }));
+                  }}
+                  placeholder="10.0.69.254"
+                  value={pbsForm.server}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Datastore</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      datastore: event.target.value,
+                    }));
+                  }}
+                  placeholder="backups"
+                  value={pbsForm.datastore}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Username</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      username: event.target.value,
+                    }));
+                  }}
+                  placeholder="root@pam"
+                  value={pbsForm.username}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Password</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }));
+                  }}
+                  placeholder={pbsStatus?.passwordConfigured ? "Saved password" : "Enter PBS password"}
+                  type="password"
+                  value={pbsForm.password}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Fingerprint</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      fingerprint: event.target.value,
+                    }));
+                  }}
+                  placeholder="Auto-detected on save if omitted"
+                  value={pbsForm.fingerprint}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Backup ID</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      backupId: event.target.value,
+                    }));
+                  }}
+                  placeholder="orbit-backup-ui"
+                  value={pbsForm.backupId}
+                />
+              </label>
+
+              <label className="block">
+                <span className="field-label">Keep last archives</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-400/40"
+                  min={1}
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      keepLast: event.target.value,
+                    }));
+                  }}
+                  placeholder="7"
+                  type="number"
+                  value={pbsForm.keepLast}
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                <input
+                  checked={pbsForm.enabled}
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      enabled: event.target.checked,
+                    }));
+                  }}
+                  type="checkbox"
+                />
+                Enable PBS archive mirror
+              </label>
+
+              <label className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                <input
+                  checked={pbsForm.archiveOnBackup}
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400"
+                  onChange={(event) => {
+                    setPbsDirty(true);
+                    setPbsForm((current) => ({
+                      ...current,
+                      archiveOnBackup: event.target.checked,
+                    }));
+                  }}
+                  type="checkbox"
+                />
+                Upload after successful backup runs
+              </label>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+                disabled={!pbsConfigReady || workingLabel === "pbs"}
+                onClick={() => void savePbsConfig()}
+                type="button"
+              >
+                <Cloud className="h-4 w-4" />
+                {workingLabel === "pbs" ? "Saving PBS..." : "Save PBS settings"}
+              </button>
+              <button
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-emerald-400/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!pbsStatus?.configured || workingLabel === "pbs-test"}
+                onClick={() => void runPbsAction("test")}
+                type="button"
+              >
+                {workingLabel === "pbs-test" ? "Testing..." : "Test connection"}
+              </button>
+              <button
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-emerald-400/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!pbsStatus?.configured || workingLabel === "pbs-archive"}
+                onClick={() => void runPbsAction("archive")}
+                type="button"
+              >
+                {workingLabel === "pbs-archive" ? "Archiving..." : "Archive now"}
+              </button>
+              <button
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-amber-400/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!pbsStatus?.configured || workingLabel === "pbs-prune"}
+                onClick={() => void runPbsAction("prune")}
+                type="button"
+              >
+                {workingLabel === "pbs-prune"
+                  ? "Pruning..."
+                  : `Prune to ${Number.isInteger(pbsKeepLast) && pbsKeepLast > 0 ? pbsKeepLast : "keep-last"}`}
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-[24px] border border-white/8 bg-white/5 px-4 py-3 text-xs text-slate-400">
+              {pbsDirty
+                ? "Unsaved PBS changes. Saving also validates the target and stores the server fingerprint if it was omitted."
+                : pbsStatus?.lastArchiveAt
+                  ? `Last Orbit archive ${formatTimestamp(pbsStatus.lastArchiveAt)}`
+                  : "No Orbit archive has been written to PBS yet."}
+            </div>
+
+            {pbsStatus?.error ? (
+              <div className="mt-4 rounded-[22px] border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-xs text-rose-100">
+                {pbsStatus.error}
+              </div>
+            ) : null}
+
+            {pbsStatus?.lastArchiveError ? (
+              <div className="mt-3 rounded-[22px] border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-100">
+                Last archive issue: {pbsStatus.lastArchiveError}
+              </div>
+            ) : null}
+
+            <div className="mt-4 rounded-[24px] border border-white/8 bg-slate-950/60 px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                  PBS snapshots for {pbsStatus?.backupId || pbsForm.backupId || "orbit-backup-ui"}
+                </div>
+                <div className="text-xs text-slate-400">
+                  {pluralize(pbsSnapshots.length, "snapshot")}
+                </div>
+              </div>
+              {pbsSnapshots.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {pbsSnapshots.slice(0, 5).map((snapshot) => (
+                    <div
+                      className="flex flex-col gap-2 rounded-[18px] border border-white/8 bg-white/5 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                      key={snapshot.id}
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-white">{snapshot.id}</div>
+                        <div className="mt-1 text-xs text-slate-400">
+                          {formatTimestamp(snapshot.backupTime)}
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(
+                          snapshot.protected ? "Completed" : "running",
+                        )}`}
+                      >
+                        {snapshot.protected ? "Protected" : "Mutable"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 text-sm text-slate-400">
+                  No Orbit archive snapshots are stored in PBS for this group yet.
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         <section className="panel rounded-[32px] p-5 sm:p-6">
@@ -1751,6 +2254,21 @@ export function BackupConsole() {
                   value={scheduleCron}
                 />
               </label>
+
+              <label className="block">
+                <span className="field-label">Retention</span>
+                <input
+                  className="mt-2 w-full rounded-[20px] border border-white/10 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                  min={1}
+                  onChange={(event) => setScheduleRetain(event.target.value)}
+                  placeholder="7"
+                  type="number"
+                  value={scheduleRetain}
+                />
+                <div className="mt-2 text-xs text-slate-500">
+                  Longhorn will keep this many recurring backups for each assigned volume.
+                </div>
+              </label>
             </div>
 
             <button
@@ -1789,6 +2307,7 @@ export function BackupConsole() {
                       </div>
                       <div className="mt-2 text-xs text-slate-400">
                         {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
+                        {` · retain ${schedule.retain}`}
                         {typeof schedule.activeVolumeCount === "number"
                           ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
                           : ""}
@@ -1806,6 +2325,37 @@ export function BackupConsole() {
                         {schedule.lastRunAt
                           ? ` · Last run ${formatTimestamp(schedule.lastRunAt)}`
                           : ""}
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-end gap-2">
+                        <label className="min-w-[9rem] flex-1">
+                          <span className="field-label">Retain backups</span>
+                          <input
+                            className="mt-2 w-full rounded-[18px] border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-violet-400/40"
+                            min={1}
+                            onChange={(event) =>
+                              setScheduleRetainDrafts((current) => ({
+                                ...current,
+                                [schedule.id]: event.target.value,
+                              }))
+                            }
+                            type="number"
+                            value={scheduleRetainDrafts[schedule.id] ?? String(schedule.retain)}
+                          />
+                        </label>
+                        <button
+                          className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-2 text-xs font-medium text-violet-100 transition hover:bg-violet-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={
+                            workingLabel === `schedule-retain:${schedule.id}` ||
+                            (scheduleRetainDrafts[schedule.id] ?? String(schedule.retain)) ===
+                              String(schedule.retain)
+                          }
+                          onClick={() => void updateScheduleRetention(schedule)}
+                          type="button"
+                        >
+                          {workingLabel === `schedule-retain:${schedule.id}`
+                            ? "Saving..."
+                            : "Save retention"}
+                        </button>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -1852,17 +2402,29 @@ export function BackupConsole() {
         eyebrow="Restore"
         title="Recover apps from the backup catalog"
         actions={
-          <button
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-            disabled={restoreDisabled}
-            onClick={() => void runRestore()}
-            type="button"
-          >
-            <ArrowDownToLine className="h-4 w-4" />
-            {workingLabel === "restore"
-              ? "Queueing restore..."
-              : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="rounded-full border border-rose-400/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={selectedBackupSets.length === 0 || workingLabel === "purge-backups"}
+              onClick={() => void purgeSelectedBackupSets()}
+              type="button"
+            >
+              {workingLabel === "purge-backups"
+                ? "Purging..."
+                : `Purge ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
+            </button>
+            <button
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-400 px-4 py-2.5 font-medium text-slate-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              disabled={restoreDisabled}
+              onClick={() => void runRestore()}
+              type="button"
+            >
+              <ArrowDownToLine className="h-4 w-4" />
+              {workingLabel === "restore"
+                ? "Queueing restore..."
+                : `Restore ${selectedBackupSets.length ? pluralize(selectedBackupSets.length, "set") : "selected sets"}`}
+            </button>
+          </div>
         }
       />
 
@@ -1954,6 +2516,10 @@ export function BackupConsole() {
             ? restoreSelectionError ||
               "Clone restore keeps supported Deployment and StatefulSet backups close to their original workload shape so validation stays safer and faster."
             : "PVC-only restore recreates detached Longhorn-backed claims without rehydrating the workload controller."}
+      </div>
+
+      <div className="mt-4 rounded-[24px] border border-rose-400/15 bg-rose-400/10 px-4 py-4 text-sm text-rose-50">
+        Purge removes the selected backup sets from Longhorn and the backup target permanently. Use it to clear old recovery points once retention or manual cleanup makes them obsolete.
       </div>
 
       <div className="mt-5">
@@ -2424,7 +2990,12 @@ export function BackupConsole() {
                 <button
                   className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 font-medium text-slate-100 transition hover:border-sky-400/40 hover:bg-sky-400/10 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={isRefreshing}
-                  onClick={() => void refresh()}
+                  onClick={() => {
+                    void refresh();
+                    if (activePage === "backup") {
+                      void refreshPbs();
+                    }
+                  }}
                   type="button"
                 >
                   <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />

@@ -1070,16 +1070,26 @@ async function loadClusterSnapshot(): Promise<ClusterSnapshot> {
   const targets: BackupTargetSummary[] = longhornBackupTargets.map((target) => {
     const status = (target.status ?? {}) as Record<string, unknown>;
     const conditions = Array.isArray(status.conditions)
-      ? status.conditions.map((condition) => {
+      ? status.conditions
+        .map((condition) => {
           const conditionObject = condition as Record<string, unknown>;
-          return [
+          const conditionStatus =
+            typeof conditionObject.status === "string" ? conditionObject.status : undefined;
+          if (conditionStatus === "False") {
+            return undefined;
+          }
+
+          const message = [
             conditionObject.type,
             conditionObject.reason,
             conditionObject.message,
           ]
             .filter(Boolean)
             .join(": ");
+
+          return message || undefined;
         })
+        .filter((condition): condition is string => Boolean(condition))
       : [];
 
     return {

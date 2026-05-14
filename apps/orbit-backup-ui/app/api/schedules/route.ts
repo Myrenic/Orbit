@@ -45,6 +45,10 @@ export async function POST(request: Request) {
       return badRequest("Select at least one workload for the schedule.");
     }
 
+    if (typeof body.retain !== "undefined" && (!Number.isInteger(body.retain) || body.retain < 1)) {
+      return badRequest("Retention must be a positive whole number.");
+    }
+
     const schedule = await createSchedule(body);
     return NextResponse.json({ schedule }, { status: 201 });
   } catch (error) {
@@ -59,6 +63,10 @@ export async function PUT(request: Request) {
 
     if (!body.id) {
       return badRequest("Schedule id is required.");
+    }
+
+    if (typeof body.retain !== "undefined" && (!Number.isInteger(body.retain) || body.retain < 1)) {
+      return badRequest("Retention must be a positive whole number.");
     }
 
     const schedule = await updateSchedule(body);

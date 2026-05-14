@@ -1,7 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { OperationRecord, PersistedState, ScheduleDefinition } from "@/lib/types";
+import {
+  OperationRecord,
+  PersistedPbsState,
+  PersistedState,
+  ScheduleDefinition,
+} from "@/lib/types";
 
 declare global {
   var __orbitBackupStoreWriteChain: Promise<void> | undefined;
@@ -128,5 +133,19 @@ export async function upsertSchedule(schedule: ScheduleDefinition) {
 export async function deleteSchedule(id: string) {
   await mutateState((draft) => {
     draft.schedules = draft.schedules.filter((schedule) => schedule.id !== id);
+  });
+}
+
+export async function getPersistedPbsState() {
+  const state = await readState();
+  return state.pbs;
+}
+
+export async function updatePersistedPbsState(
+  updater: (current: PersistedPbsState | undefined) => PersistedPbsState | undefined,
+) {
+  return mutateState((draft) => {
+    draft.pbs = updater(draft.pbs);
+    return structuredClone(draft.pbs);
   });
 }

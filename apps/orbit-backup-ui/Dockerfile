@@ -13,7 +13,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -24,7 +24,15 @@ ENV APP_DATA_DIR=/data
 ENV ORBIT_BACKUP_STATE_FILE=/data/state.json
 ENV LONGHORN_NAMESPACE=storage
 
-RUN addgroup -S nextjs && adduser -S -u 1001 -G nextjs nextjs
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates wget \
+  && wget -q https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg \
+  && echo "deb http://download.proxmox.com/debian/pbs-client bookworm main" > /etc/apt/sources.list.d/pbs-client.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends proxmox-backup-client \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd --system nextjs \
+  && useradd --system --uid 1001 --gid nextjs nextjs
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

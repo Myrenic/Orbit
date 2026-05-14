@@ -204,6 +204,7 @@ export interface ScheduleDefinition {
   id: string;
   name: string;
   cron: string;
+  retain: number;
   enabled: boolean;
   appRefs: string[];
   appDisplayNames?: string[];
@@ -219,6 +220,7 @@ export interface ScheduleDefinition {
 export interface PersistedState {
   operations: OperationRecord[];
   schedules: ScheduleDefinition[];
+  pbs?: PersistedPbsState;
 }
 
 export interface OverviewStats {
@@ -258,6 +260,7 @@ export interface CreateScheduleRequest {
   name: string;
   cron: string;
   appRefs: string[];
+  retain?: number;
 }
 
 export interface UpdateScheduleRequest {
@@ -266,8 +269,89 @@ export interface UpdateScheduleRequest {
   name?: string;
   cron?: string;
   appRefs?: string[];
+  retain?: number;
 }
 
 export interface DeleteScheduleRequest {
   id: string;
+}
+
+export interface PurgeBackupSetsRequest {
+  setIds: string[];
+}
+
+export interface PurgeBackupSetResultItem {
+  id: string;
+  displayName: string;
+}
+
+export interface PurgeBackupSetSkippedItem extends PurgeBackupSetResultItem {
+  reason: string;
+}
+
+export interface PurgeBackupSetsResponse {
+  deleted: PurgeBackupSetResultItem[];
+  skipped: PurgeBackupSetSkippedItem[];
+}
+
+export interface PbsConfig {
+  enabled: boolean;
+  server: string;
+  datastore: string;
+  username: string;
+  password?: string;
+  fingerprint?: string;
+  backupId: string;
+  keepLast: number;
+  archiveOnBackup: boolean;
+  updatedAt: string;
+}
+
+export interface PersistedPbsState {
+  config?: PbsConfig;
+  lastValidatedAt?: string;
+  lastArchiveAt?: string;
+  lastArchiveError?: string;
+}
+
+export interface PbsSnapshotSummary {
+  id: string;
+  backupTime: string;
+  size?: number;
+  protected: boolean;
+}
+
+export interface PbsStatusSummary {
+  configured: boolean;
+  enabled: boolean;
+  reachable: boolean;
+  server?: string;
+  datastore?: string;
+  username?: string;
+  backupId?: string;
+  fingerprint?: string;
+  keepLast?: number;
+  archiveOnBackup: boolean;
+  passwordConfigured: boolean;
+  lastValidatedAt?: string;
+  lastArchiveAt?: string;
+  lastArchiveError?: string;
+  error?: string;
+  snapshots: PbsSnapshotSummary[];
+}
+
+export interface UpdatePbsConfigRequest {
+  enabled: boolean;
+  server: string;
+  datastore: string;
+  username: string;
+  password?: string;
+  fingerprint?: string;
+  backupId?: string;
+  keepLast?: number;
+  archiveOnBackup?: boolean;
+}
+
+export interface PbsActionRequest {
+  action: "test" | "archive" | "prune";
 }
