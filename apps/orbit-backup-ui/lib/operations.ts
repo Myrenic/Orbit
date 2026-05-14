@@ -82,7 +82,6 @@ const ARGO_APPLICATION_GROUP = "argoproj.io";
 const ARGO_APPLICATION_VERSION = "v1alpha1";
 const ARGO_APPLICATION_PLURAL = "applications";
 const ARGO_REFRESH_ANNOTATION = "argocd.argoproj.io/refresh";
-const ARGO_SKIP_RECONCILE_ANNOTATION = "argocd.argoproj.io/skip-reconcile";
 const ARGO_INSTANCE_LABELS = [
   "argocd.argoproj.io/instance",
   "app.kubernetes.io/instance",
@@ -360,6 +359,7 @@ type ArgoApplicationObject = {
     destination?: {
       namespace?: string;
     };
+    syncPolicy?: Record<string, unknown>;
   };
   status?: {
     health?: {
@@ -417,6 +417,7 @@ type ArgoReconcileState = {
   alreadyPaused: boolean;
   name: string;
   namespace: string;
+  originalSyncPolicy?: Record<string, unknown>;
   pausedByOrbit: boolean;
 };
 
@@ -580,24 +581,14 @@ async function detectOwningArgoApplication(workload: LiveInPlaceWorkload) {
   };
 }
 
-async function setArgoApplicationSkipReconcile(
+async function replaceArgoApplicationSyncPolicy(
   namespace: string,
   name: string,
-  paused: boolean,
+  syncPolicy?: Record<string, unknown>,
 ) {
   const application = await getArgoApplication(namespace, name);
   if (!application) {
     throw new Error(`Argo Application ${namespace}/${name} was not found.`);
-  }
-
-  const annotations = {
-    ...(application.metadata?.annotations ?? {}),
-  };
-
-  if (paused) {
-    annotations[ARGO_SKIP_RECONCILE_ANNOTATION] = "true";
-  } else {
-    delete annotations[ARGO_SKIP_RECONCILE_ANNOTATION];
   }
 
   await getKubeClients().customObjects.replaceNamespacedCustomObject({
@@ -608,9 +599,9 @@ async function setArgoApplicationSkipReconcile(
     name,
     body: {
       ...application,
-      metadata: {
-        ...application.metadata,
-        annotations,
+      spec: {
+        ...application.spec,
+        ...(syncPolicy ? { syncPolicy } : {}),
       },
     },
   });
@@ -622,16 +613,22 @@ async function pauseArgoApplication(namespace: string, name: string) {
     throw new Error(`Argo Application ${namespace}/${name} was not found.`);
   }
 
-  const alreadyPaused =
-    application.metadata?.annotations?.[ARGO_SKIP_RECONCILE_ANNOTATION] === "true";
+  const originalSyncPolicy = structuredClone(application.spec?.syncPolicy ?? {});
+  const alreadyPaused = !application.spec?.syncPolicy?.automated;
 
   if (!alreadyPaused) {
-    await setArgoApplicationSkipReconcile(namespace, name, true);
+    const nextSyncPolicy = structuredClone(originalSyncPolicy);
+    delete nextSyncPolicy.automated;
+
+    await replaceArgoApplicationSyncPolicy(
+      namespace,
+      name,
+      Object.keys(nextSyncPolicy).length > 0 ? nextSyncPolicy : undefined,
+    );
     await waitForCondition(
       `Argo Application ${namespace}/${name} pause`,
       async () => getArgoApplication(namespace, name),
-      (current) =>
-        current?.metadata?.annotations?.[ARGO_SKIP_RECONCILE_ANNOTATION] === "true",
+      (current) => !current?.spec?.syncPolicy?.automated,
     );
   }
 
@@ -639,6 +636,7 @@ async function pauseArgoApplication(namespace: string, name: string) {
     alreadyPaused,
     name,
     namespace,
+    originalSyncPolicy: alreadyPaused ? undefined : originalSyncPolicy,
     pausedByOrbit: !alreadyPaused,
   } satisfies ArgoReconcileState;
 }
@@ -648,17 +646,16 @@ async function resumeArgoApplication(argoApplication: ArgoReconcileState) {
     return;
   }
 
-  await setArgoApplicationSkipReconcile(
+  await replaceArgoApplicationSyncPolicy(
     argoApplication.namespace,
     argoApplication.name,
-    false,
+    argoApplication.originalSyncPolicy,
   );
 
   await waitForCondition(
     `Argo Application ${argoApplication.namespace}/${argoApplication.name} resume`,
     async () => getArgoApplication(argoApplication.namespace, argoApplication.name),
-    (current) =>
-      current?.metadata?.annotations?.[ARGO_SKIP_RECONCILE_ANNOTATION] !== "true",
+    (current) => Boolean(current?.spec?.syncPolicy?.automated),
   );
 }
 
@@ -701,10 +698,6 @@ async function waitForArgoApplicationSettled(argoApplication: ArgoReconcileState
     async () => getArgoApplication(argoApplication.namespace, argoApplication.name),
     (application) => {
       if (!application) {
-        return false;
-      }
-
-      if (application.metadata?.annotations?.[ARGO_SKIP_RECONCILE_ANNOTATION] === "true") {
         return false;
       }
 

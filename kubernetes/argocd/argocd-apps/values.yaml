@@ -2,6 +2,9 @@
 applicationsets:
   main:
     name: main
+    ignoreApplicationDifferences:
+      - jsonPointers:
+          - /spec/syncPolicy
     generators:
       - git:
           repoURL: https://github.com/myrenic/orbit.git
