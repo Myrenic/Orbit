@@ -16,6 +16,6 @@ metrics:
       release: kube-prometheus-stack
 
 defaultBackupStore:
-  backupTarget: azblob://longhorn@velero76b1f66a064d/
+  backupTarget: azblob://longhorn@core.windows.net/
   backupTargetCredentialSecret: azure-backup-credentials
   pollInterval: "300"

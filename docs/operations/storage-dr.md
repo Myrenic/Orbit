@@ -5,7 +5,7 @@ Orbit stores Kubernetes PVCs on Longhorn and protects cluster state with Velero.
 ## Current defaults
 
 - The default `longhorn` StorageClass uses **3 replicas**, matching the three Talos control-plane nodes defined for `helios` in `terraform/infra.json`.
-- Longhorn's default backup target is repo-managed and points at the Azure Blob container `longhorn` in storage account `velero76b1f66a064d`, using the SOPS-encrypted secret `kubernetes/storage/longhorn/azure-backup-credentials.sops.yaml`.
+- Longhorn's default backup target is repo-managed and points at the Azure Blob container `longhorn` via `azblob://longhorn@core.windows.net/`, using the SOPS-encrypted secret `kubernetes/storage/longhorn/azure-backup-credentials.sops.yaml` for the storage account name and key.
 - Velero writes backups to the Azure `default` backup storage location.
 - Velero uses **Kopia filesystem backups** for pod volumes by default and keeps snapshots disabled in-chart, so Longhorn-backed PVC recovery depends on Velero pod volume backups instead of CSI snapshots.
 
@@ -24,7 +24,7 @@ velero backup get
 Healthy signs:
 
 - the `longhorn` StorageClass reports `3` replicas
-- the Longhorn default backup target reports `azblob://longhorn@velero76b1f66a064d/`, `azure-backup-credentials`, and `true`
+- the Longhorn default backup target reports `azblob://longhorn@core.windows.net/`, `azure-backup-credentials`, and `true`
 - the Velero backup storage location is `Available`
 - the `daily` schedule is present
 - recent backups complete without partial failures
