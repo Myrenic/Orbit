@@ -36,7 +36,6 @@ RUN apt-get update \
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
 
 RUN mkdir -p /data && chown -R nextjs:nextjs /data /app
 
