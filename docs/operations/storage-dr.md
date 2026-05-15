@@ -5,6 +5,7 @@ Orbit stores Kubernetes PVCs on Longhorn and protects cluster state with Velero.
 ## Current defaults
 
 - The default `longhorn` StorageClass uses **3 replicas**, matching the three Talos control-plane nodes defined for `helios` in `terraform/infra.json`.
+- Longhorn's default backup target is repo-managed and points at the Azure Blob container `longhorn` in storage account `velero76b1f66a064d`, using the SOPS-encrypted secret `kubernetes/storage/longhorn/azure-backup-credentials.sops.yaml`.
 - Velero writes backups to the Azure `default` backup storage location.
 - Velero uses **Kopia filesystem backups** for pod volumes by default and keeps snapshots disabled in-chart, so Longhorn-backed PVC recovery depends on Velero pod volume backups instead of CSI snapshots.
 
@@ -14,6 +15,7 @@ Run these checks from a shell that has already loaded the Orbit kubeconfig with 
 
 ```powershell
 kubectl get storageclass longhorn -o jsonpath='{.parameters.numberOfReplicas}{"`n"}'
+kubectl -n storage get backuptarget default -o jsonpath='{.spec.backupTargetURL}{"`n"}{.spec.credentialSecret}{"`n"}{.status.available}{"`n"}'
 kubectl -n velero get backupstoragelocation
 kubectl -n velero get schedules,backups,restores
 velero backup get
@@ -22,6 +24,7 @@ velero backup get
 Healthy signs:
 
 - the `longhorn` StorageClass reports `3` replicas
+- the Longhorn default backup target reports `azblob://longhorn@velero76b1f66a064d/`, `azure-backup-credentials`, and `true`
 - the Velero backup storage location is `Available`
 - the `daily` schedule is present
 - recent backups complete without partial failures
@@ -48,3 +51,4 @@ kubectl get podvolumerestores -A
 
 - Velero server and node-agent resource requests are pinned in-repo because the Azure plugin requires explicit requests/limits.
 - Kopia repository maintenance jobs also have explicit resource limits so backup pruning and integrity checks do not run unbounded during normal operations.
+- `backups.tuntelder.com` reads and updates the Longhorn default backup target; the bootstrap baseline now lives in Git so a fresh cluster does not come up with an empty target.

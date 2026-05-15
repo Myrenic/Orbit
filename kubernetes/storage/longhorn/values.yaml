@@ -14,3 +14,8 @@ metrics:
     enabled: true
     additionalLabels:
       release: kube-prometheus-stack
+
+defaultBackupStore:
+  backupTarget: azblob://longhorn@velero76b1f66a064d/
+  backupTargetCredentialSecret: azure-backup-credentials
+  pollInterval: "300"
