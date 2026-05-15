@@ -163,7 +163,7 @@ function getLonghornLabel(
   labels: Record<string, string>,
   key: string,
 ): string | undefined {
-  return labels[key] || labels[`orbit.${key}`];
+  return labels[key] || labels[`orbit.${key}`] || labels[`orbit-${key}`];
 }
 
 function getPodStatus(pod: V1Pod) {
