@@ -1,4 +1,5 @@
 import type {
+  V1CronJob,
   V1Deployment,
   V1Namespace,
   V1Pod,
@@ -14,6 +15,7 @@ import {
   createLonghornObject,
   deleteLonghornObject,
   getLonghornObject,
+  getLonghornObjectNamespace,
   listLonghornObjects,
   LonghornObject,
   replaceLonghornObject,
@@ -69,7 +71,10 @@ function buildName(...segments: string[]) {
 }
 
 function getNextRunAt(cronExpression: string) {
-  return new Cron(cronExpression, { paused: true }).nextRun()?.toISOString();
+  return new Cron(cronExpression, {
+    paused: true,
+    timezone: getScheduleTimeZone(),
+  }).nextRun()?.toISOString();
 }
 
 function getNextRunAtSafe(cronExpression: string) {
@@ -120,6 +125,10 @@ const ORBIT_SCHEDULE_LAST_RUN_AT_ANNOTATION = "orbit.myrenic.io/schedule-last-ru
 const LONGHORN_RECURRING_JOB_LABEL_PREFIX = "recurring-job.longhorn.io/";
 const RECURRING_JOB_RETAIN = 7;
 const RECURRING_JOB_CONCURRENCY = 1;
+
+function getScheduleTimeZone() {
+  return process.env.ORBIT_BACKUP_SCHEDULE_TIMEZONE || process.env.TZ || "UTC";
+}
 
 function buildRecurringJobName(name: string) {
   return buildName(name, shortId()).slice(0, 40);
@@ -177,6 +186,14 @@ function getPositiveInteger(value: unknown, fallback: number) {
   return Number.isFinite(numericValue) && numericValue >= 1 ? numericValue : fallback;
 }
 
+function getIsoTimestamp(value: string | Date | undefined) {
+  if (!value) {
+    return undefined;
+  }
+
+  return value instanceof Date ? value.toISOString() : value;
+}
+
 function getResolvedScheduleVolumeNames(apps: AppInventoryItem[], appRefs: string[]) {
   const appRefsSet = new Set(appRefs);
   const volumeNames = new Set<string>();
@@ -226,6 +243,63 @@ function buildRecurringJobBackupLabels(scheduleId: string, scheduleName: string)
 
 function isOrbitManagedSchedule(object: LonghornObject) {
   return getLonghornObjectLabels(object)[ORBIT_SCHEDULE_MARKER_LABEL] === "true";
+}
+
+async function getRecurringCronJob(name: string) {
+  try {
+    return await getKubeClients().batch.readNamespacedCronJob({
+      name,
+      namespace: getLonghornObjectNamespace(),
+    });
+  } catch (error) {
+    if (isKubernetesErrorStatus(error, 404)) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function syncRecurringCronJobTimeZone(name: string) {
+  const cronJob = await getRecurringCronJob(name);
+  if (!cronJob?.spec) {
+    return false;
+  }
+
+  const desiredTimeZone = getScheduleTimeZone();
+  if (cronJob.spec.timeZone === desiredTimeZone) {
+    return false;
+  }
+
+  const nextCronJob: V1CronJob = {
+    ...cronJob,
+    spec: {
+      ...cronJob.spec,
+      timeZone: desiredTimeZone,
+    },
+  };
+
+  await getKubeClients().batch.replaceNamespacedCronJob({
+    name,
+    namespace: getLonghornObjectNamespace(),
+    body: nextCronJob,
+  });
+
+  return true;
+}
+
+async function waitForRecurringCronJob(name: string, timeoutMs = 30_000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const cronJob = await getRecurringCronJob(name);
+    if (cronJob) {
+      return cronJob;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+
+  return undefined;
 }
 
 function getOperationSummary(request: CreateOperationRequest) {
@@ -2726,6 +2800,7 @@ function buildScheduleDefinition(
   apps: AppInventoryItem[],
   appRefByVolumeName: Map<string, string>,
   longhornVolumes: LonghornObject[],
+  cronJobsByName: Map<string, V1CronJob>,
 ): ScheduleDefinition {
   const annotations = getLonghornObjectAnnotations(recurringJob);
   const recurringJobName = recurringJob.metadata?.name;
@@ -2761,11 +2836,17 @@ function buildScheduleDefinition(
     annotations[ORBIT_SCHEDULE_UPDATED_AT_ANNOTATION] ||
     recurringJob.metadata?.creationTimestamp ||
     createdAt;
+  const cronJob = cronJobsByName.get(recurringJobName);
+  const lastRunAt =
+    getIsoTimestamp(cronJob?.status?.lastSuccessfulTime) ||
+    getIsoTimestamp(cronJob?.status?.lastScheduleTime) ||
+    annotations[ORBIT_SCHEDULE_LAST_RUN_AT_ANNOTATION];
 
   return {
     id: recurringJobName,
     name: annotations[ORBIT_SCHEDULE_NAME_ANNOTATION] || recurringJobName,
     cron,
+    timezone: cronJob?.spec?.timeZone || getScheduleTimeZone(),
     retain: getPositiveInteger(recurringJob.spec?.retain, RECURRING_JOB_RETAIN),
     enabled,
     appRefs,
@@ -2774,17 +2855,21 @@ function buildScheduleDefinition(
     activeVolumeCount: assignedVolumeNames.length,
     backend: "longhorn-recurringjob",
     nextRunAt: enabled ? getNextRunAtSafe(cron) : undefined,
-    lastRunAt: annotations[ORBIT_SCHEDULE_LAST_RUN_AT_ANNOTATION],
+    lastRunAt,
     createdAt,
     updatedAt,
   };
 }
 
 export async function listSchedules() {
-  const [snapshot, recurringJobs, longhornVolumes] = await Promise.all([
+  const [snapshot, recurringJobs, longhornVolumes, cronJobs] = await Promise.all([
     getClusterSnapshot(),
     listLonghornObjects("recurringjobs"),
     listLonghornObjects("volumes"),
+    getKubeClients().batch.listNamespacedCronJob({
+      namespace: getLonghornObjectNamespace(),
+      labelSelector: "longhorn.io/managed-by=longhorn-manager",
+    }),
   ]);
 
   const appRefByVolumeName = new Map<string, string>();
@@ -2794,10 +2879,22 @@ export async function listSchedules() {
     }
   }
 
+  const cronJobsByName = new Map(
+    (cronJobs.items ?? [])
+      .filter((cronJob) => cronJob.metadata?.name)
+      .map((cronJob) => [cronJob.metadata?.name ?? "", cronJob]),
+  );
+
   return recurringJobs
     .filter((recurringJob) => recurringJob.metadata?.name && isOrbitManagedSchedule(recurringJob))
     .map((recurringJob) =>
-      buildScheduleDefinition(recurringJob, snapshot.apps, appRefByVolumeName, longhornVolumes),
+      buildScheduleDefinition(
+        recurringJob,
+        snapshot.apps,
+        appRefByVolumeName,
+        longhornVolumes,
+        cronJobsByName,
+      ),
     )
     .sort((left, right) => left.name.localeCompare(right.name));
 }
@@ -2822,6 +2919,7 @@ export async function reconcileManagedSchedules() {
       snapshot.apps,
       longhornVolumes,
     );
+    await syncRecurringCronJobTimeZone(recurringJob.metadata?.name ?? "");
   }
 
   return managedJobs.length;
@@ -2879,6 +2977,8 @@ export async function createSchedule(
 
   await createLonghornObject(buildRecurringJobObject(schedule), "recurringjobs");
   await syncRecurringJobVolumeAssignments(schedule.id, schedule.appRefs, schedule.enabled);
+  await waitForRecurringCronJob(schedule.id);
+  await syncRecurringCronJobTimeZone(schedule.id);
 
   return (
     (await listSchedules()).find((entry) => entry.id === schedule.id) ?? schedule
@@ -2927,6 +3027,8 @@ export async function updateSchedule(update: UpdateScheduleRequest) {
     buildRecurringJobObject(schedule, current),
   );
   await syncRecurringJobVolumeAssignments(schedule.id, schedule.appRefs, schedule.enabled);
+  await waitForRecurringCronJob(schedule.id);
+  await syncRecurringCronJobTimeZone(schedule.id);
 
   const updatedSchedule = (await listSchedules()).find((entry) => entry.id === schedule.id);
   if (!updatedSchedule) {

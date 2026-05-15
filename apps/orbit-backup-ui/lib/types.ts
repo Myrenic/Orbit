@@ -204,6 +204,7 @@ export interface ScheduleDefinition {
   id: string;
   name: string;
   cron: string;
+  timezone?: string;
   retain: number;
   enabled: boolean;
   appRefs: string[];

@@ -47,6 +47,15 @@ rules:
       - update
       - patch
       - delete
+  - apiGroups: ["batch"]
+    resources:
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
   - apiGroups: ["longhorn.io"]
     resources:
       - volumes

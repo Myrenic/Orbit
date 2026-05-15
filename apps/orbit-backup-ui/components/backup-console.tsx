@@ -2528,6 +2528,7 @@ export function BackupConsole() {
                       <div className="mt-2 text-xs text-slate-400">
                         {schedule.cron} · {pluralize(schedule.appRefs.length, "workload")}
                         {` · retain ${schedule.retain}`}
+                        {schedule.timezone ? ` · ${schedule.timezone}` : ""}
                         {typeof schedule.activeVolumeCount === "number"
                           ? ` · ${pluralize(schedule.activeVolumeCount, "volume")}`
                           : ""}

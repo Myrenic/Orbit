@@ -2,6 +2,7 @@ import * as k8s from "@kubernetes/client-node";
 
 type KubeClients = {
   apps: k8s.AppsV1Api;
+  batch: k8s.BatchV1Api;
   core: k8s.CoreV1Api;
   customObjects: k8s.CustomObjectsApi;
 };
@@ -20,6 +21,7 @@ export function getKubeClients(): KubeClients {
 
   const clients: KubeClients = {
     apps: kubeConfig.makeApiClient(k8s.AppsV1Api),
+    batch: kubeConfig.makeApiClient(k8s.BatchV1Api),
     core: kubeConfig.makeApiClient(k8s.CoreV1Api),
     customObjects: kubeConfig.makeApiClient(k8s.CustomObjectsApi),
   };
