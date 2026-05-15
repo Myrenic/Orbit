@@ -1,2 +1,4 @@
 ---
-enforce: privileged
+enforce: baseline
+warn: restricted
+audit: restricted

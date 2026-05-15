@@ -14,3 +14,16 @@ helmCharts:
 
 resources:
   - ./ingress.yaml
+
+patches:
+  - target:
+      group: batch
+      version: v1
+      kind: Job
+      name: longhorn-uninstall
+    patch: |-
+      $patch: delete
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: longhorn-uninstall

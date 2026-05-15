@@ -14,6 +14,15 @@ podSecurityContext: {}
 
 ingress:
   host: ""
+  entryPoints:
+    - websecure
+  annotations: {}
+  annotationsPrivate: {}
+  middlewares: []
+  tls:
+    enabled: true
+    certResolver: letsencrypt
+    secretName: ""
 
 securityContext: {}
   # capabilities:

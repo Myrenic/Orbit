@@ -6,6 +6,7 @@ metadata:
   name: {{ include "generic-service.name" . }}
   labels:
     {{- include "generic-service.labels" . | nindent 4 }}
+  {{- if or .Values.ingress.annotations .Values.ingress.annotationsPrivate }}
   annotations:
   {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -13,9 +14,12 @@ metadata:
   {{- with .Values.ingress.annotationsPrivate }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- end }}
 spec:
   entryPoints:
-    - websecure
+    {{- range .Values.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
   routes:
     - match: "Host(`{{ .Values.ingress.host }}`)"
       kind: Rule
@@ -31,6 +35,13 @@ spec:
           {{- end }}
         {{- end }}
       {{- end }}
+  {{- if and .Values.ingress.tls.enabled (or .Values.ingress.tls.certResolver .Values.ingress.tls.secretName) }}
   tls:
-    certResolver: letsencrypt
+    {{- with .Values.ingress.tls.certResolver }}
+    certResolver: {{ . }}
+    {{- end }}
+    {{- with .Values.ingress.tls.secretName }}
+    secretName: {{ . }}
+    {{- end }}
+  {{- end }}
 {{- end }}

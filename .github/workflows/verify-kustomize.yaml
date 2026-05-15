@@ -4,6 +4,11 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - "*"
+    paths:
+      - "kubernetes/**"
+      - "helm-charts/**"
+      - ".github/scripts/validate_kustomize_scopes.py"
+      - ".github/workflows/verify-kustomize.yaml"
 
 jobs:
   kustomize:
@@ -11,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Install Kustomize
         run: |
           curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest \
@@ -20,6 +27,6 @@ jobs:
           | xargs curl -L -o kustomize.tar.gz && \
           tar -xzf kustomize.tar.gz && \
           sudo mv kustomize /usr/local/bin/
-      - name: Build & Validate
+      - name: Build changed kustomize scopes
         run: |
-          kustomize build kubernetes/argocd/argocd-apps --load-restrictor LoadRestrictionsNone --enable-helm
+          python3 .github/scripts/validate_kustomize_scopes.py --base-ref "${{ github.base_ref }}"

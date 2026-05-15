@@ -1,0 +1,6 @@
+---
+# kube-prometheus-stack deploys components such as node-exporter that require
+# host-level access, so monitoring must stay permissive at enforcement time.
+enforce: privileged
+warn: baseline
+audit: baseline

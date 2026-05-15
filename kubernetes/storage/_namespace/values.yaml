@@ -1,2 +1,5 @@
 ---
+# Longhorn and its CSI components require privileged access on the node.
 enforce: privileged
+warn: baseline
+audit: baseline

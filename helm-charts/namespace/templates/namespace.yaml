@@ -9,3 +9,9 @@ metadata:
     {{- if .Values.enforce }}
     pod-security.kubernetes.io/enforce: {{ .Values.enforce | quote }}
     {{- end }}
+    {{- if .Values.warn }}
+    pod-security.kubernetes.io/warn: {{ .Values.warn | quote }}
+    {{- end }}
+    {{- if .Values.audit }}
+    pod-security.kubernetes.io/audit: {{ .Values.audit | quote }}
+    {{- end }}

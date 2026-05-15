@@ -1,0 +1,4 @@
+---
+enforce: baseline
+warn: restricted
+audit: restricted

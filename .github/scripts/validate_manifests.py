@@ -1,48 +1,122 @@
 #!/usr/bin/env python3
-import os
-import yaml
+from __future__ import annotations
+
 from pathlib import Path
 
-root = Path("kubernetes")
-ignored_manifests = {
-    os.path.normpath("kubernetes/storage/longhorn/longhorn.yaml"),
+import yaml
+
+ROOT = Path("kubernetes")
+KUSTOMIZATION_FILENAMES = {"kustomization.yaml", "kustomization.yml", "Kustomization"}
+IGNORED_MANIFESTS = {
+    Path("kubernetes/storage/longhorn/longhorn.yaml"),
+    Path("kubernetes/common/cluster-secrets.sops.yaml"),
 }
 
-# Collect all yaml manifests (skip kustomization.yaml and files in charts/)
-manifests = []
-for path in root.rglob("*.yaml"):
-    if path.name == "kustomization.yaml":
-        continue
-    if "charts" in path.parts:  # skip Helm chart files
-        continue
-    try:
-        with open(path) as f:
-            docs = list(yaml.safe_load_all(f))
-        if any(isinstance(d, dict) and "apiVersion" in d and "kind" in d for d in docs if d):
-            manifest_path = os.path.normpath(path.as_posix())
-            if manifest_path not in ignored_manifests:
-                manifests.append(manifest_path)
-    except Exception:
-        continue
 
-# Collect all references from kustomization.yaml
-references = set()
-for path in root.rglob("kustomization.yaml"):
-    with open(path) as f:
-        data = yaml.safe_load(f) or {}
-        for key in ("resources", "bases", "patchesStrategicMerge", "patches"):
-            if key in data:
-                for r in data[key]:
-                    ref_path = os.path.normpath((path.parent / r).as_posix())
-                    references.add(ref_path)
+def is_remote_reference(reference: str) -> bool:
+    return "://" in reference or reference.startswith("github.com/")
 
-# Check if each manifest is covered
-missing = [m for m in manifests if m not in references]
 
-if missing:
-    print("❌ The following manifests are not referenced by any kustomization.yaml:")
-    for m in missing:
-        print(f"  - {m}")
-    exit(1)
-else:
-    print("✅ All manifests are referenced by at least one kustomization.yaml")
+def collect_manifests() -> list[Path]:
+    manifests: list[Path] = []
+    for path in ROOT.rglob("*.yaml"):
+        if path.name in KUSTOMIZATION_FILENAMES:
+            continue
+        if "charts" in path.parts:
+            continue
+        try:
+            with path.open() as handle:
+                docs = list(yaml.safe_load_all(handle))
+        except Exception:
+            continue
+
+        if any(
+            isinstance(doc, dict) and "apiVersion" in doc and "kind" in doc
+            for doc in docs
+            if doc
+        ) and path not in IGNORED_MANIFESTS:
+            manifests.append(path)
+
+    return manifests
+
+
+def iter_kustomization_references(kustomization_path: Path, data: dict) -> list[str]:
+    references: list[str] = []
+
+    for key in ("resources", "bases", "components", "patchesStrategicMerge"):
+        for item in data.get(key, []) or []:
+            if isinstance(item, str):
+                references.append(item)
+
+    for patch in data.get("patches", []) or []:
+        if isinstance(patch, str):
+            references.append(patch)
+        elif isinstance(patch, dict) and isinstance(patch.get("path"), str):
+            references.append(patch["path"])
+
+    return references
+
+
+def has_kustomization_file(directory: Path) -> bool:
+    return any((directory / filename).exists() for filename in KUSTOMIZATION_FILENAMES)
+
+
+def main() -> int:
+    manifests = collect_manifests()
+    references: set[Path] = set()
+    errors: list[str] = []
+
+    kustomizations = sorted(
+        path
+        for filename in KUSTOMIZATION_FILENAMES
+        for path in ROOT.rglob(filename)
+    )
+
+    for path in kustomizations:
+        with path.open() as handle:
+            data = yaml.safe_load(handle) or {}
+
+        for reference in iter_kustomization_references(path, data):
+            if is_remote_reference(reference):
+                continue
+
+            resolved_ref = (path.parent / reference).resolve()
+
+            try:
+                ref_path = resolved_ref.relative_to(Path.cwd())
+            except ValueError:
+                errors.append(
+                    f"{path.as_posix()}: reference '{reference}' resolves outside the repository"
+                )
+                continue
+
+            references.add(ref_path)
+
+            if not resolved_ref.exists():
+                errors.append(
+                    f"{path.as_posix()}: reference '{reference}' does not exist"
+                )
+                continue
+
+            if resolved_ref.is_dir() and not has_kustomization_file(resolved_ref):
+                errors.append(
+                    f"{path.as_posix()}: directory reference '{reference}' is missing a kustomization file"
+                )
+
+    missing = sorted(manifest for manifest in manifests if manifest not in references)
+    if missing:
+        errors.append("The following manifests are not referenced by any kustomization file:")
+        errors.extend(f"  - {manifest.as_posix()}" for manifest in missing)
+
+    if errors:
+        print("❌ Manifest validation failed:")
+        for error in errors:
+            print(error)
+        return 1
+
+    print("✅ All manifests are referenced and all kustomization references resolve correctly.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

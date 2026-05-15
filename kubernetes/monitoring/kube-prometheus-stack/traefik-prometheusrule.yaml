@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: traefik
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: traefik
+      rules:
+        - alert: TraefikMetricsTargetDown
+          expr: max by (namespace, service) (up{namespace="network", service="traefik-metrics"}) < 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            message: Traefik metrics have been unavailable for 10 minutes.
+            summary: Traefik ingress controller is not responding to Prometheus scrapes.

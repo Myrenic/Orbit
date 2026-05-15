@@ -8,12 +8,30 @@ param(
 
 
 begin {
+    Set-StrictMode -Version Latest
+
     if (-not (Test-Path ".git")) {
         Write-Error "This script must be run from the repository root."
         exit 1
     }
 
     $SCRIPT_DIR = $PSScriptRoot
+    $REPO_ROOT = (Resolve-Path (Join-Path $SCRIPT_DIR "..")).Path
+
+    function Assert-CommandAvailable {
+        param(
+            [Parameter(Mandatory)]
+            [string]$Name
+        )
+
+        if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
+            throw "$Name is required but not found in PATH."
+        }
+    }
+
+    Assert-CommandAvailable -Name "kubectl"
+    Assert-CommandAvailable -Name "kustomize"
+    Assert-CommandAvailable -Name "helm"
 
     # helper functions
     function Wait-ForDeploymentReady {
@@ -38,6 +56,27 @@ begin {
             }
             Start-Sleep -Seconds 5
         }
+    }
+
+    function Apply-SecretFromFile {
+        param(
+            [Parameter(Mandatory)]
+            [string]$Name,
+            [Parameter(Mandatory)]
+            [string]$Namespace,
+            [Parameter(Mandatory)]
+            [string]$KeyName,
+            [Parameter(Mandatory)]
+            [string]$FilePath
+        )
+
+        if (-not (Test-Path $FilePath)) {
+            throw "Required bootstrap secret source file '$FilePath' was not found."
+        }
+
+        Write-Host "Applying secret: $Namespace/$Name..." -ForegroundColor Cyan
+        kubectl create secret generic $Name --namespace $Namespace --from-file="$KeyName=$FilePath" --dry-run=client -o yaml |
+            kubectl apply -f - --server-side --force-conflicts
     }
 
 
@@ -80,6 +119,15 @@ process {
 
 	    "chart" {
                 Write-Host "Applying chart: $($item.Value)..." -ForegroundColor Cyan
+
+                if ($item.Value -eq "kubernetes/argocd/argocd") {
+                    Apply-SecretFromFile `
+                        -Name "argocd-sops-age-key" `
+                        -Namespace "argocd" `
+                        -KeyName "keys.txt" `
+                        -FilePath (Join-Path $REPO_ROOT "age.agekey")
+                }
+
                 kustomize build $item.Value --enable-helm | kubectl apply -f - --server-side
                 
                 if ($item.Value -match "argocd$") {
@@ -98,6 +146,7 @@ end {
     Write-Host "All resources processed successfully." -ForegroundColor Green
 
     if ($RestoreVelero) {
+        Assert-CommandAvailable -Name "velero"
         Write-Host "Waiting for Velero to become ready..." -ForegroundColor Yellow
         Wait-ForDeploymentReady -Name "velero" -Namespace "velero" -TimeoutSeconds 600
 

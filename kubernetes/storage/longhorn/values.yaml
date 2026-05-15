@@ -1,6 +1,6 @@
 ---
 persistence:
-  defaultClassReplicaCount: 2
+  defaultClassReplicaCount: 3
   allowVolumeExpansion: true
   reclaimPolicy: Delete
   volumeBindingMode: Immediate
@@ -8,3 +8,9 @@ persistence:
 preUpgradeChecker:
   jobEnabled: false
   upgradeVersionCheck: true
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: kube-prometheus-stack

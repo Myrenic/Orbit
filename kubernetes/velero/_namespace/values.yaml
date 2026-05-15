@@ -1,2 +1,5 @@
 ---
+# Velero's node-agent needs host-level access for filesystem backups.
 enforce: privileged
+warn: baseline
+audit: baseline

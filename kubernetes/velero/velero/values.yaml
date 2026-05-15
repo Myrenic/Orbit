@@ -1,4 +1,12 @@
 ---
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
 credentials:
   useSecret: true
   existingSecret: velero-credentials
@@ -16,6 +24,9 @@ configuration:
     - name: default
       provider: azure
       bucket: velero
+      # Scope this cluster's backups under a stable prefix so the default BSL
+      # validates cleanly during bootstrap and restore workflows.
+      prefix: orbit-helios
       default: true
       credential:
         name: velero-credentials
@@ -28,10 +39,68 @@ configuration:
   defaultVolumesToFsBackup: true
   uploaderType: kopia
   backupSyncPeriod: 1h
+  garbageCollectionFrequency: 12h
+  storeValidationFrequency: 12h
+  repositoryMaintenanceJob:
+    repositoryConfigData:
+      global:
+        keepLatestMaintenanceJobs: 3
+        podResources:
+          cpuRequest: "100m"
+          cpuLimit: "500m"
+          memoryRequest: "128Mi"
+          memoryLimit: "512Mi"
 
 backupsEnabled: true
 snapshotsEnabled: false
 deployNodeAgent: true
+
+nodeAgent:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    autodetect: false
+    additionalLabels:
+      release: kube-prometheus-stack
+  nodeAgentPodMonitor:
+    enabled: true
+    autodetect: false
+    additionalLabels:
+      release: kube-prometheus-stack
+  prometheusRule:
+    enabled: true
+    autodetect: false
+    additionalLabels:
+      release: kube-prometheus-stack
+    spec:
+      - alert: VeleroBackupFailed
+        annotations:
+          message: Velero backup {{ $labels.schedule }} has failed.
+        expr: velero_backup_last_status{schedule!=""} != 1
+        for: 15m
+        labels:
+          severity: warning
+      - alert: VeleroNoRecentSuccessfulBackup
+        annotations:
+          message: Velero backup {{ $labels.schedule }} has not completed successfully in the last 30 hours.
+        expr: |
+          (
+            (time() - velero_backup_last_successful_timestamp{schedule!=""}) > bool (30 * 3600)
+            or
+            absent(velero_backup_last_successful_timestamp{schedule!=""})
+          ) == 1
+        for: 1h
+        labels:
+          severity: critical
 
 schedules:
   daily:
@@ -39,5 +108,6 @@ schedules:
     template:
       ttl: 720h0m0s
       storageLocation: default
+      defaultVolumesToFsBackup: true
       excludedNamespaces:
         - velero

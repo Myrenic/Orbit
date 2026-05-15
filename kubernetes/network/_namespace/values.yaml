@@ -1,2 +1,6 @@
 ---
+# Traefik and MetalLB need elevated network-related permissions, so keep
+# enforcement permissive while still surfacing stronger policy drift.
 enforce: privileged
+warn: baseline
+audit: baseline

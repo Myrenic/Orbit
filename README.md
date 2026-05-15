@@ -31,13 +31,24 @@ The homelab runs on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-envi
 - **helios** — a [Talos](https://www.talos.dev/) Kubernetes cluster (control plane + workers)
 - **atlas** — an Ubuntu VM used as a file server for media storage and [Longhorn](https://longhorn.io/) backups
 
-All cluster workloads are managed via [GitOps](https://en.wikipedia.org/wiki/DevOps) with [Argo CD](https://argoproj.github.io/cd/) and an ApplicationSet that auto-syncs from this repository. Secrets are encrypted in-repo using [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets).
+All cluster workloads are managed via [GitOps](https://en.wikipedia.org/wiki/DevOps) with [Argo CD](https://argoproj.github.io/cd/) and an ApplicationSet that auto-syncs from this repository. Secrets are encrypted in-repo with [SOPS](https://github.com/getsops/sops) + age for shared/bootstrap material and selected bootstrap secrets, while [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) handles Kubernetes-native secret workflows for application manifests.
+
+Namespaces also carry Pod Security Admission labels. General-purpose namespaces (`argocd`, `auth`, and `services`) enforce the Kubernetes `baseline` profile and emit `restricted` warnings/audits, while infrastructure namespaces that still need elevated access (`monitoring`, `network`, `storage`, and `velero`) keep permissive enforcement and emit `baseline` warnings/audits so exceptions remain visible without breaking workloads.
 
 ## 🚀 Getting Started
 
-1. **Create Terraform variables** in `terraform/helios` (and optionally `terraform/atlas`). Use the provided `.example` files as a reference.
+1. **Prepare the cluster-ops toolbox**.
 
-2. **Deploy the Talos cluster** using Terraform:
+   Follow [`docs/operations/cluster-ops-toolbox.md`](docs/operations/cluster-ops-toolbox.md) to install the required CLI tools.
+   Once the tools are present, validate the workstation toolchain from the repo root with:
+
+   ```powershell
+   .\scripts\initialize-ClusterOps.ps1 -SkipConfigImport
+   ```
+
+2. **Create Terraform variables** in `terraform/helios` (and optionally `terraform/atlas`). Use the provided `.example` files as a reference.
+
+3. **Deploy the Talos cluster** using Terraform:
 
 ```bash
 cd terraform/helios
@@ -45,7 +56,15 @@ terraform init
 terraform apply
 ```
 
-3. **Bootstrap the cluster** (creates namespaces, restores sealed-secret keys, installs ArgoCD and ArgoCD-Apps):
+4. **Import dedicated kubeconfig and talosconfig files for day-2 work**:
+
+```powershell
+.\scripts\initialize-ClusterOps.ps1
+```
+
+This writes dedicated config files to `~/.kube/orbit-helios.config` and `~/.talos/orbit-helios.config`, then exports `KUBECONFIG` and `TALOSCONFIG` for the current shell.
+
+5. **Bootstrap the cluster** (creates namespaces, reapplies `sealed-secret-backup.yaml` into the `secrets` namespace, installs ArgoCD and ArgoCD-Apps):
 
 ```powershell
 .\scripts\new-Cluster.ps1
@@ -57,13 +76,13 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 .\scripts\get-ArgoPassword.ps1
 ```
 
-4. **Creating a sealed value for a specific secret key**:
+6. **Creating a sealed value for a specific secret key**:
 
 ```powershell
 .\scripts\new-SealedSecret.ps1 -password <value> -namespace <ns> -secretName <name> -key <secretKey>
 ```
 
-5. **Edit a SealedSecret file using your default editor (sops-like flow)**:
+7. **Edit a SealedSecret file using your default editor (sops-like flow)**:
 
 ```powershell
 .\scripts\edit-SealedSecret.ps1 -FilePath <path-to-sealed-secret.yaml>
@@ -72,19 +91,45 @@ ArgoCD will automatically sync all remaining applications from the repository. R
 This decrypts the file to a temporary manifest, opens it in `$VISUAL`/`$EDITOR` (falls back to `vi`), and reseals it back to the original file when the editor exits.
 The script automatically preserves secret name, namespace, and scope (`strict`, `namespace-wide`, `cluster-wide`) from the existing manifest.
 
-6. **Backing up Sealed Secret keys**:
+8. **Backing up Sealed Secrets recovery keys from the `secrets` namespace**:
 
 ```powershell
 .\scripts\backup-SealedSecret.ps1
 ```
 
-6. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace that includes your Azure subscription ID, then update `kubernetes/velero/velero/values.yaml` with your Azure storage account and resource group).
+Use `-controllerNamespace <namespace>` if your controller is not running in the repo default `secrets` namespace.
 
-7. **Restore Velero backups during onboarding (optional)**:
+9. **Configure Velero Azure credentials** (create a `velero-credentials` secret with a `cloud` key in the `velero` namespace that includes your Azure subscription ID, then update `kubernetes/velero/velero/values.yaml` with your Azure storage account and resource group).
+
+   The repo keeps this credential as a SOPS-encrypted secret manifest at `kubernetes/velero/velero/velero-credentials.sops.yaml`; prefer updating that file instead of introducing a second secret-management pattern.
+
+10. **Restore Velero backups during onboarding (optional)**:
 
 ```powershell
 .\scripts\new-Cluster.ps1 -RestoreVelero -VeleroSchedule daily
 ```
+
+## 🧰 Cluster Ops Toolbox
+
+Use the repo's cluster-ops helpers from a dedicated admin workstation shell:
+
+```powershell
+.\scripts\initialize-ClusterOps.ps1
+.\scripts\get-ClusterOpsSnapshot.ps1 -IncludeVelero
+```
+
+- `initialize-ClusterOps.ps1` validates the CLI toolchain and imports dedicated `kubectl`/`talosctl` configs from the Terraform outputs.
+- `get-ClusterOpsSnapshot.ps1` gives a quick day-2 status view for nodes, Argo CD applications, unhealthy pods, and optional Velero resources.
+- `backup-SealedSecret.ps1` defaults to the repo's active `secrets` namespace, matching the checked-in Sealed Secrets key backup manifest.
+- `docs/operations/cluster-ops-toolbox.md` includes the Grafana access flow for the repo-managed monitoring stack.
+- `docs/operations/storage-dr.md` captures the repo's current Longhorn replica policy plus the Velero backup and restore drill workflow.
+
+## 🌐 Networking and access conventions
+
+- Public HTTP exposure should use Traefik `IngressRoute` resources on the `websecure` entrypoint.
+- External TLS currently terminates in Traefik via the shared `letsencrypt` ACME resolver; `cert-manager`'s `internal-selfsigned` issuer is reserved for cluster-internal certificates.
+- Admin and operator-facing routes should usually attach the shared `network/oauth2-proxy-auth` middleware, with `network/local-only` available for LAN-only surfaces when needed.
+- The `helm-charts/generic-service` chart now exposes `ingress.entryPoints`, `ingress.middlewares`, and `ingress.tls` settings so new services can follow the same Traefik and access pattern without copy/paste edits.
 
 ## Apps
 
@@ -230,6 +275,11 @@ Foundation components for running and deploying applications in my cluster
         <td><img width="32" src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png"></td>
         <td><a href="https://argo-cd.readthedocs.io/en/stable/">Argo CD</a></td>
         <td>GitOps tool for continuous delivery and Kubernetes application management.</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg"></td>
+        <td><a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack">kube-prometheus-stack</a></td>
+        <td>Cluster monitoring foundation with Prometheus, Alertmanager, Grafana, and Traefik/Velero/Longhorn hooks.</td>
     </tr>
     <tr>
         <td><img width="32" src="https://www.svgrepo.com/download/374041/renovate.svg"></td>

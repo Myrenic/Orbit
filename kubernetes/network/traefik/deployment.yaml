@@ -32,6 +32,7 @@ spec:
             - --entrypoints.web.http.redirections.entrypoint.to=websecure
             - --entrypoints.web.http.redirections.entrypoint.scheme=https
             - --entrypoints.websecure.address=:443
+            - --entrypoints.metrics.address=:9100
             - --providers.kubernetesingress.ingressclass=traefik
             - --providers.kubernetesingress.ingressendpoint.hostname=testlab.${SECRET_DOMAIN_0}
             - --providers.kubernetescrd
@@ -43,11 +44,33 @@ spec:
             - --accesslog=true
             - --accesslog.filters.statuscodes=400-429
             - --accesslog.format=json
+            - --metrics.prometheus=true
+            - --metrics.prometheus.entrypoint=metrics
+            - --ping=true
+            - --ping.entrypoint=metrics
           ports:
             - containerPort: 80
               name: web
             - containerPort: 443
               name: websecure
+            - containerPort: 9100
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

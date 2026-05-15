@@ -8,5 +8,6 @@ resources:
   - volumes.yaml
   - deployment.yaml
   - service.yaml
+  - metrics-service.yaml
   - secrets.yaml
   - middleware.yaml
