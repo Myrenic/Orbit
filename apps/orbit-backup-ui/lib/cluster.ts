@@ -46,6 +46,11 @@ type WorkloadRecord = {
 };
 
 type LonghornStatus = Record<string, unknown>;
+type LonghornKubernetesStatus = {
+  namespace?: string;
+  pvcName?: string;
+  pvName?: string;
+};
 type ResourceMetadata = {
   labels?: Record<string, string>;
   annotations?: Record<string, string>;
@@ -164,6 +169,35 @@ function getLonghornLabel(
   key: string,
 ): string | undefined {
   return labels[key] || labels[`orbit.${key}`] || labels[`orbit-${key}`];
+}
+
+function getNamespacedPvcKey(namespace?: string, pvcName?: string) {
+  if (!namespace || !pvcName) {
+    return undefined;
+  }
+
+  return `${namespace}/${pvcName}`;
+}
+
+function parseLonghornKubernetesStatus(
+  labels: Record<string, string>,
+): LonghornKubernetesStatus | undefined {
+  const raw = labels.KubernetesStatus;
+  if (!raw) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      namespace: typeof parsed.namespace === "string" ? parsed.namespace : undefined,
+      pvcName: typeof parsed.pvcName === "string" ? parsed.pvcName : undefined,
+      pvName: typeof parsed.pvName === "string" ? parsed.pvName : undefined,
+    };
+  } catch (error) {
+    console.error("Failed to parse Longhorn KubernetesStatus label.", error);
+    return undefined;
+  }
 }
 
 function getPodStatus(pod: V1Pod) {
@@ -926,9 +960,14 @@ async function loadClusterSnapshot(): Promise<ClusterSnapshot> {
 
   const appByRef = new Map(inventory.map((app) => [app.ref, app]));
   const appRefByVolumeName = new Map<string, string>();
+  const appRefByPvcKey = new Map<string, string>();
   for (const app of inventory) {
     for (const volume of app.volumes) {
       appRefByVolumeName.set(volume.longhornVolumeName, app.ref);
+      const pvcKey = getNamespacedPvcKey(app.namespace, volume.pvcName);
+      if (pvcKey) {
+        appRefByPvcKey.set(pvcKey, app.ref);
+      }
     }
   }
 
@@ -936,6 +975,7 @@ async function loadClusterSnapshot(): Promise<ClusterSnapshot> {
     const status = (backup.status ?? {}) as Record<string, unknown>;
     const spec = (backup.spec ?? {}) as Record<string, unknown>;
     const labels = ((status.labels ?? spec.labels ?? {}) as Record<string, string>) || {};
+    const kubernetesStatus = parseLonghornKubernetesStatus(labels);
     const operationId = getLonghornLabel(labels, "operation");
     const itemId = getLonghornLabel(labels, "item");
     const scheduleId = getLonghornLabel(labels, "schedule-id");
@@ -951,9 +991,14 @@ async function loadClusterSnapshot(): Promise<ClusterSnapshot> {
       workloadKind,
       getLonghornLabel(labels, "workload"),
     );
+    const pvcKey = getNamespacedPvcKey(
+      getLonghornLabel(labels, "namespace") || kubernetesStatus?.namespace,
+      getLonghornLabel(labels, "pvc") || kubernetesStatus?.pvcName,
+    );
     const matchedAppRef = [
       getLonghornLabel(labels, "app-ref"),
       workloadRef,
+      pvcKey ? appRefByPvcKey.get(pvcKey) : undefined,
       appRefByVolumeName.get(String(status.volumeName ?? "")),
     ].find((candidate): candidate is string => Boolean(candidate));
     const matchedApp = matchedAppRef ? appByRef.get(matchedAppRef) : undefined;
@@ -975,8 +1020,11 @@ async function loadClusterSnapshot(): Promise<ClusterSnapshot> {
       name: backup.metadata?.name ?? "backup",
       setId,
       volumeName: String(status.volumeName ?? ""),
-      pvcName: getLonghornLabel(labels, "pvc"),
-      namespace: getLonghornLabel(labels, "namespace") || matchedApp?.namespace,
+      pvcName: getLonghornLabel(labels, "pvc") || kubernetesStatus?.pvcName,
+      namespace:
+        getLonghornLabel(labels, "namespace") ||
+        kubernetesStatus?.namespace ||
+        matchedApp?.namespace,
       workloadKind: workloadKind ?? matchedApp?.kind,
       workloadName: getLonghornLabel(labels, "workload") || matchedApp?.name,
       appDisplayName:
